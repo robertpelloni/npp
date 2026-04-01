@@ -1048,9 +1048,9 @@ void AutoCompletion::update(int character)
 {
 	if (!character)
 		return;
-
-	if (_curLang == L_TEXT)
+	if (_pEditView && _pEditView->getCurrentBuffer() && _pEditView->getCurrentBuffer()->getLangType() == L_TEXT)
 		return;
+
 
 	const NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
 	if (!_funcCompletionActive && nppGUI._autocStatus == nppGUI.autoc_func)
