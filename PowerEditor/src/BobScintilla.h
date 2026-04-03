@@ -10,6 +10,9 @@
 #include <windows.h>
 #include "Scintilla.h"
 #include "Sci_Position.h"
+#include "ILexer.h"
+#include "Lexilla.h"
+#include "SciLexer.h"
 
 // Note: To compile this, the target must link against Scintilla and Lexilla.
 
@@ -50,13 +53,54 @@ public:
         send(SCI_SETSELBACK, 1, 0x805A20); // BGR for #205A80
         
         // Margins
-        send(SCI_SETMARGINWIDTHN, 0, 40); // Line number margin
+        send(SCI_SETMARGINWIDTHN, 0, 45); // Line number margin
         send(SCI_STYLESETBACK, STYLE_LINENUMBER, 0x1A140E);
         send(SCI_STYLESETFORE, STYLE_LINENUMBER, 0x888888);
         
-        // Hide margin 1 (usually symbols)
-        send(SCI_SETMARGINWIDTHN, 1, 0);
-        send(SCI_SETMARGINWIDTHN, 2, 0);
+        // Margin 1 (Bookmarks/Symbols)
+        send(SCI_SETMARGINWIDTHN, 1, 14);
+        send(SCI_SETMARGINTYPEN, 1, SC_MARGIN_SYMBOL);
+        send(SCI_SETMARGINMASKN, 1, ~SC_MASK_FOLDERS);
+        send(SCI_SETMARGINSENSITIVEN, 1, 1);
+
+        // Margin 2 (Code Folding)
+        send(SCI_SETMARGINWIDTHN, 2, 14);
+        send(SCI_SETMARGINTYPEN, 2, SC_MARGIN_SYMBOL);
+        send(SCI_SETMARGINMASKN, 2, SC_MASK_FOLDERS);
+        send(SCI_SETMARGINSENSITIVEN, 2, 1);
+        send(SCI_SETFOLDMARGINCOLOUR, 1, 0x1A140E);
+        send(SCI_SETFOLDMARGINHICOLOUR, 1, 0x1A140E);
+        
+        // Define Liquid Glass folder symbols (sleek, minimalistic box lines)
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
+        send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
+        
+        // Style them
+        for (int i = SC_MARKNUM_FOLDEREND; i <= SC_MARKNUM_FOLDEROPEN; i++) {
+            send(SCI_MARKERSETFORE, i, 0x1A140E); // Match background
+            send(SCI_MARKERSETBACK, i, 0x88AAFF); // Subtle blue/cyan for glass aesthetic
+            send(SCI_MARKERSETBACKSELECTED, i, 0xFFFFFF);
+        }
+        
+        // Enable folding in lexers
+        send(SCI_SETPROPERTY, reinterpret_cast<sptr_t>("fold"), reinterpret_cast<sptr_t>("1"));
+        send(SCI_SETPROPERTY, reinterpret_cast<sptr_t>("fold.compact"), reinterpret_cast<sptr_t>("0"));
+
+        // Style Autocomplete and Calltips to match Liquid Glass
+        send(SCI_CALLTIPUSESTYLE, 0); // Use Scintilla styles for calltips
+        send(SCI_STYLESETBACK, STYLE_CALLTIP, 0x2A241E); // Slightly lighter navy
+        send(SCI_STYLESETFORE, STYLE_CALLTIP, 0xEBEBEB);
+        
+        // Autocompletion lists
+        send(SCI_SETELEMENTCOLOUR, SC_ELEMENT_LIST, 0xFF1E242A); // ABGR (requires alpha for SC_ELEMENT)
+        send(SCI_SETELEMENTCOLOUR, SC_ELEMENT_LIST_BACK, 0xFF1E242A);
+        send(SCI_SETELEMENTCOLOUR, SC_ELEMENT_LIST_SELECTED, 0x80FFAA88); // Semi-transparent blue
+        send(SCI_SETELEMENTCOLOUR, SC_ELEMENT_LIST_SELECTED_BACK, 0x80FFAA88);
 
         // Word wrap off by default
         send(SCI_SETWRAPMODE, SC_WRAP_NONE);
@@ -117,6 +161,103 @@ public:
         send(SCI_STYLESETFORE, STYLE_DEFAULT, 0xEBEBEB); // BGR off-white
         send(SCI_STYLESETBACK, STYLE_LINENUMBER, 0x1A140E);
         send(SCI_STYLESETFORE, STYLE_LINENUMBER, 0x888888);
+        
+        // Re-apply specific lexer colors if already set
+        if (!m_currentExt.isEmpty()) {
+            applyLexer(m_currentExt);
+        }
+    }
+
+    void applyLexer(const QString& ext) {
+        m_currentExt = ext.toLower();
+        QString lexerName;
+        
+        if (m_currentExt == "cpp" || m_currentExt == "c" || m_currentExt == "h" || m_currentExt == "hpp") {
+            lexerName = "cpp";
+        } else if (m_currentExt == "py") {
+            lexerName = "python";
+        } else if (m_currentExt == "html" || m_currentExt == "htm" || m_currentExt == "xml") {
+            lexerName = "html";
+        } else if (m_currentExt == "js" || m_currentExt == "ts" || m_currentExt == "json") {
+            lexerName = "cpp"; // cpp lexer is often used for JS in Scintilla
+        } else if (m_currentExt == "md" || m_currentExt == "markdown") {
+            lexerName = "markdown";
+        } else if (m_currentExt == "css") {
+            lexerName = "css";
+        } else if (m_currentExt == "sh" || m_currentExt == "bash") {
+            lexerName = "bash";
+        } else {
+            lexerName = "null";
+        }
+
+        ILexer5* lexer = CreateLexer(lexerName.toUtf8().constData());
+        if (lexer) {
+            send(SCI_SETILEXER, 0, reinterpret_cast<sptr_t>(lexer));
+            
+            // Set base styles for syntax highlighting mapped to Liquid Glass theme
+            // Base colors (BGR format)
+            int bg = 0x1A140E;
+            int fg = 0xEBEBEB;
+            int comment = 0x608060; // green-ish
+            int keyword = 0xFF9040; // orange/gold
+            int string = 0x60C0FF;  // yellow-ish
+            int number = 0xA0A0FF;  // cyan-ish
+            int op = 0xFFD080;      // light blue-ish
+            int preproc = 0xA060C0; // purple-ish
+            
+            if (lexerName == "cpp") {
+                send(SCI_STYLESETFORE, SCE_C_DEFAULT, fg);
+                send(SCI_STYLESETFORE, SCE_C_COMMENT, comment);
+                send(SCI_STYLESETFORE, SCE_C_COMMENTLINE, comment);
+                send(SCI_STYLESETFORE, SCE_C_COMMENTDOC, comment);
+                send(SCI_STYLESETFORE, SCE_C_NUMBER, number);
+                send(SCI_STYLESETFORE, SCE_C_WORD, keyword);
+                send(SCI_STYLESETBOLD, SCE_C_WORD, 1);
+                send(SCI_STYLESETFORE, SCE_C_STRING, string);
+                send(SCI_STYLESETFORE, SCE_C_CHARACTER, string);
+                send(SCI_STYLESETFORE, SCE_C_OPERATOR, op);
+                send(SCI_STYLESETFORE, SCE_C_PREPROCESSOR, preproc);
+                
+                // Keywords definition for C++
+                send(SCI_SETKEYWORDS, 0, reinterpret_cast<sptr_t>(
+                    "auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while "
+                    "asm bool catch class const_cast delete dynamic_cast explicit export false friend inline mutable namespace new operator private protected public reinterpret_cast static_cast template this throw true try typeid typename using virtual wchar_t "
+                    "alignas alignof char16_t char32_t constexpr decltype noexcept nullptr static_assert thread_local"
+                ));
+            } else if (lexerName == "python") {
+                send(SCI_STYLESETFORE, SCE_P_DEFAULT, fg);
+                send(SCI_STYLESETFORE, SCE_P_COMMENTLINE, comment);
+                send(SCI_STYLESETFORE, SCE_P_NUMBER, number);
+                send(SCI_STYLESETFORE, SCE_P_STRING, string);
+                send(SCI_STYLESETFORE, SCE_P_CHARACTER, string);
+                send(SCI_STYLESETFORE, SCE_P_WORD, keyword);
+                send(SCI_STYLESETBOLD, SCE_P_WORD, 1);
+                send(SCI_STYLESETFORE, SCE_P_TRIPLE, string);
+                send(SCI_STYLESETFORE, SCE_P_TRIPLEDOUBLE, string);
+                send(SCI_STYLESETFORE, SCE_P_CLASSNAME, preproc);
+                send(SCI_STYLESETFORE, SCE_P_DEFNAME, op);
+                send(SCI_STYLESETFORE, SCE_P_OPERATOR, op);
+                
+                send(SCI_SETKEYWORDS, 0, reinterpret_cast<sptr_t>(
+                    "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield"
+                ));
+            } else if (lexerName == "html") {
+                send(SCI_STYLESETFORE, SCE_H_DEFAULT, fg);
+                send(SCI_STYLESETFORE, SCE_H_TAG, keyword);
+                send(SCI_STYLESETFORE, SCE_H_TAGUNKNOWN, keyword);
+                send(SCI_STYLESETFORE, SCE_H_ATTRIBUTE, op);
+                send(SCI_STYLESETFORE, SCE_H_ATTRIBUTEUNKNOWN, op);
+                send(SCI_STYLESETFORE, SCE_H_NUMBER, number);
+                send(SCI_STYLESETFORE, SCE_H_DOUBLESTRING, string);
+                send(SCI_STYLESETFORE, SCE_H_SINGLESTRING, string);
+                send(SCI_STYLESETFORE, SCE_H_OTHER, fg);
+                send(SCI_STYLESETFORE, SCE_H_COMMENT, comment);
+            }
+            // For all lexers, ensure background is consistent
+            for (int i = 0; i <= STYLE_MAX; ++i) {
+                send(SCI_STYLESETBACK, i, bg);
+            }
+        }
     }
 
     std::function<void()> onCursorPositionChanged;
@@ -134,6 +275,26 @@ protected:
                     if (onModificationChanged) onModificationChanged(true);
                 } else if (scn->nmhdr.code == SCN_UPDATEUI) {
                     if (onCursorPositionChanged) onCursorPositionChanged();
+                } else if (scn->nmhdr.code == SCN_CHARADDED) {
+                    // Simple C++ / Python Autocomplete Trigger
+                    char ch = static_cast<char>(scn->ch);
+                    if (isalpha(ch) || ch == '_') {
+                        sptr_t pos = send(SCI_GETCURRENTPOS);
+                        sptr_t start = send(SCI_WORDSTARTPOSITION, pos, true);
+                        sptr_t len = pos - start;
+                        if (len == 3) {
+                            if (m_currentExt == "cpp" || m_currentExt == "h") {
+                                send(SCI_AUTOCSHOW, len, reinterpret_cast<sptr_t>("alignas alignof auto bool break case catch char class const constexpr continue decltype default delete double else enum explicit export extern false float for friend goto if inline int long mutable namespace new noexcept nullptr operator private protected public register reinterpret_cast return short signed sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while"));
+                            } else if (m_currentExt == "py") {
+                                send(SCI_AUTOCSHOW, len, reinterpret_cast<sptr_t>("False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield"));
+                            }
+                        }
+                    }
+                } else if (scn->nmhdr.code == SCN_MARGINCLICK) {
+                    if (scn->margin == 2) {
+                        sptr_t line = send(SCI_LINEFROMPOSITION, scn->position);
+                        send(SCI_TOGGLEFOLD, line);
+                    }
                 }
             }
         }
@@ -149,6 +310,7 @@ protected:
 
 private:
     HWND m_sciHwnd = nullptr;
+    QString m_currentExt;
 };
 
 #endif // BOB_SCINTILLA_H

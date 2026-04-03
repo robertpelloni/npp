@@ -99,14 +99,14 @@ add_executable(npp_bobui_v2
 #   dwmapi  — DwmEnableBlurBehindWindow, DwmSetWindowAttribute
 #   uxtheme — Theme APIs
 # ─────────────────────────────────────────────────────────────────────────────
-add_executable(npp_liquid_glass
+add_executable(npp_liquid_glass_v2
     PowerEditor/src/NppLiquidGlass_Main.cpp
 )
 
 # Input dialog (needed for Go to Line)
 find_library(BOBUI_CORE_EXISTS NAMES Qt6Core HINTS ${BOBUI_LIB_DIR})
 
-target_include_directories(npp_liquid_glass PRIVATE
+target_include_directories(npp_liquid_glass_v2 PRIVATE
     PowerEditor/src
     PowerEditor/src/WinControls
     PowerEditor/src/ScintillaComponent
@@ -119,7 +119,7 @@ target_include_directories(npp_liquid_glass PRIVATE
     textfx/src
 )
 
-target_link_libraries(npp_liquid_glass
+target_link_libraries(npp_liquid_glass_v2
     ${QT_STATIC_LIBS}
     ${WIN_LIBS}
     dwmapi
@@ -127,7 +127,7 @@ target_link_libraries(npp_liquid_glass
     lexilla
 )
 
-target_compile_definitions(npp_liquid_glass PRIVATE
+target_compile_definitions(npp_liquid_glass_v2 PRIVATE
     BOBUI_THEME_LIQUID_GLASS
     NPP_BOBUI_OVERHAUL
     NPP_LIQUID_GLASS
@@ -164,7 +164,7 @@ file(READ "${CMAKE_SOURCE_DIR}/VERSION" NPP_BOBUI_VERSION)
 string(STRIP "${NPP_BOBUI_VERSION}" NPP_BOBUI_VERSION)
 message(STATUS "Building Notepad++ BobUI Liquid Glass v${NPP_BOBUI_VERSION}")
 
-target_compile_definitions(npp_liquid_glass PRIVATE
+target_compile_definitions(npp_liquid_glass_v2 PRIVATE
     NPP_VERSION="${NPP_BOBUI_VERSION}"
 )
 target_compile_definitions(npp_bobui_v2 PRIVATE

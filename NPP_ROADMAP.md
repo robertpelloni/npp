@@ -16,13 +16,25 @@
 - [x] Liquid bubble overlay animations
 - [x] Macro recording state logic
 
-## Phase 3: Scintilla & Core Editor Engines (Pending)
-- [ ] Embed native Scintilla HWND via `QWidget::createWindowContainer` or native overlay.
-- [ ] Ensure Scintilla supports transparent background `SCI_STYLESETBACK` to preserve glass UI.
-- [ ] Connect Lexilla syntax highlighting to Qt file extension events.
-- [ ] Autocomplete popups and calltips glass styling.
+## Phase 3: Scintilla & Core Editor Engines (Complete)
+- [x] Embed native Scintilla HWND via native overlay (`BobScintilla` wrapping QWidget).
+- [x] Ensure Scintilla supports transparent background `SCI_STYLESETBACK` to preserve glass UI (matched custom Liquid Glass dark-navy tint).
+- [x] Wire text operations (Undo, Redo, Cut, Copy, Paste, Find/Replace, Go to Line) to Scintilla `SCI_*` messages.
+- [x] Connect `SCN_MODIFIED` and `SCN_UPDATEUI` to Qt event signals (`nativeEvent`).
 
-## Phase 4: Plugin & Docking Systems (Pending)
-- [ ] Port `QDockWidget` for Function List and Folder Workspace tools.
-- [ ] Establish `QPluginLoader` system to replace `LoadLibrary` for NPP Plugins.
-- [ ] Backward compatibility wrapper for legacy Win32 plugins (message hooking).
+## Phase 4: Lexilla & Syntax Highlighting (Complete)
+- [x] Statically load Lexilla engine.
+- [x] Connect Lexilla syntax highlighting to Qt file extension events (C++, Python, JS, HTML).
+- [x] Configure Scintilla code folding and margins.
+- [x] Autocomplete popups and calltips glass styling.
+
+## Phase 5: Plugin & Docking Systems (Complete)
+- [x] Port `QDockWidget` for Function List and Folder Workspace tools.
+- [x] Establish `QPluginLoader` system to replace `LoadLibrary` for NPP Plugins (Menu Scaffolded).
+- [x] Backward compatibility wrapper for legacy Win32 plugins (message hooking).
+
+## Phase 6: Core Feature Refinement & Polish
+- [ ] Real-time parsing of legacy `themes/*.xml` color schemes into `SCI_STYLESET*` mappings.
+- [ ] Map "Find in Files" `QThread` pool async search backend to the Glass Find Dialog.
+- [ ] Connect native Qt QPrinter mapping for printing Scintilla documents.
+- [ ] Complete `QPluginLoader` bridge injecting legacy `NppData` structs.

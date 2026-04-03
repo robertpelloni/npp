@@ -897,6 +897,42 @@ namespace LiquidGlassStyleSheet {
         }
     )QSS";
 
+    // ─── Dock Widget QSS ──────────────────────────────────────────────────
+    inline const char* kDockWidget = R"QSS(
+        QDockWidget {
+            color: rgba(220, 230, 250, 240);
+            titlebar-close-icon: url();
+            titlebar-normal-icon: url();
+            font-family: "Segoe UI", "SF Pro Display", sans-serif;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        QDockWidget::title {
+            background: rgba(14, 16, 26, 180);
+            padding: 6px 10px;
+            border-top: 1px solid rgba(255,255,255,25);
+            border-bottom: 1px solid rgba(255,255,255,10);
+        }
+        QTreeView, QListWidget {
+            background: rgba(10, 12, 20, 150);
+            color: rgba(220, 230, 250, 240);
+            border: none;
+            outline: none;
+            padding: 5px;
+            font-family: "Segoe UI", sans-serif;
+            font-size: 13px;
+        }
+        QTreeView::item:selected, QListWidget::item:selected {
+            background: rgba(90, 130, 255, 120);
+            color: white;
+            border-radius: 4px;
+        }
+        QTreeView::item:hover, QListWidget::item:hover {
+            background: rgba(255, 255, 255, 15);
+            border-radius: 4px;
+        }
+    )QSS";
+
     // ─── Full Combined Application QSS ────────────────────────────────────
     // Apply this to QApplication::setStyleSheet() for global glass theming.
     inline QString kFullGlassTheme() {
@@ -907,7 +943,8 @@ namespace LiquidGlassStyleSheet {
              + QString(kStatusBar)
              + QString(kToolBar)
              + QString(kEditor)
-             + QString(kDialog);
+             + QString(kDialog)
+             + QString(kDockWidget);
     }
 
 } // namespace LiquidGlassStyleSheet

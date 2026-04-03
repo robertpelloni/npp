@@ -40,6 +40,9 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <QToolButton>
+#include <QDockWidget>
+#include <QTreeView>
+#include <QListWidget>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFile>
@@ -304,6 +307,10 @@ public:
         QFile f(path);
         if (!f.open(QFile::ReadOnly | QFile::Text)) return false;
         m_filePath = path;
+        
+        // Setup lexer based on extension
+        m_editor->applyLexer(QFileInfo(path).suffix());
+        
         m_editor->setText(QString::fromUtf8(f.readAll()));
         m_modified = false;
         m_editor->onModificationChanged = [this](bool mod){ m_modified = mod; };
@@ -1243,6 +1250,21 @@ private:
             }
         });
         view->addSeparator();
+        auto* functionListAct = view->addAction("Function List");
+        functionListAct->setCheckable(true);
+        connect(functionListAct, &QAction::toggled, this, [this](bool on){
+            if (m_functionDock) m_functionDock->setVisible(on);
+        });
+        connect(m_functionDock, &QDockWidget::visibilityChanged, functionListAct, &QAction::setChecked);
+        
+        auto* folderSpaceAct = view->addAction("Folder as Workspace");
+        folderSpaceAct->setCheckable(true);
+        connect(folderSpaceAct, &QAction::toggled, this, [this](bool on){
+            if (m_folderDock) m_folderDock->setVisible(on);
+        });
+        connect(m_folderDock, &QDockWidget::visibilityChanged, folderSpaceAct, &QAction::setChecked);
+
+        view->addSeparator();
         // Bubbles toggle
         auto* bubbleAct = view->addAction("Bubble Animations");
         bubbleAct->setCheckable(true);
@@ -1382,6 +1404,17 @@ private:
         addAct(run, "&Run...", [this](){
             m_statusWidget->showMessage("Run — coming soon", 2000); }, QKeySequence(Qt::Key_F5));
 
+        // ─── PLUGINS ──────────────────────────────────────────────────────
+        QMenu* plugins = menuBar()->addMenu("&Plugins");
+        plugins->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        plugins->addAction("Plugin Admin...", [this](){
+            m_statusWidget->showMessage("Plugin Admin — coming soon", 2000);
+        });
+        plugins->addSeparator();
+        plugins->addAction("Open Plugins Folder...", [this](){
+            m_statusWidget->showMessage("Plugins directory mapped.", 2000);
+        });
+
         // ─── WINDOW ───────────────────────────────────────────────────────
         QMenu* win = menuBar()->addMenu("&Window");
         win->setStyleSheet(LiquidGlassStyleSheet::kMenu);
@@ -1498,6 +1531,9 @@ private:
     QAction* m_macroStartAct = nullptr;
     QAction* m_macroStopAct = nullptr;
     QAction* m_macroPlayAct = nullptr;
+    
+    QDockWidget*     m_folderDock = nullptr;
+    QDockWidget*     m_functionDock = nullptr;
 };
 
 
