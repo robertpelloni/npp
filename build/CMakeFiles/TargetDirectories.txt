@@ -1,5 +1,5 @@
 C:/Users/hyper/workspace/npp/build/CMakeFiles/npp_bobui_v2.dir
-C:/Users/hyper/workspace/npp/build/CMakeFiles/npp_liquid_glass.dir
+C:/Users/hyper/workspace/npp/build/CMakeFiles/npp_liquid_glass_v2.dir
 C:/Users/hyper/workspace/npp/build/CMakeFiles/ALL_BUILD.dir
 C:/Users/hyper/workspace/npp/build/CMakeFiles/ZERO_CHECK.dir
 C:/Users/hyper/workspace/npp/build/scintilla/win32/CMakeFiles/scintilla.dir

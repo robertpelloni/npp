@@ -89,6 +89,8 @@
 #include <QSettings>
 #include <QInputDialog>
 #include <QRegularExpression>
+#include <QStandardItemModel>
+#include <QStandardItem>
 #include <QtPlugin>
 #include <random>
 #include <cmath>
@@ -102,6 +104,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "LiquidGlass.h"
 #include "GlassSettings.h"
 #include "GlassPreferencesDialog.h"
+#include "GlassSearchWorker.h"
+#include "GlassFindInFilesDialog.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -665,6 +669,7 @@ public:
         // ── Menus & toolbar ──────────────────────────────────────────────────
         setupMenuBar();
         setupToolBar();
+        setupDockWidgets();
 
         // ── Bubble overlay (lives above everything) ──────────────────────────
         // The overlay must be a child of the central widget (not the window)
@@ -780,6 +785,80 @@ protected:
     }
 
 private:
+    void setupDockWidgets() {
+        // ── Folder as Workspace ─────────────────────────────────────────────
+        m_folderDock = new QDockWidget("Folder as Workspace", this);
+        m_folderDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        auto* tree = new QTreeView(m_folderDock);
+        tree->setHeaderHidden(true);
+        auto* model = new QStandardItemModel(tree);
+        auto* root = model->invisibleRootItem();
+        auto* proj = new QStandardItem("LiquidGlassProject");
+        proj->appendRow(new QStandardItem("src/"));
+        proj->appendRow(new QStandardItem("include/"));
+        proj->appendRow(new QStandardItem("CMakeLists.txt"));
+        proj->appendRow(new QStandardItem("README.md"));
+        root->appendRow(proj);
+        tree->setModel(model);
+        tree->expandAll();
+        m_folderDock->setWidget(tree);
+        addDockWidget(Qt::LeftDockWidgetArea, m_folderDock);
+        m_folderDock->hide();
+
+        // ── Function List ───────────────────────────────────────────────────
+        m_functionDock = new QDockWidget("Function List", this);
+        m_functionDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        auto* list = new QListWidget(m_functionDock);
+        list->addItem("main(int argc, char* argv[])");
+        list->addItem("drawGlassBackground(QPainter& p)");
+        list->addItem("enableBlurBehind(QWidget* w)");
+        m_functionDock->setWidget(list);
+        addDockWidget(Qt::RightDockWidgetArea, m_functionDock);
+        m_functionDock->hide();
+        
+        // ── Search Results ──────────────────────────────────────────────────
+        m_searchDock = new QDockWidget("Search Results", this);
+        m_searchDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        m_searchTree = new QTreeView(m_searchDock);
+        m_searchTree->setHeaderHidden(true);
+        m_searchModel = new QStandardItemModel(m_searchTree);
+        m_searchTree->setModel(m_searchModel);
+        m_searchDock->setWidget(m_searchTree);
+        addDockWidget(Qt::BottomDockWidgetArea, m_searchDock);
+        m_searchDock->hide();
+
+        // Connect search result clicking to open file and jump to line
+        connect(m_searchTree, &QTreeView::doubleClicked, this, [this](const QModelIndex& idx){
+            auto* item = m_searchModel->itemFromIndex(idx);
+            if (item && item->parent()) {
+                // It's a line number node
+                QString path = item->parent()->text();
+                int line = item->data(Qt::UserRole).toInt();
+                
+                // Open file
+                auto* p = findPanelByPath(path);
+                if (!p) {
+                    p = new GlassEditorPanel(m_tabs);
+                    if (p->loadFile(path)) {
+                        m_tabs->setCurrentIndex(m_tabs->addTab(p, QFileInfo(path).fileName()));
+                        connectEditorSignals(p);
+                    } else {
+                        delete p;
+                        return;
+                    }
+                } else {
+                    m_tabs->setCurrentWidget(p);
+                }
+                
+                // Jump to line
+                sptr_t pos = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
+                p->editor()->send(SCI_GOTOPOS, pos);
+                p->editor()->send(SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1);
+                p->editor()->send(SCI_GRABFOCUS);
+            }
+        });
+    }
+
     // ── Document management ─────────────────────────────────────────────────
     void addNewDocument(const QString& name) {
         auto* panel = new GlassEditorPanel(m_tabs);
@@ -800,6 +879,14 @@ private:
 
     GlassEditorPanel* currentPanel() {
         return static_cast<GlassEditorPanel*>(m_tabs->currentWidget());
+    }
+
+    GlassEditorPanel* findPanelByPath(const QString& path) {
+        for (int i = 0; i < m_tabs->count(); ++i) {
+            auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i));
+            if (p && p->filePath() == path) return p;
+        }
+        return nullptr;
     }
 
     void onTabCloseRequested(int idx) {
@@ -1210,7 +1297,60 @@ private:
         addAct(search, "&Find...",        [this](){ showFindDialog(); }, QKeySequence::Find);
         addAct(search, "&Replace...",     [this](){ showFindDialog(); }, QKeySequence::Replace);
         addAct(search, "Find in &Files...", [this](){
-            m_statusWidget->showMessage("Find in Files — coming soon", 2000);
+            GlassFindInFilesDialog dlg(this);
+            dlg.setFindCallback([&](){
+                if (dlg.findText().isEmpty() || dlg.directory().isEmpty()) return;
+                
+                if (m_searchWorker) {
+                    m_searchWorker->cancel();
+                    m_searchWorker->wait();
+                    delete m_searchWorker;
+                }
+                
+                m_searchModel->clear();
+                m_searchDock->show();
+                m_searchDock->raise();
+                
+                auto* rootItem = m_searchModel->invisibleRootItem();
+                auto* searchNode = new QStandardItem(QString("Find in '%1'").arg(dlg.directory()));
+                rootItem->appendRow(searchNode);
+                
+                m_searchWorker = new GlassSearchWorker(dlg.findText(), dlg.directory(), dlg.filterText(),
+                                                       dlg.matchCase(), dlg.wholeWord(), dlg.searchSubDirs(), this);
+                
+                m_searchWorker->onResultFound = [this, searchNode](const SearchResultItem& res){
+                    QStandardItem* fileItem = nullptr;
+                    for (int i = 0; i < searchNode->rowCount(); ++i) {
+                        if (searchNode->child(i)->text() == res.filePath) {
+                            fileItem = searchNode->child(i);
+                            break;
+                        }
+                    }
+                    if (!fileItem) {
+                        fileItem = new QStandardItem(res.filePath);
+                        searchNode->appendRow(fileItem);
+                    }
+                    auto* lineItem = new QStandardItem(QString("Line %1: %2").arg(res.lineNum).arg(res.text));
+                    lineItem->setData(res.lineNum, Qt::UserRole);
+                    fileItem->appendRow(lineItem);
+                    m_searchTree->expand(fileItem->index());
+                    m_searchTree->expand(searchNode->index());
+                };
+                
+                m_searchWorker->onProgressUpdated = [this](int count, const QString& path){
+                    m_statusWidget->showMessage(QString("Searching... scanned %1 files").arg(count), 0);
+                };
+                
+                m_searchWorker->onSearchFinished = [this, searchNode](int files, int matches){
+                    m_statusWidget->showMessage(QString("Search complete: %1 matches in %2 files").arg(matches).arg(files), 4000);
+                    searchNode->setText(searchNode->text() + QString(" - %1 matches").arg(matches));
+                    m_searchWorker->deleteLater();
+                    m_searchWorker = nullptr;
+                };
+                
+                m_searchWorker->start();
+            });
+            dlg.exec();
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_F));
         addAct(search, "Find &Next",    [this](){ doFind(false); }, QKeySequence::FindNext);
         addAct(search, "Find &Previous",[this](){ doFind(true); },  QKeySequence::FindPrevious);
@@ -1534,6 +1674,10 @@ private:
     
     QDockWidget*     m_folderDock = nullptr;
     QDockWidget*     m_functionDock = nullptr;
+    QDockWidget*     m_searchDock = nullptr;
+    QTreeView*       m_searchTree = nullptr;
+    QStandardItemModel* m_searchModel = nullptr;
+    GlassSearchWorker* m_searchWorker = nullptr;
 };
 
 

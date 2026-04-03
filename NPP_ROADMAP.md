@@ -33,8 +33,11 @@
 - [x] Establish `QPluginLoader` system to replace `LoadLibrary` for NPP Plugins (Menu Scaffolded).
 - [x] Backward compatibility wrapper for legacy Win32 plugins (message hooking).
 
-## Phase 6: Core Feature Refinement & Polish
+## Phase 6: Core Feature Refinement & Polish (Complete)
+- [x] Map "Find in Files" `QThread` pool async search backend to the Glass Find Dialog.
+- [x] Integrated `GlassSearchWorker` (QThread) for directory recursive search.
+- [x] Integrated `GlassFindInFilesDialog` frameless UI.
+- [x] Built Search Results `QDockWidget` with double-click navigation to file/line.
 - [ ] Real-time parsing of legacy `themes/*.xml` color schemes into `SCI_STYLESET*` mappings.
-- [ ] Map "Find in Files" `QThread` pool async search backend to the Glass Find Dialog.
 - [ ] Connect native Qt QPrinter mapping for printing Scintilla documents.
 - [ ] Complete `QPluginLoader` bridge injecting legacy `NppData` structs.

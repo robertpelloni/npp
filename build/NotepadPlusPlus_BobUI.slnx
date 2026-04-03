@@ -11,7 +11,7 @@
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
 		<BuildDependency Project="npp_bobui_v2.vcxproj"/>
-		<BuildDependency Project="npp_liquid_glass.vcxproj"/>
+		<BuildDependency Project="npp_liquid_glass_v2.vcxproj"/>
 		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
 		<Build Solution="Debug|*" Project="false"/>
 		<Build Solution="Release|*" Project="false"/>
@@ -27,7 +27,7 @@
 		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
 		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
 	</Project>
-	<Project Path="npp_liquid_glass.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0cb60c15-a580-3731-bf02-576f3e1492f1">
+	<Project Path="npp_liquid_glass_v2.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7b5ba171-deb6-3cc8-95ba-1cbf2340ce16">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
 		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
