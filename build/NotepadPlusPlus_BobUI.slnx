@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ae92410d-4d6a-3f7b-9517-a603c2780ea5" DefaultStartup="true">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
+		<BuildDependency Project="npp_bobui_v2.vcxproj"/>
+		<BuildDependency Project="npp_liquid_glass.vcxproj"/>
+		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="ZERO_CHECK.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6d40d3e3-477f-3dd4-81fd-30c52bfe36bd"/>
+	<Project Path="lexilla/src/lexilla.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f54cadc5-fbc5-32ec-824c-9f52b3e0eca1">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="npp_bobui_v2.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="2be85ba1-8173-34a4-a28e-235df9f771e0">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
+		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
+	</Project>
+	<Project Path="npp_liquid_glass.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0cb60c15-a580-3731-bf02-576f3e1492f1">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="lexilla/src/lexilla.vcxproj"/>
+		<BuildDependency Project="scintilla/win32/scintilla.vcxproj"/>
+	</Project>
+	<Project Path="scintilla/win32/scintilla.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a159f6cd-f7b5-30e0-9573-6f2e77abc464">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+</Solution>

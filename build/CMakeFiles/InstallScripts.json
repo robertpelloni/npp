@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/hyper/workspace/npp/build/cmake_install.cmake",
+		"C:/Users/hyper/workspace/npp/build/scintilla/win32/cmake_install.cmake",
+		"C:/Users/hyper/workspace/npp/build/lexilla/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

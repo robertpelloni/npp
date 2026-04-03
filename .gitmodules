@@ -1,0 +1,6 @@
+[submodule "bobui"]
+	path = bobui
+	url = https://github.com/robertpelloni/bobui.git
+[submodule "textfx"]
+	path = textfx
+	url = https://github.com/rainman74/NPPTextFX2.git
