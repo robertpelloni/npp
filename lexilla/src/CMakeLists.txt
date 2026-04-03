@@ -10,7 +10,13 @@ include_directories(.)
 include_directories(../../scintilla/include)
 include_directories(../../scintilla/src)
 
+file(GLOB LEXILLA_CORE_SOURCES "*.cxx")
+file(GLOB LEXILLA_LEXERS "../lexers/*.cxx")
+file(GLOB LEXILLA_LEXLIB "../lexlib/*.cxx")
+
 add_library(lexilla STATIC
-    Lexilla.cxx
+    ${LEXILLA_CORE_SOURCES}
+    ${LEXILLA_LEXERS}
+    ${LEXILLA_LEXLIB}
 )
 target_compile_definitions(lexilla PRIVATE UNICODE _UNICODE SCI_LEXER)

@@ -316,10 +316,45 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\PlatWin.cxx" />
-    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\ScintillaWin.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\AutoComplete.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CallTip.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CaseConvert.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CaseFolder.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CellBuffer.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\ChangeHistory.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CharClassify.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CharacterCategoryMap.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\CharacterType.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\ContractionState.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\DBCS.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Decoration.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Document.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\EditModel.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\EditView.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Editor.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Geometry.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Indicator.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\KeyMap.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\LineMarker.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\MarginView.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\PerLine.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\PositionCache.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\RESearch.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\RunStyles.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\ScintillaBase.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Selection.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\Style.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\UndoHistory.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\UniConversion.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\UniqueString.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\ViewStyle.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\src\XPM.cxx" />
     <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\HanjaDic.cxx" />
     <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\ListBox.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\PlatWin.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\ScintillaDLL.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\ScintillaWin.cxx" />
+    <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\SurfaceD2D.cxx" />
     <ClCompile Include="C:\Users\hyper\workspace\npp\scintilla\win32\SurfaceGDI.cxx" />
   </ItemGroup>
   <ItemGroup />

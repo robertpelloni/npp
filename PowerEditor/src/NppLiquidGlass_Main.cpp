@@ -106,6 +106,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 // Scintilla API (for future real editor integration)
 #include "Scintilla.h"
 #include "Sci_Position.h"
+#include "BobScintilla.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VERSION — loaded from ../../VERSION (one source of truth)
@@ -282,13 +283,8 @@ public:
         layout->setContentsMargins(1, 1, 1, 1);  // thin glass border margin
         layout->setSpacing(0);
 
-        // The actual text editor with the glass QSS applied
-        m_editor = new QPlainTextEdit(this);
-        m_editor->setStyleSheet(LiquidGlassStyleSheet::kEditor);
-        m_editor->setFrameShape(QFrame::NoFrame);
-        // Smooth scrolling preference
-        m_editor->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        m_editor->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        // The native Scintilla text editor
+        m_editor = new BobScintilla(this);
         
         // Apply settings
         m_editor->setFont(GlassSettings::instance().editorFont());
@@ -297,10 +293,10 @@ public:
         layout->addWidget(m_editor);
     }
 
-    QPlainTextEdit* editor() { return m_editor; }
+    BobScintilla* editor() { return m_editor; }
 
-    QString text() const     { return m_editor->toPlainText(); }
-    void setText(const QString& t) { m_editor->setPlainText(t); }
+    QString text() const     { return m_editor->text(); }
+    void setText(const QString& t) { m_editor->setText(t); }
     void setFilePath(const QString& p) { m_filePath = p; }
     QString filePath() const { return m_filePath; }
 
@@ -308,10 +304,9 @@ public:
         QFile f(path);
         if (!f.open(QFile::ReadOnly | QFile::Text)) return false;
         m_filePath = path;
-        m_editor->setPlainText(QString::fromUtf8(f.readAll()));
+        m_editor->setText(QString::fromUtf8(f.readAll()));
         m_modified = false;
-        connect(m_editor->document(), &QTextDocument::modificationChanged,
-                this, [this](bool mod){ m_modified = mod; });
+        m_editor->onModificationChanged = [this](bool mod){ m_modified = mod; };
         return true;
     }
 
@@ -320,23 +315,23 @@ public:
         QFile f(m_filePath);
         if (!f.open(QFile::WriteOnly | QFile::Text)) return false;
         QTextStream s(&f);
-        s << m_editor->toPlainText();
+        s << m_editor->text();
         m_modified = false;
-        m_editor->document()->setModified(false);
+        // Tell Scintilla to save state
+        m_editor->send(SCI_SETSAVEPOINT);
         return true;
     }
 
     bool isModified() const { return m_modified; }
 
-    bool wordWrap() const { return m_editor->lineWrapMode() == QPlainTextEdit::WidgetWidth; }
+    bool wordWrap() const { return m_editor->wordWrap(); }
     void setWordWrap(bool wrap) {
-        m_editor->setLineWrapMode(wrap ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
+        m_editor->setWordWrap(wrap);
     }
 
 protected:
     void paintEvent(QPaintEvent* ev) override {
         // Draw the glass material as the border/frame of the editor area.
-        // The editor widget itself paints its own dark background.
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
 
@@ -349,8 +344,8 @@ protected:
     }
 
 private:
-    QPlainTextEdit* m_editor;
-    QString         m_filePath;
+    BobScintilla* m_editor;
+    QString       m_filePath;
     bool            m_modified = false;
 };
 
@@ -402,13 +397,14 @@ public:
         }
     }
 
-    void updateStats(QPlainTextEdit* editor) {
+    void updateStats(BobScintilla* editor) {
         if (!editor) return;
-        QTextCursor cur = editor->textCursor();
-        int ln  = cur.blockNumber() + 1;
-        int col = cur.columnNumber() + 1;
-        int sel = cur.selectionEnd() - cur.selectionStart();
-        QString text = editor->toPlainText();
+        sptr_t pos = editor->send(SCI_GETCURRENTPOS);
+        sptr_t ln  = editor->send(SCI_LINEFROMPOSITION, pos) + 1;
+        sptr_t col = editor->send(SCI_GETCOLUMN, pos) + 1;
+        sptr_t sel = editor->send(SCI_GETSELECTIONEND) - editor->send(SCI_GETSELECTIONSTART);
+        
+        QString text = editor->text();
         QStringList words = text.split(QRegularExpression(R"(\s+)"),
                                        Qt::SkipEmptyParts);
         m_lnColLabel->setText(QString("Ln %1, Col %2").arg(ln).arg(col));
@@ -787,10 +783,12 @@ private:
 
     void connectEditorSignals(GlassEditorPanel* panel) {
         // Update status bar on cursor movement / content change
-        connect(panel->editor(), &QPlainTextEdit::cursorPositionChanged,
-                this, [this, panel]() { m_statusWidget->updateStats(panel->editor()); });
-        connect(panel->editor()->document(), &QTextDocument::contentsChanged,
-                this, [this, panel]() { m_statusWidget->updateStats(panel->editor()); });
+        panel->editor()->onCursorPositionChanged = [this, panel]() { 
+            if (m_tabs->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+        };
+        panel->editor()->onContentsChanged = [this, panel]() { 
+            if (m_tabs->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+        };
     }
 
     GlassEditorPanel* currentPanel() {
@@ -945,55 +943,93 @@ private:
         m_findDialog->activateWindow();
     }
 
-    void doFind(bool /*backward*/) {
+    void doFind(bool backward) {
         if (!m_findDialog) return;
         auto* panel = currentPanel();
         if (!panel) return;
-        QString needle = m_findDialog->findText();
+        QByteArray needle = m_findDialog->findText().toUtf8();
         if (needle.isEmpty()) return;
 
-        QTextDocument::FindFlags flags;
-        if (m_findDialog->matchCase()) flags |= QTextDocument::FindCaseSensitively;
-        if (m_findDialog->wholeWord()) flags |= QTextDocument::FindWholeWords;
-
-        bool found = panel->editor()->find(needle, flags);
-        if (!found) {
-            // Wrap around
-            panel->editor()->moveCursor(QTextCursor::Start);
-            found = panel->editor()->find(needle, flags);
+        int flags = 0;
+        if (m_findDialog->matchCase()) flags |= SCFIND_MATCHCASE;
+        if (m_findDialog->wholeWord()) flags |= SCFIND_WHOLEWORD;
+        if (m_findDialog->useRegex())  flags |= SCFIND_REGEXP;
+        
+        auto* ed = panel->editor();
+        ed->send(SCI_SETSEARCHFLAGS, flags);
+        
+        sptr_t startPos = ed->send(SCI_GETCURRENTPOS);
+        sptr_t docEnd = ed->send(SCI_GETLENGTH);
+        
+        if (backward) {
+            ed->send(SCI_SETTARGETSTART, startPos);
+            ed->send(SCI_SETTARGETEND, 0);
+        } else {
+            ed->send(SCI_SETTARGETSTART, startPos);
+            ed->send(SCI_SETTARGETEND, docEnd);
         }
-        m_statusWidget->showMessage(found ? "Found" : "Not found: " + needle, 2000);
+        
+        sptr_t pos = ed->send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData()));
+        if (pos == -1) {
+            // Wrap around
+            if (backward) {
+                ed->send(SCI_SETTARGETSTART, docEnd);
+                ed->send(SCI_SETTARGETEND, 0);
+            } else {
+                ed->send(SCI_SETTARGETSTART, 0);
+                ed->send(SCI_SETTARGETEND, docEnd);
+            }
+            pos = ed->send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData()));
+        }
+        
+        if (pos != -1) {
+            sptr_t tgtEnd = ed->send(SCI_GETTARGETEND);
+            ed->send(SCI_SETSEL, pos, tgtEnd);
+            m_statusWidget->showMessage("Found", 2000);
+        } else {
+            m_statusWidget->showMessage("Not found: " + m_findDialog->findText(), 2000);
+        }
     }
 
     void doReplace(bool all) {
         if (!m_findDialog) return;
         auto* panel = currentPanel();
         if (!panel) return;
-        QString needle      = m_findDialog->findText();
-        QString replacement = m_findDialog->replaceText();
+        QByteArray needle = m_findDialog->findText().toUtf8();
+        QByteArray replacement = m_findDialog->replaceText().toUtf8();
         if (needle.isEmpty()) return;
 
+        auto* ed = panel->editor();
+        
         if (all) {
-            // Replace all occurrences
-            QString text = panel->text();
-            Qt::CaseSensitivity cs = m_findDialog->matchCase()
-                ? Qt::CaseSensitive : Qt::CaseInsensitive;
+            int flags = 0;
+            if (m_findDialog->matchCase()) flags |= SCFIND_MATCHCASE;
+            if (m_findDialog->wholeWord()) flags |= SCFIND_WHOLEWORD;
+            if (m_findDialog->useRegex())  flags |= SCFIND_REGEXP;
+            
+            ed->send(SCI_SETSEARCHFLAGS, flags);
+            ed->send(SCI_SETTARGETSTART, 0);
+            ed->send(SCI_SETTARGETEND, ed->send(SCI_GETLENGTH));
+            
             int count = 0;
-            int pos = text.indexOf(needle, 0, cs);
-            while (pos != -1) {
-                text.replace(pos, needle.length(), replacement);
-                pos = text.indexOf(needle, pos + replacement.length(), cs);
-                ++count;
+            ed->send(SCI_BEGINUNDOACTION);
+            while (ed->send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData())) != -1) {
+                if (m_findDialog->useRegex()) {
+                    ed->send(SCI_REPLACETARGETRE, replacement.length(), reinterpret_cast<sptr_t>(replacement.constData()));
+                } else {
+                    ed->send(SCI_REPLACETARGET, replacement.length(), reinterpret_cast<sptr_t>(replacement.constData()));
+                }
+                ed->send(SCI_SETTARGETSTART, ed->send(SCI_GETTARGETEND));
+                ed->send(SCI_SETTARGETEND, ed->send(SCI_GETLENGTH));
+                count++;
             }
-            panel->setText(text);
-            m_statusWidget->showMessage(
-                QString("Replaced %1 occurrence(s)").arg(count), 2500);
+            ed->send(SCI_ENDUNDOACTION);
+            m_statusWidget->showMessage(QString("Replaced %1 occurrence(s)").arg(count), 2500);
         } else {
-            // Replace current selection / find next
-            QTextCursor cur = panel->editor()->textCursor();
-            if (cur.hasSelection()) {
-                cur.insertText(replacement);
-                panel->editor()->setTextCursor(cur);
+            sptr_t selStart = ed->send(SCI_GETSELECTIONSTART);
+            sptr_t selEnd = ed->send(SCI_GETSELECTIONEND);
+            if (selEnd > selStart) {
+                ed->send(SCI_REPLACESEL, 0, reinterpret_cast<sptr_t>(replacement.constData()));
             }
             doFind(false);
         }
@@ -1122,7 +1158,7 @@ private:
         addAct(edit, "&Paste",      [this](){
             if (auto* p = currentPanel()) p->editor()->paste(); }, QKeySequence::Paste);
         addAct(edit, "&Delete",     [this](){
-            if (auto* p = currentPanel()) p->editor()->textCursor().removeSelectedText();
+            if (auto* p = currentPanel()) p->editor()->send(SCI_CLEAR);
         }, QKeySequence::Delete);
         addAct(edit, "Select &All", [this](){
             if (auto* p = currentPanel()) p->editor()->selectAll();
@@ -1177,10 +1213,8 @@ private:
             int ln = QInputDialog::getInt(this, "Go to Line", "Line number:", 1, 1, 999999, 1, &ok);
             if (ok) {
                 if (auto* p = currentPanel()) {
-                    QTextCursor cur = p->editor()->textCursor();
-                    cur.movePosition(QTextCursor::Start);
-                    cur.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor, ln - 1);
-                    p->editor()->setTextCursor(cur);
+                    sptr_t pos = p->editor()->send(SCI_POSITIONFROMLINE, ln - 1);
+                    p->editor()->send(SCI_GOTOPOS, pos);
                 }
             }
         }, QKeySequence(Qt::CTRL | Qt::Key_G));
@@ -1205,8 +1239,7 @@ private:
         wrapAct->setCheckable(true);
         connect(wrapAct, &QAction::toggled, this, [this](bool on){
             if (auto* p = currentPanel()) {
-                p->editor()->setLineWrapMode(
-                    on ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
+                p->setWordWrap(on);
             }
         });
         view->addSeparator();
@@ -1472,6 +1505,11 @@ private:
 // MAIN ENTRY POINT
 // ─────────────────────────────────────────────────────────────────────────────
 int main(int argc, char* argv[]) {
+    // Register Native Scintilla Window Class
+#ifdef Q_OS_WIN
+    Scintilla_RegisterClasses(GetModuleHandle(NULL));
+#endif
+
     // Enable DWM composition / high-DPI before QApplication is created.
     // On Windows, DWM must be enabled before the message loop starts.
 #ifdef Q_OS_WIN

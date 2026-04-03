@@ -5,14 +5,8 @@ include_directories(../include)
 include_directories(../src)
 include_directories(.)
 
-set(SCINTILLA_SOURCES
-    PlatWin.cxx
-    ScintillaWin.cxx
-    HanjaDic.cxx
-    ListBox.cxx
-    SurfaceGDI.cxx
-    # Add more source files as needed
-)
+file(GLOB SCINTILLA_CORE_SOURCES "../src/*.cxx")
+file(GLOB SCINTILLA_WIN32_SOURCES "*.cxx")
 
-add_library(scintilla STATIC ${SCINTILLA_SOURCES})
+add_library(scintilla STATIC ${SCINTILLA_CORE_SOURCES} ${SCINTILLA_WIN32_SOURCES})
 target_compile_definitions(scintilla PRIVATE UNICODE _UNICODE SCI_LEXER)
