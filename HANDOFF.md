@@ -10,26 +10,27 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: XML Theme Engine & Indicator Highlighting (v1.1.3)
+## THIS SESSION: Splash Screens, Plugin Bridges & Boot Telemetry (v1.1.4)
 
 ### Major Achievements
-1. **XML Style Engine:** Engineered `GlassThemeManager.h` utilizing `QXmlStreamReader`. It natively parses Notepad++ `stylers.xml` files, mapping hex colors and font weights to Scintilla style IDs.
-2. **Search Hit Indicators:** Implemented **Scintilla Indicators (ID 8)** for search result navigation. 
-   * **Visuals:** Double-clicking a search result now applies a semi-transparent **Electric Orange rounded-box** highlight over the exact match in the source code.
-   * **Telemetry Update:** Upgraded `GlassSearchWorker` to return precise column offsets and match lengths, ensuring sub-pixel alignment of the glass indicator.
-3. **Automated Lexer Mapping:** Scintilla now auto-populates `SCI_STYLESETBACK` globally across the entire style range based on the XML palette, preventing "white-out" flashes when changing lexers.
-4. **Default stylers.xml:** Authored a standalone `PowerEditor/src/stylers.xml` containing the Liquid Glass design tokens (dark-navy bg, bright-orange keywords) to ensure zero-config syntax highlighting out of the box.
+1. **Glass Splash Screen:** Built a high-fidelity startup screen (`GlassSplashScreen.h`) featuring the Liquid Glass backdrop, a blurred radial glow, and real-time engine initialization telemetry.
+2. **Plugin Data Bridge:** Engineered `GlassPluginManager.h` which recreates the legacy **Notepad++ SDK (`NppData`)**. 
+   * **Handle Mapping:** Automatically maps the `HWND` handles for the Main Window and the active Scintilla control to the plugin's `setInfo` call.
+   * **Legacy Support:** Decoupled DLL loading via `QLibrary` to resolve `getName`, `beNotified`, and `setInfo` exports from standard NPP plugins.
+3. **Notification Loop:** Wired the native Win32 notification pipeline so that Scintilla's `WM_NOTIFY` events are broadcasted to all loaded plugins in real-time.
+4. **Bootstrapping:** Automated the discovery and loading of `.dll` modules from the `plugins/` directory during the window's `showEvent`.
+5. **Stability Polish:** Fixed a major brace-imbalance regression that had accidentally closed the main window class prematurely, restoring all toolbar and menu functionality.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassThemeManager.h` | Native XML parser for NPP styler configurations. |
-| `PowerEditor/src/BobScintilla.h` | Added `highlightRange()` and XML style application loop. |
-| `PowerEditor/src/GlassSearchWorker.h` | Refined result structure to include `column` and `length`. |
-| `PowerEditor/src/stylers.xml` | Default Liquid Glass theme definitions. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated the theme loader and indicator-jump logic. |
+| `PowerEditor/src/GlassSplashScreen.h` | Custom `QSplashScreen` with Liquid Glass painting. |
+| `PowerEditor/src/GlassPluginManager.h` | The `NppData` bridge and DLL loading logic. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated startup splash and plugin manager orchestration. |
+| `PowerEditor/src/BobScintilla.h` | Added plugin notification hooks and HWND accessors. |
+| `NPP_ROADMAP.md` | Marked Phase 7 (Splash & Plugins) as Complete. |
 
 ---
 
@@ -43,12 +44,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 7)
+## Next Steps for Implementor (Phase 8)
 
 ### Immediate (P0)
-1. **Plugin Data Bridge:** The core missing piece for plugin support is the `NppData` structure. We need to instantiate this struct and pass it to loaded DLLs via `QPluginLoader`.
-2. **Glass Splash Screen:** The initial library load (Scintilla + Lexilla) takes a split second. Implement a gorgeous Liquid Glass splash screen using `QSplashScreen` with a custom `LiquidGlassEffect`.
+1. **Glass Command Palette:** Implement a `Ctrl+Shift+P` overlay (similar to VS Code) using a glass-styled `QListWidget` for rapid action searching.
+2. **System Tray Integration:** Add a `QSystemTrayIcon` with a custom-painted Liquid Glass context menu for quick file access.
 
 ### Short-term (P1)
-3. **Printing Interface:** Map `SCI_FORMATRANGE` to `QPrinter` so documents can be printed with our custom fonts and themes.
-4. **Windows Snap Layouts:** Intercept `WM_NCHITTEST` on the main window's maximize button to enable the Windows 11 snap layout menu for our frameless-adjacent DWM window.
+3. **Multi-Cursor Virtualization:** Begin architecting the focus-tree virtualization to support multiple independent hardware cursors (Phase 8 Roadmap).
+4. **Snap Layouts:** Intercept `WM_NCHITTEST` on the main window title bar to enable native Windows 11 snap behavior for the frameless-styled window.

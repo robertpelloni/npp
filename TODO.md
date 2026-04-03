@@ -1,6 +1,5 @@
-# Immediate Tasks (Phase 7: UX & Advanced UX)
-- [ ] Implement `QPluginLoader` bridge: expose `NppData` structure for existing plugins.
-- [ ] Connect native Qt QPrinter mapping.
-- [ ] Refine the Status Bar to calculate dynamic Line/Col numbers when `SCI_WORDWRAP` is enabled (display/virtual lines vs physical lines).
-- [ ] Implement a Glass Splash screen on startup using a frameless `QSplashScreen` with `LiquidGlassEffect`.
-- [ ] Add Window Snap layout integration via `WM_NCHITTEST` interceptions.
+# Immediate Tasks (Phase 8: Advanced OS Features)
+- [ ] Implement System Tray icon with Liquid Glass context menu.
+- [ ] Add support for Windows 11 Snap Layouts (interception of `WM_NCHITTEST`).
+- [ ] Implement multi-cursor virtualization for shared collaborative sessions.
+- [ ] Create a "Glass Command Palette" (Ctrl+Shift+P) for rapid feature access.

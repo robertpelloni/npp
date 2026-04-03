@@ -115,6 +115,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "Sci_Position.h"
 #include "BobScintilla.h"
 #include "GlassThemeManager.h"
+#include "GlassSplashScreen.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VERSION — loaded from ../../VERSION (one source of truth)
@@ -710,6 +711,20 @@ protected:
             
             // Initial bubbles state
             if (m_bubbles) m_bubbles->setVisible(s.bubbleAnimations());
+
+            // Initialize Plugin Bridge
+            NppData data;
+            data._nppHandle = reinterpret_cast<HWND>(winId());
+            data._scintillaMainHandle = nullptr;
+            if (auto* panel = currentPanel()) {
+                data._scintillaMainHandle = panel->editor()->getHwnd();
+            }
+            data._scintillaSecondHandle = nullptr;
+            
+            GlassPluginManager::instance().loadPlugins("plugins", data);
+            
+            // Update Plugins Menu with loaded plugins
+            updatePluginsMenu();
         });
     }
 
@@ -1552,15 +1567,9 @@ private:
             m_statusWidget->showMessage("Run — coming soon", 2000); }, QKeySequence(Qt::Key_F5));
 
         // ─── PLUGINS ──────────────────────────────────────────────────────
-        QMenu* plugins = menuBar()->addMenu("&Plugins");
-        plugins->setStyleSheet(LiquidGlassStyleSheet::kMenu);
-        plugins->addAction("Plugin Admin...", [this](){
-            m_statusWidget->showMessage("Plugin Admin — coming soon", 2000);
-        });
-        plugins->addSeparator();
-        plugins->addAction("Open Plugins Folder...", [this](){
-            m_statusWidget->showMessage("Plugins directory mapped.", 2000);
-        });
+        m_pluginsMenu = menuBar()->addMenu("&Plugins");
+        m_pluginsMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        updatePluginsMenu();
 
         // ─── WINDOW ───────────────────────────────────────────────────────
         QMenu* win = menuBar()->addMenu("&Window");
@@ -1632,6 +1641,32 @@ private:
                [this](){ showAbout(); });
     }
 
+    void updatePluginsMenu() {
+        if (!m_pluginsMenu) return;
+        m_pluginsMenu->clear();
+        
+        m_pluginsMenu->addAction("Plugin Admin...", [this](){
+            m_statusWidget->showMessage("Plugin Admin — coming soon", 2000);
+        });
+        m_pluginsMenu->addSeparator();
+        
+        // List loaded plugins
+        const auto& loaded = GlassPluginManager::instance().plugins();
+        for (const auto& gp : loaded) {
+            m_pluginsMenu->addAction(gp.name);
+        }
+        
+        if (loaded.isEmpty()) {
+            auto* a = m_pluginsMenu->addAction("No plugins loaded");
+            a->setEnabled(false);
+        }
+
+        m_pluginsMenu->addSeparator();
+        m_pluginsMenu->addAction("Open Plugins Folder...", [this](){
+            m_statusWidget->showMessage("Plugins directory mapped.", 2000);
+        });
+    }
+
     // ── Toolbar setup ────────────────────────────────────────────────────────
     void setupToolBar() {
         QToolBar* tb = addToolBar("Standard");
@@ -1685,6 +1720,7 @@ private:
     QTreeView*       m_searchTree = nullptr;
     QStandardItemModel* m_searchModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
+    QMenu*           m_pluginsMenu = nullptr;
 };
 
 
@@ -1724,12 +1760,37 @@ int main(int argc, char* argv[]) {
     app.setOrganizationName("robertpelloni");
     app.setOrganizationDomain("github.com/robertpelloni");
 
+    // Launch Splash Screen
+    GlassSplashScreen splash;
+    splash.show();
+    splash.setProgress(10);
+    app.processEvents();
+
+    // Register Native Scintilla Window Class
+#ifdef Q_OS_WIN
+    splash.setMessage("Registering Scintilla components...");
+    splash.setProgress(30);
+    app.processEvents();
+    Scintilla_RegisterClasses(GetModuleHandle(NULL));
+#endif
+
+    // Load Default Liquid Glass Theme
+    splash.setMessage("Loading Liquid Glass themes...");
+    splash.setProgress(60);
+    app.processEvents();
+    GlassThemeManager::instance().loadTheme("PowerEditor/src/stylers.xml");
+
     // Apply the global liquid glass stylesheet
+    splash.setMessage("Finalizing UI layout...");
+    splash.setProgress(90);
+    app.processEvents();
     app.setStyleSheet(LiquidGlassStyleSheet::kFullGlassTheme());
 
     // Launch the main window
     BobNppGlassWindow win;
     win.show();
+
+    splash.finish(&win);
 
     return app.exec();
 }

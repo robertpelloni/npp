@@ -14,6 +14,7 @@
 #include "Lexilla.h"
 #include "SciLexer.h"
 #include "GlassThemeManager.h"
+#include "GlassPluginManager.h"
 
 // Note: To compile this, the target must link against Scintilla and Lexilla.
 
@@ -148,6 +149,8 @@ public:
     void copy() { send(SCI_COPY); }
     void paste(){ send(SCI_PASTE); }
     void selectAll() { send(SCI_SELECTALL); }
+
+    HWND getHwnd() const { return m_sciHwnd; }
 
     void highlightRange(sptr_t start, sptr_t length) {
         // Use indicator 8 (standard for search)
@@ -310,6 +313,9 @@ protected:
         if (msg->message == WM_NOTIFY) {
             SCNotification* scn = reinterpret_cast<SCNotification*>(msg->lParam);
             if (scn->nmhdr.hwndFrom == m_sciHwnd) {
+                // Notify Plugins
+                GlassPluginManager::instance().notifyAll(scn);
+
                 if (scn->nmhdr.code == SCN_MODIFIED) {
                     if (onContentsChanged) onContentsChanged();
                     if (onModificationChanged) onModificationChanged(true);
