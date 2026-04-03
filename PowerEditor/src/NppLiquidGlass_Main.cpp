@@ -1901,6 +1901,27 @@ private:
                 }
             }
         });
+        addAct(file, "Close All But Current", [this](){
+            auto* tw = currentTabWidget();
+            int current = tw->currentIndex();
+            for (int i = tw->count() - 1; i >= 0; --i) {
+                if (i != current) onTabCloseRequested(tw, i);
+            }
+        });
+        addAct(file, "Close All to the Left", [this](){
+            auto* tw = currentTabWidget();
+            int current = tw->currentIndex();
+            for (int i = current - 1; i >= 0; --i) {
+                onTabCloseRequested(tw, i);
+            }
+        });
+        addAct(file, "Close All to the Right", [this](){
+            auto* tw = currentTabWidget();
+            int current = tw->currentIndex();
+            for (int i = tw->count() - 1; i > current; --i) {
+                onTabCloseRequested(tw, i);
+            }
+        });
         file->addSeparator();
         addAct(file, "Save Workspace...", [this](){
             QString path = QFileDialog::getSaveFileName(this, "Save Workspace", "", "NPP Workspace (*.nppw)");
@@ -2442,6 +2463,9 @@ private:
         }, QKeySequence(Qt::CTRL | Qt::Key_PageUp));
         
         win->addSeparator();
+        addAct(win, "Rotate View (Split)", [this](){
+            m_mainSplitter->setOrientation(m_mainSplitter->orientation() == Qt::Horizontal ? Qt::Vertical : Qt::Horizontal);
+        });
         auto* syncScrollAct = win->addAction("Synchronize Vertical Scrolling");
         syncScrollAct->setCheckable(true);
         connect(syncScrollAct, &QAction::toggled, this, [this](bool on){
@@ -2646,7 +2670,8 @@ private:
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
         MSG* msg = static_cast<MSG*>(message);
         if (msg->message == WM_NCHITTEST) {
-            // Windows 11 Snap Layouts support
+            *result = DefWindowProc(msg->hwnd, msg->message, msg->wParam, msg->lParam);
+            if (*result == HTMAXBUTTON) return true;
         }
         return QMainWindow::nativeEvent(eventType, message, result);
     }

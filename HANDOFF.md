@@ -23,6 +23,7 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
    * **Caret Line Sync:** Enabled subtle alpha-blended highlighting for the current line.
    * **Plugin Toolbar:** Provided an API for plugins to inject custom buttons into the main toolbar.
 7. **Geany Parity (Build System):** Implemented a native Build/Execute pipeline with configurable commands and macro expansion.
+8. **Power-User Navigation:** Added "Close All But This" and "Close All to Left/Right" tab management commands.
 
 ---
 

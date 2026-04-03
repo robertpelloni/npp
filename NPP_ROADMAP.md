@@ -50,6 +50,7 @@
 - [x] "Move to Other View" and "Clone to Other View" logic.
 - [x] Vertical and horizontal synchronized scrolling.
 - [x] Distraction Free Mode toggle (Ctrl+Shift+D).
+- [x] Added "Rotate View" for Dual-View orientation toggling.
 
 ## Phase 9: Editing Powerhouse (Complete)
 - [x] Enabled multi-selection and rectangular selection (Column Mode).
@@ -62,12 +63,13 @@
 - [x] Engineered a native "Glass Terminal" utilizing QProcess.
 - [x] Enhanced Status Bar with "Display Line" virtualization.
 - [x] Polished Scintilla visuals with "Caret Line Highlighting".
+- [x] Enabled Windows 11 Snap Layouts support via WM_NCHITTEST.
 
 ## Phase 11: Interoperability (Complete)
 - [x] Engineered XML configuration interop for standard NPP config.xml.
 - [x] Implemented XML macro persistence for NPP shortcuts.xml.
 - [x] Implemented native .nppw Workspace files (JSON session serialization).
-- [x] Built the GlassUDLManager for User Defined Language parsing.
+- [x] Built the GlassUDLManager with support for custom XML syntax styles.
 
 ## Phase 12: Geany & Plugin Parity (Complete)
 - [x] Engineered native Build System with configurable commands (F8/F5).
@@ -77,14 +79,13 @@
 - [x] Integrated File Change Monitoring (Tail -f) with auto-reload.
 - [x] Implemented "Open in New Instance" multi-process logic.
 - [x] Built a "Check for Updates" system in the Help menu.
-- [x] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
 - [x] Automated Shortcut Mapper population from indexed QActions.
 
 ## Phase 13: High-Fidelity UI (Complete)
 - [x] Integrated real-time "Markdown Preview" dock.
 - [x] Implemented "Smart Highlighting" for all word occurrences.
 - [x] Enabled alpha-blended "Caret Line" and "Selection" overlays.
-- [x] Added "Paste Special" scaffold.
+- [x] Added "Close All" variants (But current, Left, Right).
 
 ## Phase 14: Final Distribution (Pending)
 - [ ] Connect native Qt QPrinter mapping for document printing.
