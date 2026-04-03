@@ -14,6 +14,7 @@
 #include "Lexilla.h"
 #include "SciLexer.h"
 #include "GlassThemeManager.h"
+#include "GlassUDLManager.h"
 #include "GlassPluginManager.h"
 
 // Note: To compile this, the target must link against Scintilla and Lexilla.
@@ -396,6 +397,9 @@ public:
             for (int i = 0; i <= STYLE_MAX; ++i) {
                 send(SCI_STYLESETBACK, i, bg);
             }
+        } else {
+            // Try UDL
+            GlassUDLManager::instance().applyUDL([this](unsigned int m, uptr_t w, sptr_t l){ return this->send(m,w,l); }, ext);
         }
     }
 

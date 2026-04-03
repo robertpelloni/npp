@@ -90,3 +90,4 @@
 - [ ] Connect native Qt QPrinter mapping for document printing.
 - [ ] Create "Glass Theme Store" downloader.
 - [ ] Package as a portable .zip with all dependencies.
+- [ ] Implement "Code Snippets" (Geany parity).

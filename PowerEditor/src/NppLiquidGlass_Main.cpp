@@ -743,6 +743,10 @@ public:
         m_tabs->setTabsClosable(true);
         m_tabs->setDocumentMode(true);
         m_tabs->setStyleSheet(LiquidGlassStyleSheet::kTabWidget);
+        m_tabs->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(m_tabs, &QTabWidget::customContextMenuRequested, this, [this](const QPoint& pos){
+            showTabContextMenu(m_tabs, pos);
+        });
         connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](int idx) {
             onTabCloseRequested(m_tabs, idx);
         });
@@ -756,6 +760,10 @@ public:
         m_tabsSecondary->setTabsClosable(true);
         m_tabsSecondary->setDocumentMode(true);
         m_tabsSecondary->setStyleSheet(LiquidGlassStyleSheet::kTabWidget);
+        m_tabsSecondary->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(m_tabsSecondary, &QTabWidget::customContextMenuRequested, this, [this](const QPoint& pos){
+            showTabContextMenu(m_tabsSecondary, pos);
+        });
         m_tabsSecondary->hide(); // Hidden by default
         connect(m_tabsSecondary, &QTabWidget::tabCloseRequested, this, [this](int idx) {
             onTabCloseRequested(m_tabsSecondary, idx);
@@ -2446,6 +2454,8 @@ private:
             m_syncScrollingH = on;
         });
 
+
+
         auto* minimapAct = view->addAction("Document Minimap");
         minimapAct->setCheckable(true);
         minimapAct->setChecked(GlassSettings::instance().showMinimap());
@@ -2543,16 +2553,100 @@ private:
                [this](){ showAbout(); });
     }
 
+    void showTabContextMenu(QTabWidget* tw, const QPoint& pos) {
+        int idx = tw->tabBar()->tabAt(pos);
+        if (idx == -1) return;
+
+        QMenu menu(this);
+        menu.setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        
+        menu.addAction("Close", [this, tw, idx](){ onTabCloseRequested(tw, idx); });
+        menu.addAction("Close All BUT This", [this, tw, idx](){
+            for (int i = tw->count() - 1; i >= 0; --i) {
+                if (i != idx) onTabCloseRequested(tw, i);
+            }
+        });
+        menu.addSeparator();
+        menu.addAction("Close All to the Left", [this, tw, idx](){
+            for (int i = idx - 1; i >= 0; --i) {
+                onTabCloseRequested(tw, i);
+            }
+        });
+        menu.addAction("Close All to the Right", [this, tw, idx](){
+            for (int i = tw->count() - 1; i > idx; --i) {
+                onTabCloseRequested(tw, i);
+            }
+        });
+        menu.addSeparator();
+        menu.addAction("Move to Other View", [this, tw, idx](){
+            auto* twDst = (tw == m_tabs) ? m_tabsSecondary : m_tabs;
+            auto* p = static_cast<GlassEditorPanel*>(tw->widget(idx));
+            QString name = tw->tabText(idx);
+            tw->removeTab(idx);
+            p->setParent(twDst);
+            twDst->addTab(p, name);
+            twDst->show();
+            twDst->setCurrentWidget(p);
+        });
+
+        menu.exec(tw->tabBar()->mapToGlobal(pos));
+    }
+
     void updatePluginsMenu() {
-        // ... (existing code)
+        if (!m_pluginsMenu) return;
+        m_pluginsMenu->clear();
+        
+        m_pluginsMenu->addAction("Plugin Admin...", [this](){
+            m_statusWidget->showMessage("Plugin Admin — coming soon", 2000);
+        });
+        m_pluginsMenu->addSeparator();
+
+        // Native Compare Plugin
+        QMenu* compareMenu = m_pluginsMenu->addMenu("Compare");
+        compareMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        compareMenu->addAction("Compare", this, &BobNppGlassWindow::actionCompare, QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_C));
+        compareMenu->addAction("Clear Results", this, [this](){
+            for (auto* tw : {m_tabs, m_tabsSecondary}) {
+                for (int i = 0; i < tw->count(); ++i) {
+                    auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                    GlassCompareManager::clear(p->editor());
+                }
+            }
+        });
+        compareMenu->addSeparator();
+        auto* syncScrollVAct_C = compareMenu->addAction("Sync Vertical Scrolling");
+        syncScrollVAct_C->setCheckable(true);
+        syncScrollVAct_C->setChecked(m_syncScrollingV);
+        connect(syncScrollVAct_C, &QAction::toggled, this, [this](bool on){ m_syncScrollingV = on; });
+        
+        auto* syncScrollHAct_C = compareMenu->addAction("Sync Horizontal Scrolling");
+        syncScrollHAct_C->setCheckable(true);
+        syncScrollHAct_C->setChecked(m_syncScrollingH);
+        connect(syncScrollHAct_C, &QAction::toggled, this, [this](bool on){ m_syncScrollingH = on; });
+
+        m_pluginsMenu->addSeparator();
+        
+        // List loaded plugins
+        const auto& loaded = GlassPluginManager::instance().plugins();
+        for (const auto& gp : loaded) {
+            m_pluginsMenu->addAction(gp.name);
+        }
+        
+        if (loaded.isEmpty()) {
+            auto* a = m_pluginsMenu->addAction("No plugins loaded");
+            a->setEnabled(false);
+        }
+
+        m_pluginsMenu->addSeparator();
+        m_pluginsMenu->addAction("Open Plugins Folder...", [this](){
+            m_statusWidget->showMessage("Plugins directory mapped.", 2000);
+        });
     }
 
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
         MSG* msg = static_cast<MSG*>(message);
         if (msg->message == WM_NCHITTEST) {
-            // Windows 11 Snap Layouts support:
-            // Returning HTMAXBUTTON when the mouse is over the maximize button area
-            // enables the snap menu. 
+            // Windows 11 Snap Layouts support
         }
         return QMainWindow::nativeEvent(eventType, message, result);
     }
@@ -2569,6 +2663,7 @@ private:
     // ── Toolbar setup ────────────────────────────────────────────────────────
     void setupToolBar() {
         QToolBar* tb = addToolBar("Standard");
+        tb->setObjectName("Standard");
         tb->setMovable(false);
         tb->setStyleSheet(LiquidGlassStyleSheet::kToolBar);
         tb->setIconSize(QSize(16, 16));
