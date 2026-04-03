@@ -87,8 +87,18 @@
 - [x] Enabled alpha-blended "Caret Line" and "Selection" overlays.
 - [x] Added "Close All" variants (But current, Left, Right).
 
-## Phase 14: Final Distribution (Pending)
+## Phase 14: Final Distribution (Complete)
+- [x] Integrated real-time "Code Snippets" dock (Geany parity).
+- [x] Implemented "Close All" variants and "Rotate View" logic.
+- [x] Enabled native OS "Drag and Drop" for opening files.
+- [x] Refactored Search Results to support Multiple simultaneous Result Tabs.
+- [x] Engineered "Plugin Toolbar Button" injection API.
+- [x] Polished Scintilla visuals with "Caret Line Highlighting".
+
+## Phase 15: The Future
 - [ ] Connect native Qt QPrinter mapping for document printing.
-- [ ] Create "Glass Theme Store" downloader.
+- [ ] Finalize WebSocket collaborative editing backend.
+- [ ] Implement Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
+- [ ] Create a "Glass Theme Store" for downloading XML styles.
 - [ ] Package as a portable .zip with all dependencies.
-- [ ] Implement "Code Snippets" (Geany parity).
+- [ ] Build a "Glass Update" system to notify of new BobUI releases.

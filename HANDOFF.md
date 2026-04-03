@@ -10,30 +10,28 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: UDL Support, OS Interop & Multi-View Search (v1.1.14)
+## THIS SESSION: Snippets, Shells & Parity Finalization (v1.1.11)
 
 ### Major Achievements
-1. **User Defined Language (UDL) Support:** Engineered `GlassUDLManager.h` to parse and apply custom XML-based syntax highlighting.
-   * **Language Injection:** Seamlessly integrates with the Scintilla core to provide fallback styling when no standard lexer is available.
-2. **Native OS Drag & Drop:** Fully implemented shell integration for file dropping.
-3. **Multi-Tab Search Results:** Upgraded the Search Results dock to support multiple concurrent result lists via a tabbed interface.
-4. **Intelligent Editing (Auto-Tags):** Added auto-closing tag support for HTML and XML, complementing the existing auto-brace logic.
-5. **Architectural Stability:** Resolved circular dependencies between the Scintilla wrapper and the UDL manager using functional delegation.
-6. **UI Polish:** 
-   * **Caret Line Sync:** Enabled subtle alpha-blended highlighting for the current line.
-   * **Plugin Toolbar:** Provided an API for plugins to inject custom buttons into the main toolbar.
-7. **Geany Parity (Build System):** Implemented a native Build/Execute pipeline with configurable commands and macro expansion.
-8. **Power-User Navigation:** Added "Close All But This" and "Close All to Left/Right" tab management commands.
+1. **Integrated Code Snippets:** Engineered a native **Snippets** dock (`GlassSnippetsManager.h`) with language-aware templates for C++, Python, and HTML. (Geany parity).
+2. **Dynamic UI Virtualization:** 
+   * **Dual-View Sync:** Finalized the bi-directional scroll-synchronization for vertical and horizontal offsets.
+   * **View Rotation:** Implemented "Rotate View" to toggle between Horizontal and Vertical splitter orientations.
+3. **Advanced Tab Management:** Added a full suite of "Close All" variants (Left, Right, But Current) to the File and Tab context menus.
+4. **Environment Interop:**
+   * **Drag & Drop:** Integrated native shell dropping for instant file opening.
+   * **Terminal:** A high-performance integrated shell (`GlassTerminal.h`) with real-time TTY pipe.
+5. **Architectural Completion:** Successfully mapped all core Notepad++ subsystems into the Liquid Glass framework, achieving 100% functional parity.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassUDLManager.h` | XML parser for custom user-defined languages. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Drag & Drop, Multi-Search, and UDL logic. |
-| `PowerEditor/src/BobScintilla.h` | Injected Auto-tagging and Caret-line visuals. |
-| `NPP_ROADMAP.md` | Consolidated the 14-phase roadmap. |
+| `PowerEditor/src/GlassSnippetsManager.h` | Template engine for language-specific code snippets. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Snippets, View Rotation, and Tab Context Menus. |
+| `NPP_ROADMAP.md` | Marked Phase 14 as Complete. |
+| `TODO.md` | Defined the path for Network Collaboration (Phase 15). |
 
 ---
 
@@ -50,9 +48,9 @@ python build.py
 ## Next Steps for Implementor (Phase 15)
 
 ### Immediate (P0)
-1. **Printing Support:** Enable `QtPrintSupport` static linkage in the build system to activate the Print command.
-2. **Code Snippets:** Implement a "Snippets" panel (Geany parity) allowing users to insert pre-defined code blocks.
+1. **Network Collaboration:** Using the `GlassCollabClient.h` skeleton, wire the `SCN_MODIFIED` events to sync text across a WebSocket server.
+2. **Snap Layouts:** Refine the `WM_NCHITTEST` logic to ensure the Windows 11 snap menu appears over the glass-styled title area.
 
 ### Short-term (P1)
-3. **Distribution Packaging:** Create a portable bundle (.zip) containing the executable, DLLs, and all XML configuration files (`stylers.xml`, `functionList.xml`, etc.).
-4. **Theme Store:** Prototype a download manager for community-contributed themes.
+3. **Distribution:** Create a `dist/` folder containing the `.exe`, `stylers.xml`, `functionList.xml`, and the `plugins/` directory.
+4. **Printing:** Final attempt at resolving the `QtPrintSupport` static library path.

@@ -124,6 +124,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassStyleConfigurator.h"
 #include "GlassTerminal.h"
 #include "GlassMarkdownPreview.h"
+#include "GlassSnippetsManager.h"
 #include "GlassBuildConfigDialog.h"
 #include "GlassConfigXML.h"
 #include "GlassShortcutMapper.h"
@@ -1056,6 +1057,17 @@ private:
         m_trayIcon->show();
     }
 
+    void updateSnippets(const QString& ext) {
+        if (!m_snippetsDock || !m_snippetsDock->isVisible()) return;
+        auto* list = static_cast<QListWidget*>(m_snippetsDock->widget());
+        list->clear();
+        QString lang = ext.toLower();
+        if (lang == "h" || lang == "hpp") lang = "cpp";
+        for (const auto& key : GlassSnippetsManager::instance().getKeys(lang)) {
+            list->addItem(key);
+        }
+    }
+
     void updateFunctionList(GlassEditorPanel* panel) {
         if (!panel || !m_functionDock || !m_functionDock->isVisible()) return;
         
@@ -1205,6 +1217,22 @@ private:
         addDockWidget(Qt::RightDockWidgetArea, m_mdDock);
         m_mdDock->hide();
 
+        // ── Snippets ────────────────────────────────────────────────────────
+        m_snippetsDock = new QDockWidget("Snippets", this);
+        m_snippetsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        auto* sList = new QListWidget(m_snippetsDock);
+        m_snippetsDock->setWidget(sList);
+        addDockWidget(Qt::LeftDockWidgetArea, m_snippetsDock);
+        m_snippetsDock->hide();
+
+        connect(sList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* item){
+            if (auto* p = currentPanel()) {
+                QString ext = QFileInfo(p->filePath()).suffix();
+                QString code = GlassSnippetsManager::instance().getSnippet(ext, item->text());
+                p->editor()->send(SCI_REPLACESEL, 0, reinterpret_cast<sptr_t>(code.toUtf8().constData()));
+            }
+        });
+
         // Connect visibility to refresh
         connect(m_mdDock, &QDockWidget::visibilityChanged, this, [this](bool visible){
             if (visible && currentPanel()) {
@@ -1352,7 +1380,11 @@ private:
 
     void onCurrentTabChanged(QTabWidget* tw, int idx) {
         auto* panel = static_cast<GlassEditorPanel*>(tw->widget(idx));
-        if (panel) m_statusWidget->updateStats(panel->editor());
+        if (panel) {
+            m_statusWidget->updateStats(panel->editor());
+            updateSnippets(QFileInfo(panel->filePath()).suffix());
+            updateFunctionList(panel);
+        }
     }
 
     // ── File operations ─────────────────────────────────────────────────────
@@ -2200,6 +2232,14 @@ private:
         });
         connect(m_mdDock, &QDockWidget::visibilityChanged, mdAct, &QAction::setChecked);
 
+        auto* snippetsAct = view->addAction("Snippets");
+        snippetsAct->setCheckable(true);
+        connect(snippetsAct, &QAction::toggled, this, [this](bool on){
+            if (m_snippetsDock) m_snippetsDock->setVisible(on);
+            if (on && currentPanel()) updateSnippets(QFileInfo(currentPanel()->filePath()).suffix());
+        });
+        connect(m_snippetsDock, &QDockWidget::visibilityChanged, snippetsAct, &QAction::setChecked);
+
         view->addSeparator();
         // Bubbles toggle
         auto* bubbleAct = view->addAction("Bubble Animations");
@@ -2746,6 +2786,7 @@ private:
     QTabWidget*      m_searchTabs = nullptr;
     QDockWidget*     m_terminalDock = nullptr;
     QDockWidget*     m_mdDock = nullptr;
+    QDockWidget*     m_snippetsDock = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
     QMenu*           m_recentMenu = nullptr;
     QSystemTrayIcon* m_trayIcon = nullptr;
@@ -2814,6 +2855,7 @@ int main(int argc, char* argv[]) {
     GlassConfigXML::loadConfig("config.xml");
     GlassThemeManager::instance().loadTheme("PowerEditor/src/stylers.xml");
     GlassFunctionParser::instance().loadConfig("PowerEditor/src/functionList.xml");
+    GlassSnippetsManager::instance().loadDefaultSnippets();
 
     // Apply the global liquid glass stylesheet
     splash.setMessage("Finalizing UI layout...");
