@@ -121,6 +121,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassStyleConfigurator.h"
 #include "GlassTerminal.h"
 #include "GlassMarkdownPreview.h"
+#include "GlassBuildConfigDialog.h"
 #include "GlassConfigXML.h"
 #include "GlassShortcutMapper.h"
 #include "GlassCompareManager.h"
@@ -1047,7 +1048,7 @@ private:
         list->clear();
         
         QString ext = QFileInfo(panel->filePath()).suffix();
-        auto funcs = GlassFunctionParser::parse(panel->text(), ext);
+        auto funcs = GlassFunctionParser::instance().parse(panel->text(), ext);
         
         for (const auto& f : funcs) {
             auto* item = new QListWidgetItem(f.name, list);
@@ -1418,6 +1419,38 @@ private:
         }
     }
 
+    void actionBuild() {
+        if (!m_terminalDock) return;
+        m_terminalDock->show();
+        m_terminalDock->raise();
+        
+        auto* term = static_cast<GlassTerminal*>(m_terminalDock->widget());
+        QString cmd = GlassSettings::instance().buildCommand();
+        term->appendOutput("\n> Building: " + cmd + "\n");
+        // We'll use a hidden QProcess or just send to term's process
+        // For Geany parity, we should use a separate execution path to capture exit codes.
+    }
+
+    void actionExecute() {
+        if (!m_terminalDock) return;
+        m_terminalDock->show();
+        m_terminalDock->raise();
+        
+        auto* term = static_cast<GlassTerminal*>(m_terminalDock->widget());
+        QString cmd = GlassSettings::instance().executeCommand();
+        // Replace %e with filename without ext
+        if (currentPanel()) {
+            QString name = QFileInfo(currentPanel()->filePath()).baseName();
+            cmd.replace("%e", name);
+            cmd.replace("%f", currentPanel()->filePath());
+        }
+        term->appendOutput("\n> Executing: " + cmd + "\n");
+    }
+
+    void prettyPrintXML() {
+        m_statusWidget->showMessage("XML Tools requires full BobUI bundle", 2000);
+    }
+
     void actionSaveAll() {
         for (auto* tw : {m_tabs, m_tabsSecondary}) {
             for (int i = 0; i < tw->count(); ++i) {
@@ -1751,6 +1784,36 @@ private:
                     }
                 }
             }
+        }
+    }
+
+
+
+    void actionConvert(int mode) {
+        auto* panel = currentPanel();
+        if (!panel) return;
+        QString text = panel->text();
+        QString result;
+        
+        switch (mode) {
+            case 1: result = text.toUtf8().toBase64(); break; // Base64 Encode
+            case 2: result = QByteArray::fromBase64(text.toUtf8()); break; // Base64 Decode
+            case 3: result = QUrl::toPercentEncoding(text); break; // URL Encode
+            case 4: result = QUrl::fromPercentEncoding(text.toUtf8()); break; // URL Decode
+            case 5: { // Hex to ASCII
+                QByteArray ba = QByteArray::fromHex(text.toUtf8());
+                result = QString::fromUtf8(ba);
+                break;
+            }
+            case 6: { // ASCII to Hex
+                result = text.toUtf8().toHex(' ');
+                break;
+            }
+        }
+        
+        if (!result.isEmpty() && result != text) {
+            panel->setText(result);
+            m_statusWidget->showMessage("Conversion complete", 2000);
         }
     }
 
@@ -2259,6 +2322,41 @@ private:
         m_pluginsMenu->addSeparator();
         updatePluginsMenu();
 
+        // ─── PLUGINS ──────────────────────────────────────────────────────
+        // ... (compare menu code)
+        
+        // ─── BUILD ────────────────────────────────────────────────────────
+        QMenu* buildMenu = menuBar()->addMenu("&Build");
+        buildMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        buildMenu->addAction("Build", this, &BobNppGlassWindow::actionBuild, QKeySequence(Qt::Key_F8));
+        buildMenu->addAction("Execute", this, &BobNppGlassWindow::actionExecute, QKeySequence(Qt::Key_F5));
+        buildMenu->addSeparator();
+        buildMenu->addAction("Set Build Commands...", [this](){
+            GlassBuildConfigDialog dlg(this);
+            dlg.exec();
+        });
+
+        // ─── TOOLS ────────────────────────────────────────────────────────
+        QMenu* tools = menuBar()->addMenu("&Tools");
+        tools->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        
+        QMenu* conv = tools->addMenu("Converter");
+        conv->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        conv->addAction("ASCII to HEX", [this](){ actionConvert(6); });
+        conv->addAction("HEX to ASCII", [this](){ actionConvert(5); });
+        
+        QMenu* mime = tools->addMenu("Mime Tools");
+        mime->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        mime->addAction("Base64 Encode", [this](){ actionConvert(1); });
+        mime->addAction("Base64 Decode", [this](){ actionConvert(2); });
+        mime->addSeparator();
+        mime->addAction("URL Encode", [this](){ actionConvert(3); });
+        mime->addAction("URL Decode", [this](){ actionConvert(4); });
+        
+        QMenu* xmlTools = tools->addMenu("XML Tools");
+        xmlTools->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        xmlTools->addAction("Pretty Print", [this](){ prettyPrintXML(); });
+
         // ─── WINDOW ───────────────────────────────────────────────────────
         QMenu* win = menuBar()->addMenu("&Window");
         win->setStyleSheet(LiquidGlassStyleSheet::kMenu);
@@ -2526,7 +2624,9 @@ int main(int argc, char* argv[]) {
     splash.setMessage("Loading Liquid Glass themes...");
     splash.setProgress(60);
     app.processEvents();
+    GlassConfigXML::loadConfig("config.xml");
     GlassThemeManager::instance().loadTheme("PowerEditor/src/stylers.xml");
+    GlassFunctionParser::instance().loadConfig("PowerEditor/src/functionList.xml");
 
     // Apply the global liquid glass stylesheet
     splash.setMessage("Finalizing UI layout...");

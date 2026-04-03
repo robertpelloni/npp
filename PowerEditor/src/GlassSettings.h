@@ -57,6 +57,13 @@ public:
     int backupInterval() const { return m_settings.value("Backup/Interval", 30000).toInt(); }
     void setBackupInterval(int ms) { m_settings.setValue("Backup/Interval", ms); }
 
+    // ── Build System (Geany Parity) ──
+    QString buildCommand() const { return m_settings.value("Build/Build", "make").toString(); }
+    void setBuildCommand(const QString& cmd) { m_settings.setValue("Build/Build", cmd); }
+    
+    QString executeCommand() const { return m_settings.value("Build/Execute", "./%e").toString(); }
+    void setExecuteCommand(const QString& cmd) { m_settings.setValue("Build/Execute", cmd); }
+
     // ── View Modes ──
     bool distractionFree() const { return m_settings.value("View/DistractionFree", false).toBool(); }
     void setDistractionFree(bool enable) { m_settings.setValue("View/DistractionFree", enable); }

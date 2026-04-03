@@ -401,6 +401,20 @@ protected:
                     else if (ch == '[') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("]")); }
                     else if (ch == '"') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("\"")); }
                     else if (ch == '\'') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("'")); }
+                    else if (ch == '>') {
+                        // Auto-close HTML/XML tags
+                        if (m_currentExt == "html" || m_currentExt == "xml") {
+                            sptr_t start = send(SCI_WORDSTARTPOSITION, pos - 1, true);
+                            Sci_TextRangeFull tr;
+                            QByteArray tag; tag.resize(pos - 1 - start);
+                            tr.chrg.cpMin = start; tr.chrg.cpMax = pos - 1; tr.lpstrText = tag.data();
+                            send(SCI_GETTEXTRANGEFULL, 0, reinterpret_cast<sptr_t>(&tr));
+                            if (!tag.isEmpty()) {
+                                QString closeTag = "</" + QString::fromUtf8(tag) + ">";
+                                send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>(closeTag.toUtf8().constData()));
+                            }
+                        }
+                    }
 
                     // Simple C++ / Python Autocomplete Trigger
                     if (isalpha(ch) || ch == '_') {

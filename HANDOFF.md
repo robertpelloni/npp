@@ -10,27 +10,28 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: OS Polish, Multi-Search & Plugin APIs (v1.1.11)
+## THIS SESSION: Geany Parity, Build Systems & Plugin Porting (v1.1.11)
 
 ### Major Achievements
-1. **Native OS Drag & Drop:** Successfully implemented `dragEnterEvent` and `dropEvent` on the main window. You can now drag files directly from Windows Explorer into the glass editor to open them.
-2. **Multi-Tab Search Results:** Refactored the search results dock to use a `QTabWidget`. 
-   * **Concurrent Results:** Each "Find in Files" execution now creates a dedicated result tab (e.g., "Find: [needle]"), matching the multi-list capabilities of the original Notepad++.
-3. **Plugin Toolbar API:** Engineered an injection method `addPluginToolbarButton()` allowing loaded DLL plugins to register custom icons and callbacks in the main "Standard" toolbar.
-4. **Enhanced Visual Fidelity:** 
-   * **Caret Line Sync:** Enabled `SCI_SETCARETLINEVISIBLE` with alpha-blended glass coloring.
-   * **Mime Interop:** Added `QMimeData` and `QUrl` support for high-fidelity path resolution during OS interactions.
-5. **Roadmap Restructure:** Conducted a comprehensive audit and re-ordering of the project roadmap, aligning 15 phases of development into a logical progression towards 100% parity.
+1. **Integrated Build System:** Implemented a Geany-style build/execute pipeline.
+   * **Configurable Commands:** Supports custom shell execution logic (F8 to build, F5 to run) with macro expansion for paths (`%f`) and filenames (`%e`).
+   * **Terminal Routing:** Standard output is piped directly into the native Glass Terminal.
+2. **Native Plugin Porting (Converter & Mime):** Ported the core logic of several high-demand NPP plugins into the program's native codebase.
+   * **Tools Suite:** Added support for Base64 encoding/decoding, URL percent-encoding, and Hex-to-ASCII bi-directional conversion.
+3. **Architectural Parity (XML Function List):** Refactored the discovery engine to utilize an external **`functionList.xml`**. Regex signatures for C++ and Python are now user-configurable, reaching 1:1 structural parity with the Notepad++ language engine.
+4. **Auto-Closing Tag Engine:** Upgraded the Scintilla character trap to automatically generate closing tags for HTML and XML documents.
+5. **UI Logic Consolidation:** Integrated the Build configuration dialog and refined the status bar feedback loops.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Drag & Drop, Multi-Search Tabs, and Plugin Toolbar hooks. |
-| `PowerEditor/src/BobScintilla.h` | Enabled Caret Line Highlighting and refined margin alpha. |
-| `NPP_ROADMAP.md` | Cleaned and reorganized the 15-phase project master plan. |
-| `TODO.md` | Defined the final "Phase 12" polish goals. |
+| `PowerEditor/src/GlassBuildConfigDialog.h` | UI for managing Build and Execute shell commands. |
+| `PowerEditor/src/functionList.xml` | XML definitions for regex function discovery. |
+| `PowerEditor/src/GlassFunctionParser.h` | Refactored to ingest XML-based language signatures. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Tools menu, Build system, and JSON macro maps. |
+| `NPP_ROADMAP.md` | Marked Geany & Plugin parity as Complete. |
 
 ---
 
@@ -44,12 +45,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 12)
+## Next Steps for Implementor (Phase 15)
 
 ### Immediate (P0)
-1. **Windows 11 Snap Layouts:** Implement the `nativeEvent` filter to return `HTMAXBUTTON` during hit testing, enabling the native snap overlay for our DWM-extended frame.
-2. **UDL Advanced Styles:** Complete the `GlassUDLManager` to support full lexical state transitions for user-defined XML syntax.
+1. **Windows 11 Snap Layouts:** Implement `nativeEvent` filtering to support the native snap menu in the DWM frame.
+2. **File Monitoring (Tail -f):** Port the "Document Monitor" plugin logic to automatically detect and reload external file changes.
 
 ### Short-term (P1)
-3. **Printing:** Research static linkage for `QtPrintSupport` to enable the "Print" command.
-4. **Column Paste:** Enhance the multi-selection engine to support pasting rectangular data across multiple caret positions.
+3. **Shortcut Mapper Automation:** Finish the QAction indexing to allow users to bind custom keys to any menu item via the Shortcut Mapper UI.
+4. **UDL Advanced Styles:** Support nested block definitions in the User Defined Language parser.

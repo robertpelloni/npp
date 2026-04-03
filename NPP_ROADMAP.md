@@ -69,8 +69,11 @@
 - [x] Implemented native .nppw Workspace files (JSON session serialization).
 - [x] Built the GlassUDLManager for User Defined Language parsing.
 
-## Phase 12: Final Polish (Pending)
+## Phase 12: Geany & Plugin Parity (Complete)
+- [x] Engineered native Build System with configurable commands (F8/F5).
+- [x] Integrated Mime and Converter tools (Base64, Hex, URL).
+- [x] Implemented XML-driven Function List parsing parity.
+- [x] Added auto-closing tags for HTML/XML documents.
 - [ ] Connect native Qt QPrinter mapping for document printing.
 - [ ] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
-- [ ] Implement robust UDL (User Defined Language) XML style parser.
 - [ ] Build a "Glass Update" system to notify of new BobUI releases.

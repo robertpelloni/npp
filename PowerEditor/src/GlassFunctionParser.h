@@ -1,5 +1,5 @@
 /**
- * GlassFunctionParser.h — High-performance Regex-based Function Discovery
+ * GlassFunctionParser.h — XML-configurable Regex Function Parser
  */
 
 #ifndef GLASS_FUNCTION_PARSER_H
@@ -7,7 +7,8 @@
 
 #include <QString>
 #include <QRegularExpression>
-#include <QListWidget>
+#include <QXmlStreamReader>
+#include <QFile>
 #include <QMap>
 
 struct FunctionItem {
@@ -17,40 +18,55 @@ struct FunctionItem {
 
 class GlassFunctionParser {
 public:
-    static QList<FunctionItem> parse(const QString& text, const QString& ext) {
-        QList<FunctionItem> results;
-        QString pattern;
+    static GlassFunctionParser& instance() {
+        static GlassFunctionParser inst;
+        return inst;
+    }
 
-        if (ext == "cpp" || ext == "h" || ext == "hpp" || ext == "c") {
-            // Basic C++ function regex
-            pattern = R"((?:[a-zA-Z_][a-zA-Z0-9_*&]*\s+)+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*\{)";
-        } else if (ext == "py") {
-            // Python def regex
-            pattern = R"(def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\()";
-        } else if (ext == "js" || ext == "ts") {
-            pattern = R"(function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\()";
-        } else {
-            return results;
+    void loadConfig(const QString& path) {
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+
+        m_parsers.clear();
+        QXmlStreamReader xml(&file);
+        while (!xml.atEnd() && !xml.hasError()) {
+            xml.readNext();
+            if (xml.isStartElement() && xml.name() == "parser") {
+                QString id = xml.attributes().value("id").toString();
+                while (!(xml.isEndElement() && xml.name() == "parser")) {
+                    xml.readNext();
+                    if (xml.isStartElement() && xml.name() == "function") {
+                        m_parsers[id] = xml.attributes().value("mainExpr").toString();
+                    }
+                }
+            }
         }
+    }
 
-        QRegularExpression rx(pattern);
+    QList<FunctionItem> parse(const QString& text, const QString& ext) {
+        QList<FunctionItem> results;
+        QString lang = ext.toLower();
+        if (lang == "h" || lang == "hpp") lang = "cpp";
+        if (lang == "py") lang = "python";
+
+        if (!m_parsers.contains(lang)) return results;
+
+        QRegularExpression rx(m_parsers[lang]);
         auto it = rx.globalMatch(text);
         
-        // Split text by lines to find line numbers
-        QStringList lines = text.split('\n');
-
         while (it.hasNext()) {
             auto match = it.next();
             QString name = match.captured(1);
             int offset = match.capturedStart();
-            
-            // Calculate line number
             int lineNum = text.left(offset).count('\n') + 1;
             results.append({name, lineNum});
         }
-
         return results;
     }
+
+private:
+    GlassFunctionParser() = default;
+    QMap<QString, QString> m_parsers;
 };
 
 #endif // GLASS_FUNCTION_PARSER_H
