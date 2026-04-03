@@ -44,6 +44,7 @@
 #include <QTreeView>
 #include <QListWidget>
 #include <QSystemTrayIcon>
+#include <QVariantList>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFile>
@@ -111,6 +112,9 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassFindInFilesDialog.h"
 #include "GlassCommandPalette.h"
 #include "GlassStyleConfigurator.h"
+#include "GlassTerminal.h"
+#include "GlassConfigXML.h"
+#include "GlassShortcutMapper.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -1071,6 +1075,15 @@ private:
         addDockWidget(Qt::BottomDockWidgetArea, m_searchDock);
         m_searchDock->hide();
 
+        // ── Glass Terminal ──────────────────────────────────────────────────
+        m_terminalDock = new QDockWidget("Glass Terminal", this);
+        m_terminalDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        auto* term = new GlassTerminal(m_terminalDock);
+        m_terminalDock->setWidget(term);
+        addDockWidget(Qt::BottomDockWidgetArea, m_terminalDock);
+        m_terminalDock->hide();
+        term->startShell();
+
         // Connect search result clicking to open file and jump to line
         connect(m_searchTree, &QTreeView::doubleClicked, this, [this](const QModelIndex& idx){
             auto* item = m_searchModel->itemFromIndex(idx);
@@ -1813,6 +1826,13 @@ private:
         });
         connect(m_folderDock, &QDockWidget::visibilityChanged, folderSpaceAct, &QAction::setChecked);
 
+        auto* terminalAct = view->addAction("Terminal");
+        terminalAct->setCheckable(true);
+        connect(terminalAct, &QAction::toggled, this, [this](bool on){
+            if (m_terminalDock) m_terminalDock->setVisible(on);
+        });
+        connect(m_terminalDock, &QDockWidget::visibilityChanged, terminalAct, &QAction::setChecked);
+
         view->addSeparator();
         // Bubbles toggle
         auto* bubbleAct = view->addAction("Bubble Animations");
@@ -1939,7 +1959,11 @@ private:
             m_macroPlayAct->setEnabled(!m_macroCommands.isEmpty());
             // Tell Scintilla to stop recording
             if (auto* p = currentPanel()) p->editor()->send(SCI_STOPRECORD);
-            m_statusWidget->showMessage(QString("Macro recording stopped (%1 actions)").arg(m_macroCommands.size()), 3000);
+            
+            // Save to shortcuts.xml
+            GlassConfigXML::saveMacros("shortcuts.xml", m_macroCommands);
+            
+            m_statusWidget->showMessage(QString("Macro recording stopped (%1 actions) - Saved to shortcuts.xml").arg(m_macroCommands.size()), 3000);
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
         m_macroStopAct->setEnabled(false); // Default off
         
@@ -2060,7 +2084,9 @@ private:
             dlg.exec();
         });
         settings->addAction("Shortcut Mapper...",    [this](){
-            m_statusWidget->showMessage("Shortcut mapper — coming soon", 2000); });
+            GlassShortcutMapper dlg(this);
+            dlg.exec();
+        });
         settings->addSeparator();
         // Glass intensity toggle (quick access)
         auto* intensityAct = settings->addAction("Cycle Glass Intensity");
@@ -2157,7 +2183,6 @@ private:
 
     // Macro state
     bool m_isRecordingMacro = false;
-    struct MacroCommand { unsigned int msg; uptr_t wp; sptr_t lp; };
     QList<MacroCommand> m_macroCommands;
     QAction* m_macroStartAct = nullptr;
     QAction* m_macroStopAct = nullptr;
@@ -2170,6 +2195,7 @@ private:
     QStandardItemModel* m_searchModel = nullptr;
     QStandardItemModel* m_folderModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
+    QDockWidget*     m_terminalDock = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
     QSystemTrayIcon* m_trayIcon = nullptr;
     QTimer*          m_backupTimer = nullptr;

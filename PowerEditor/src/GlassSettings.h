@@ -16,6 +16,17 @@
 #include <QSize>
 #include <QPoint>
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+#include "Scintilla.h"
+
+struct MacroCommand {
+    unsigned int msg;
+    uptr_t wp;
+    sptr_t lp;
+};
+
 class GlassSettings {
 public:
     static GlassSettings& instance() {

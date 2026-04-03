@@ -329,6 +329,7 @@ public:
     std::function<void(unsigned int, uptr_t, sptr_t)> onMacroRecord;
 
     std::function<void()> onScroll;
+    std::function<void(int)> onCharAdded;
 
 protected:
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
@@ -351,6 +352,8 @@ protected:
                     if (onCursorPositionChanged) onCursorPositionChanged();
                     if (onScroll) onScroll();
                 } else if (scn->nmhdr.code == SCN_CHARADDED) {
+                    if (onCharAdded) onCharAdded(scn->ch);
+                    
                     // Simple C++ / Python Autocomplete Trigger
                     char ch = static_cast<char>(scn->ch);
                     if (isalpha(ch) || ch == '_') {

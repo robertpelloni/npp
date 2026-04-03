@@ -10,31 +10,28 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Workspace Roots, Sync Scrolling & Multi-Cursor Parity (v1.1.6)
+## THIS SESSION: Glass Terminals, XML Interop & Shortcut Mapping (v1.1.7)
 
 ### Major Achievements
-1. **Dynamic Workspace Explorer:** Transformed the Folder Workspace into a real, reactive file explorer.
-   * **Multiple Roots:** Added support for anchoring multiple root directories via the custom context menu.
-   * **Hierarchical State:** Uses `QStandardItemModel` to persist absolute file paths across sub-folder levels.
-2. **View Synchronization:** Implemented full **Dual-Pane Synchronized Scrolling**.
-   * **Bi-directional Sync:** Scrolling in the primary view now optionally locks the secondary view's vertical AND horizontal scroll offsets (`SCI_SETFIRSTVISIBLELINE` / `SCI_SETXOFFSET`).
-3. **Advanced Editing Engine:**
-   * **Column Mode:** Enabled Scintilla's rectangular selection and multiple selection features (`SCI_SETMULTIPLESELECTION`).
-   * **Macro Core:** Successfully trapped `SCN_MACRORECORD` to capture a sequence of raw Scintilla message triplets for automated playback.
-4. **UX Persistence:**
-   * **Session Management:** The application now remembers every open file across all tab widgets and restores them precisely on reboot.
-   * **Auto-Backup:** Integrated a background `QTimer` that performs incremental backups of all modified documents to a local `backup/` directory.
-5. **Mark All Visualization:** Integrated Scintilla Indicators (ID 9) for "Mark All" operations, utilizing a straight-box green glass overlay.
+1. **Glass Terminal Integration:** Built a native dockable command terminal (`GlassTerminal.h`) powered by `QProcess`.
+   * **Real-time TTY:** Intercepts Scintilla `SCN_CHARADDED` events to pipe keystrokes directly into the `cmd.exe` / `/bin/bash` standard input stream.
+   * **Visual Parity:** Uses a high-contrast dark glass theme with block caret rendering to match the terminal aesthetic.
+2. **NPP XML Interop:** Engineered `GlassConfigXML.h` for native Notepad++ compatibility.
+   * **Macro Persistence:** The system now translates recorded Scintilla message sequences into official `shortcuts.xml` Action tags, ensuring macros can be shared with the "old" Notepad++.
+3. **Shortcut Mapper UI:** Built a high-fidelity dialog (`GlassShortcutMapper.h`) featuring a glass-styled `QTableWidget` to manage global keyboard accelerators.
+4. **Refined Core Structs:** Centralized the `MacroCommand` and `StyleSettings` structures into `GlassSettings.h` to facilitate cross-module data propagation.
+5. **UI Polish:** Added "Terminal" toggles to the View menu and successfully linked the terminal process lifecycle to the main window.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Workspace roots, Sync Scrolling, and Session logic. |
-| `PowerEditor/src/BobScintilla.h` | Enabled Column Mode, Multi-selection, and Macro recording triggers. |
-| `PowerEditor/src/GlassPreferencesDialog.h` | Expanded to a multi-page sidebar with Backup and General categories. |
-| `NPP_ROADMAP.md` | Marked Phase 9 as Complete. |
+| `PowerEditor/src/GlassTerminal.h` | Native shell wrapper using Scintilla for output. |
+| `PowerEditor/src/GlassConfigXML.h` | XML StreamWriter for NPP shortcuts and configurations. |
+| `PowerEditor/src/GlassShortcutMapper.h` | UI for keyboard binding management. |
+| `PowerEditor/src/BobScintilla.h` | Added character input hooks for terminal emulation. |
+| `NPP_ROADMAP.md` | Marked Phase 10 as Complete. |
 
 ---
 
@@ -48,12 +45,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 10)
+## Next Steps for Implementor (Phase 11)
 
 ### Immediate (P0)
-1. **Config Persistence:** Settings are currently stored in `QSettings` (Registry/INI). We need to implement an XML writer that translates these design tokens into standard `config.xml` and `shortcuts.xml` for full NPP interoperability.
-2. **Glass Terminal:** Build a `QDockWidget` that spawns `cmd.exe` or `powershell` and pipes the output into a Scintilla control.
+1. **Collaborative Backend:** Integrate `QWebSocket` to allow multiple editors to sync caret positions and text changes across the network.
+2. **UDL Parser:** Implement the User Defined Language (UDL) XML parser to allow custom syntax highlighting for non-standard file formats.
 
 ### Short-term (P1)
-3. **Line Bookmarks:** Map Scintilla Margin 1 (ID 1) to a toggle-able bookmark system with glass-styled markers.
-4. **UDL Support:** Begin architecting the "User Defined Language" (UDL) parser to allow custom syntax highlighting XMLs.
+3. **Windows 11 Snap Layouts:** Finalize the `WM_NCHITTEST` logic to support native Windows 11 window snapping.
+4. **Glass Compare:** Develop a side-by-side diff tool that highlights line deletions and insertions using Scintilla background markers.

@@ -43,6 +43,20 @@
 - [ ] Connect native Qt QPrinter mapping for printing Scintilla documents.
 - [ ] Complete `QPluginLoader` bridge injecting legacy `NppData` structs.
 
+## Phase 10: OS Features & Terminal (Complete)
+- [x] Engineered a native "Glass Terminal" utilizing `QProcess` and Scintilla for shell interaction.
+- [x] Implemented XML configuration interop for NPP-compatible `shortcuts.xml` (Macro saving).
+- [x] Built a high-fidelity "Shortcut Mapper" UI scaffold.
+- [x] Refined Scintilla input trap for real-time shell TTY emulation.
+- [ ] Connect native Qt QPrinter mapping for document printing.
+- [ ] Implement Scintilla Marker logic for line-bookmarks (Margin 1).
+- [ ] Implement Windows 11 Snap Layouts integration.
+
+## Phase 11: Collaborative Singularity
+- [ ] Integrate a real-time collaborative editing backend (WebSocket/CRDT).
+- [ ] Multi-cursor focus tree virtualization for shared sessions.
+- [ ] Advanced UDL (User Defined Language) parser for custom XML syntax.
+
 ## Phase 8: Advanced OS Features (Complete)
 - [x] Implemented Glass Command Palette (`Ctrl+Shift+P`) for rapid action searching.
 - [x] Integrated `QSystemTrayIcon` with custom-painted Liquid Glass context menu.
