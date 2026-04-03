@@ -1777,7 +1777,12 @@ private:
 
     void onFileChanged(const QString& path) {
         auto* p = findPanelByPath(path);
-        if (p && !p->isModified()) {
+        if (!p) return;
+        
+        if (GlassSettings::instance().autoReload()) {
+            p->loadFile(path);
+            m_statusWidget->showMessage("Auto-reloaded: " + path, 1000);
+        } else if (!p->isModified()) {
             auto btn = QMessageBox::question(this, "File Changed",
                 QString("'%1' has been modified by another program. Reload it?").arg(QFileInfo(path).fileName()),
                 QMessageBox::Yes | QMessageBox::No);
@@ -1937,6 +1942,9 @@ private:
             if (auto* p = currentPanel()) p->editor()->copy(); }, QKeySequence::Copy);
         addAct(edit, "&Paste",      [this](){
             if (auto* p = currentPanel()) p->editor()->paste(); }, QKeySequence::Paste);
+        addAct(edit, "Paste &Special", [this](){
+            if (auto* p = currentPanel()) p->editor()->paste();
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
         addAct(edit, "&Delete",     [this](){
             if (auto* p = currentPanel()) p->editor()->send(SCI_CLEAR);
         }, QKeySequence::Delete);
@@ -2450,6 +2458,15 @@ private:
                 }
             }
         });
+        
+        auto* monitorAct = view->addAction("Monitoring (tail -f)");
+        monitorAct->setCheckable(true);
+        monitorAct->setChecked(GlassSettings::instance().autoReload());
+        connect(monitorAct, &QAction::toggled, this, [this](bool on){
+            GlassSettings::instance().setAutoReload(on);
+            m_autoReload = on;
+        });
+
         win->addSeparator();
         addAct(win, "Clone Current Tab", [this](){
             auto* p = currentPanel();
@@ -2616,6 +2633,7 @@ private:
     bool             m_syncScrollingV = false;
     bool             m_syncScrollingH = false;
     QFileSystemWatcher* m_fileWatcher = nullptr;
+    bool             m_autoReload = false;
 };
 
 

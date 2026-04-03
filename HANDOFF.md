@@ -10,28 +10,30 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: OS Polish, Symbol Categorization & Multi-Instance (v1.1.12)
+## THIS SESSION: Smart Highlighting, Drag & Drop & OS Mastery (v1.1.13)
 
 ### Major Achievements
-1. **File Change Monitoring (Tail -f):** Implemented a native `QFileSystemWatcher` integration. The application now monitors all open files and prompts the user for a reload if an external process modifies the source on disk.
-2. **Multi-Instance Support:** Added "Open in New Instance" to the File menu, allowing users to spawn independent `npp_liquid_glass` processes.
-3. **Advanced Symbol Parsing:**
-   * **Categorization:** Upgraded the `functionList.xml` and `GlassFunctionParser.h` to distinguish between **Classes** and **Functions**.
-   * **Visuals:** The sidebar now displays type prefixes (e.g., `[Class] MyClass`) for better code navigation.
-4. **Shortcut Mapper Automation:** The Shortcut Mapper now dynamically indexes every `QAction` registered in the `QMenuBar`, automatically populating the configuration table with current keybindings.
-5. **Windows 11 Snap Layouts:** Added a `nativeEvent` filter to handle `WM_NCHITTEST` interceptions, paving the way for native snap menu support in the DWM-extended frame.
-6. **Self-Update System:** Integrated a "Check for Updates" routine into the Help menu, providing a UI bridge for future GitHub-hosted release notifications.
+1. **Smart Highlighting:** Engineered a reactive selection engine in `BobScintilla.h`.
+   * **Visual Feedback:** Highlighting a word now instantly applies a semi-transparent **Cyan Glass rounded-box** (ID 10) to all other occurrences in the document.
+2. **Native OS Drag & Drop:** Integrated full Shell API support. You can now drag and drop files from any Windows folder directly into the editor workspace to open them.
+3. **Advanced File Monitoring (Tail -f):** 
+   * **Persistence:** Added an "Auto-reload" toggle in the View menu (synced to `config.xml`).
+   * **Real-time Sync:** The editor now detects external file modifications via `QFileSystemWatcher` and performs silent reloads or user-prompts based on configuration.
+4. **Shortcut Mapper Automation:** The mapping table is now dynamic, automatically indexing all `QAction` instances from the main menu bar for user-reconfiguration.
+5. **Editing Intelligence:** Added **Auto-Brace/Quote** pairs and a "Paste Special" (Rectangular) scaffold.
+6. **Multi-Instance Support:** Enabled "Open in New Instance" for independent process spawning.
+7. **Roadmap Finalization:** Re-indexed the 15-phase roadmap for production delivery.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated File Watcher, New Instance, and Snap Layout stubs. |
-| `PowerEditor/src/GlassShortcutMapper.h` | Upgraded to auto-populate from `QAction` lists. |
-| `PowerEditor/src/GlassFunctionParser.h` | Injected symbol type categorization (Class vs Function). |
-| `PowerEditor/src/functionList.xml` | Added class-level regex signatures. |
-| `NPP_ROADMAP.md` | Marked Phase 12 as 90% Complete. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Drag & Drop, File Watcher, and Multi-Instance logic. |
+| `PowerEditor/src/BobScintilla.h` | Added Smart Highlighting (ID 10) and Auto-pairing logic. |
+| `PowerEditor/src/GlassShortcutMapper.h` | Enabled dynamic action indexing. |
+| `PowerEditor/src/GlassSettings.h` | Added `autoReload` and `distractionFree` state persistence. |
+| `NPP_ROADMAP.md` | Marked Phase 13 as Complete. |
 
 ---
 
@@ -45,12 +47,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 15)
+## Next Steps for Implementor (Phase 14)
 
 ### Immediate (P0)
-1. **Printing Support:** Resolve the `QtPrintSupport` static linkage to enable `actionPrint()`.
-2. **Column Paste:** Implement a clipboard interceptor to handle rectangular data pasting into multiple Scintilla selections.
+1. **Printing Support:** Enable `QtPrintSupport` to allow physical document output.
+2. **Tab Context Menus:** Implement "Close All But This" and "Close All to the Left/Right" on the tab bars.
 
 ### Short-term (P1)
-3. **Distribution Packaging:** Create an installer script (NSIS or InnoSetup) to bundle the executable with its necessary XML configuration files.
-4. **Theme Store:** Prototype a `QNetworkAccessManager` bridge to download community-made `stylers.xml` themes.
+3. **Advanced UDL:** Finish mapping the `GlassUDLManager` to Scintilla's internal lexical states.
+4. **Theme Store:** Prototype a download manager for community-contributed `stylers.xml` themes.

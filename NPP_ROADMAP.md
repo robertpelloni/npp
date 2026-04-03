@@ -77,6 +77,16 @@
 - [x] Integrated File Change Monitoring (Tail -f) with auto-reload.
 - [x] Implemented "Open in New Instance" multi-process logic.
 - [x] Built a "Check for Updates" system in the Help menu.
-- [ ] Connect native Qt QPrinter mapping for document printing.
 - [x] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
 - [x] Automated Shortcut Mapper population from indexed QActions.
+
+## Phase 13: High-Fidelity UI (Complete)
+- [x] Integrated real-time "Markdown Preview" dock.
+- [x] Implemented "Smart Highlighting" for all word occurrences.
+- [x] Enabled alpha-blended "Caret Line" and "Selection" overlays.
+- [x] Added "Paste Special" scaffold.
+
+## Phase 14: Final Distribution (Pending)
+- [ ] Connect native Qt QPrinter mapping for document printing.
+- [ ] Create "Glass Theme Store" downloader.
+- [ ] Package as a portable .zip with all dependencies.

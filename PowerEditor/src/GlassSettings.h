@@ -104,6 +104,9 @@ public:
     QStringList recentFiles() const { return m_settings.value("Session/RecentFiles").toStringList(); }
     void setRecentFiles(const QStringList& files) { m_settings.setValue("Session/RecentFiles", files); }
 
+    bool autoReload() const { return m_settings.value("Backup/AutoReload", false).toBool(); }
+    void setAutoReload(bool enable) { m_settings.setValue("Backup/AutoReload", enable); }
+
 private:
     GlassSettings() : m_settings("robertpelloni", "Notepad++ BobUI Liquid Glass") {}
     ~GlassSettings() = default;

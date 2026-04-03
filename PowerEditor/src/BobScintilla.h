@@ -179,10 +179,48 @@ public:
             send(SCI_INDICSETSTYLE, 9, INDIC_STRAIGHTBOX);
             send(SCI_INDICSETFORE, 9, 0x00FF00); // Green for Mark All
             send(SCI_INDICSETALPHA, 9, 60);
+        } else if (indicator == 10) {
+            send(SCI_INDICSETSTYLE, 10, INDIC_ROUNDBOX);
+            send(SCI_INDICSETFORE, 10, 0x00FFFF); // Cyan for Smart Highlighting
+            send(SCI_INDICSETALPHA, 10, 40);
         }
         
         // Fill new
         send(SCI_INDICATORFILLRANGE, start, length);
+    }
+
+    void smartHighlight() {
+        sptr_t start = send(SCI_GETSELECTIONSTART);
+        sptr_t end = send(SCI_GETSELECTIONEND);
+        clearIndicator(10);
+        
+        if (start == end) return;
+        
+        sptr_t len = end - start;
+        if (len < 2) return; // Don't highlight single chars
+
+        QByteArray needle;
+        needle.resize(static_cast<int>(len));
+        Sci_TextRangeFull tr;
+        tr.chrg.cpMin = static_cast<Sci_Position>(start);
+        tr.chrg.cpMax = static_cast<Sci_Position>(end);
+        tr.lpstrText = needle.data();
+        send(SCI_GETTEXTRANGEFULL, 0, reinterpret_cast<sptr_t>(&tr));
+
+        sptr_t docLen = send(SCI_GETLENGTH);
+        send(SCI_SETTARGETSTART, 0);
+        send(SCI_SETTARGETEND, docLen);
+        send(SCI_SETSEARCHFLAGS, SCFIND_WHOLEWORD | SCFIND_MATCHCASE);
+
+        while (send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData())) != -1) {
+            sptr_t matchStart = send(SCI_GETTARGETSTART);
+            sptr_t matchEnd = send(SCI_GETTARGETEND);
+            if (matchStart != start) { // Don't highlight the current selection
+                highlightRange(matchStart, matchEnd - matchStart, 10);
+            }
+            send(SCI_SETTARGETSTART, matchEnd);
+            send(SCI_SETTARGETEND, docLen);
+        }
     }
 
     void clearIndicator(int indicator = 8) {
@@ -390,6 +428,7 @@ protected:
                 } else if (scn->nmhdr.code == SCN_UPDATEUI) {
                     if (onCursorPositionChanged) onCursorPositionChanged();
                     if (onScroll) onScroll();
+                    smartHighlight();
                 } else if (scn->nmhdr.code == SCN_CHARADDED) {
                     if (onCharAdded) onCharAdded(scn->ch);
                     
