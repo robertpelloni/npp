@@ -98,6 +98,11 @@ public:
         send(SCI_SETMULTIPLESELECTION, 1);
         send(SCI_SETADDITIONALSELECTIONTYPING, 1);
         send(SCI_SETVIRTUALSPACEOPTIONS, SCVS_RECTANGULARSELECTION);
+
+        // Caret line highlighting
+        send(SCI_SETCARETLINEVISIBLE, 1);
+        send(SCI_SETCARETLINEBACK, 0xFFFFFF); // White
+        send(SCI_SETCARETLINEBACKALPHA, 20); // Very subtle
         
         // Enable folding in lexers
         send(SCI_SETPROPERTY, reinterpret_cast<sptr_t>("fold"), reinterpret_cast<sptr_t>("1"));

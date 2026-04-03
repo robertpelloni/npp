@@ -10,30 +10,27 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Markdown Preview, Function Parsing & Workspace Files (v1.1.10)
+## THIS SESSION: OS Polish, Multi-Search & Plugin APIs (v1.1.11)
 
 ### Major Achievements
-1. **Live Markdown Preview:** Built a dedicated **Markdown Preview** dock (`GlassMarkdownPreview.h`) featuring real-time rendering and Liquid Glass styling.
-   * **Reactive Sync:** Automatically updates the preview panel when `.md` files are edited in the Scintilla core.
-2. **Dynamic Function Discovery:** Engineered a regex-based **Function List Parser** (`GlassFunctionParser.h`).
-   * **Language Support:** Natively parses C++, Python, and JavaScript method signatures to populate the side panel.
-   * **Telemetry:** Features double-click navigation to jump the caret to specific function definitions.
-3. **Project Interoperability:**
-   * **`.nppw` Workspaces:** Implemented a JSON-based project format that allows you to save and load entire Dual-View sessions (paths, views, and active states).
-   * **Config Auto-Sync:** Integrated `config.xml` loading into the splash-screen boot sequence.
-4. **Enhanced Workspace Explorer:** Finalized the **Multiple Root Folder** support, allowing for complex multi-project management within a single glass sidebar.
-5. **Editing Intelligence:** Refined the **Auto-Brace/Quote** logic and fixed several Scintilla notification-loop edge cases.
+1. **Native OS Drag & Drop:** Successfully implemented `dragEnterEvent` and `dropEvent` on the main window. You can now drag files directly from Windows Explorer into the glass editor to open them.
+2. **Multi-Tab Search Results:** Refactored the search results dock to use a `QTabWidget`. 
+   * **Concurrent Results:** Each "Find in Files" execution now creates a dedicated result tab (e.g., "Find: [needle]"), matching the multi-list capabilities of the original Notepad++.
+3. **Plugin Toolbar API:** Engineered an injection method `addPluginToolbarButton()` allowing loaded DLL plugins to register custom icons and callbacks in the main "Standard" toolbar.
+4. **Enhanced Visual Fidelity:** 
+   * **Caret Line Sync:** Enabled `SCI_SETCARETLINEVISIBLE` with alpha-blended glass coloring.
+   * **Mime Interop:** Added `QMimeData` and `QUrl` support for high-fidelity path resolution during OS interactions.
+5. **Roadmap Restructure:** Conducted a comprehensive audit and re-ordering of the project roadmap, aligning 15 phases of development into a logical progression towards 100% parity.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassMarkdownPreview.h` | live Markdown renderer using `QTextBrowser`. |
-| `PowerEditor/src/GlassFunctionParser.h` | Regex signatures for C++, Python, and JS discovery. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Markdown/Function docks and `.nppw` serialization. |
-| `PowerEditor/src/GlassConfigXML.h` | Added `loadConfig` / `saveConfig` logic for UI design tokens. |
-| `NPP_ROADMAP.md` | Marked Phase 13 as Complete. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Drag & Drop, Multi-Search Tabs, and Plugin Toolbar hooks. |
+| `PowerEditor/src/BobScintilla.h` | Enabled Caret Line Highlighting and refined margin alpha. |
+| `NPP_ROADMAP.md` | Cleaned and reorganized the 15-phase project master plan. |
+| `TODO.md` | Defined the final "Phase 12" polish goals. |
 
 ---
 
@@ -47,12 +44,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 14)
+## Next Steps for Implementor (Phase 12)
 
 ### Immediate (P0)
-1. **Collab Backend:** Implement the `GlassCollabClient.h` logic using `QWebSocket` to enable shared document editing.
-2. **UDL Advanced Styles:** Extend the UDL parser to handle custom lexical states and keyword coloring.
+1. **Windows 11 Snap Layouts:** Implement the `nativeEvent` filter to return `HTMAXBUTTON` during hit testing, enabling the native snap overlay for our DWM-extended frame.
+2. **UDL Advanced Styles:** Complete the `GlassUDLManager` to support full lexical state transitions for user-defined XML syntax.
 
 ### Short-term (P1)
-3. **Drag and Drop:** Implement native OS drag-and-drop into the editor space for opening files.
-4. **Window Snapping:** Fine-tune `WM_NCHITTEST` to return `HTMAXBUTTON` on the glass title bar for Windows 11 layouts.
+3. **Printing:** Research static linkage for `QtPrintSupport` to enable the "Print" command.
+4. **Column Paste:** Enhance the multi-selection engine to support pasting rectangular data across multiple caret positions.

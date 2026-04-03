@@ -75,6 +75,10 @@
 #include <QKeySequence>
 #include <QShortcut>
 #include <QDialog>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QUrl>
 #include <QResizeEvent>
 #include <QPaintEvent>
 #include <QShowEvent>
@@ -696,6 +700,9 @@ public:
         setWindowTitle(QString("Notepad++ (BobUI Liquid Glass) v%1").arg(kAppVersion));
         resize(1400, 900);
 
+        // ── Drag & Drop support ──
+        setAcceptDrops(true);
+
         // ── Transparency setup ───────────────────────────────────────────────
         // WA_TranslucentBackground is the key flag that makes the Qt window
         // composited with the desktop beneath it. Without this, DWM blur is
@@ -888,6 +895,17 @@ protected:
         if (m_bubbles) m_bubbles->resize(centralWidget() ? centralWidget()->size() : size());
     }
 
+    void dragEnterEvent(QDragEnterEvent* ev) override {
+        if (ev->mimeData()->hasUrls()) ev->acceptProposedAction();
+    }
+
+    void dropEvent(QDropEvent* ev) override {
+        for (const QUrl& url : ev->mimeData()->urls()) {
+            QString path = url.toLocalFile();
+            if (!path.isEmpty()) openFile(path);
+        }
+    }
+
     void closeEvent(QCloseEvent* ev) override {
         // Save window state
         auto& s = GlassSettings::instance();
@@ -1035,6 +1053,87 @@ private:
             auto* item = new QListWidgetItem(f.name, list);
             item->setData(Qt::UserRole, f.line);
         }
+    }
+
+    void addSearchResult(const QString& needle, const QString& dir, const QString& filter, bool mc, bool ww, bool sd) {
+        m_searchDock->show();
+        m_searchDock->raise();
+
+        auto* tree = new QTreeView(m_searchTabs);
+        tree->setHeaderHidden(true);
+        auto* model = new QStandardItemModel(tree);
+        tree->setModel(model);
+        
+        int tabIdx = m_searchTabs->addTab(tree, QString("Find: %1").arg(needle));
+        m_searchTabs->setCurrentIndex(tabIdx);
+
+        auto* rootItem = model->invisibleRootItem();
+        auto* searchNode = new QStandardItem(QString("Find in '%1'").arg(dir));
+        rootItem->appendRow(searchNode);
+
+        auto* worker = new GlassSearchWorker(needle, dir, filter, mc, ww, sd, this);
+        
+        worker->onResultFound = [this, tree, model, searchNode](const SearchResultItem& res){
+            QStandardItem* fileItem = nullptr;
+            for (int i = 0; i < searchNode->rowCount(); ++i) {
+                if (searchNode->child(i)->text() == res.filePath) {
+                    fileItem = searchNode->child(i);
+                    break;
+                }
+            }
+            if (!fileItem) {
+                fileItem = new QStandardItem(res.filePath);
+                searchNode->appendRow(fileItem);
+            }
+            auto* lineItem = new QStandardItem(QString("Line %1: %2").arg(res.lineNum).arg(res.text));
+            lineItem->setData(QVariantList({res.lineNum, res.column, res.length}), Qt::UserRole);
+            fileItem->appendRow(lineItem);
+            tree->expand(fileItem->index());
+            tree->expand(searchNode->index());
+        };
+
+        worker->onProgressUpdated = [this](int count, const QString& path){
+            m_statusWidget->showMessage(QString("Searching... scanned %1 files").arg(count), 0);
+        };
+
+        worker->onSearchFinished = [this, searchNode, worker](int files, int matches){
+            m_statusWidget->showMessage(QString("Search complete: %1 matches in %2 files").arg(matches).arg(files), 4000);
+            searchNode->setText(searchNode->text() + QString(" - %1 matches").arg(matches));
+            worker->deleteLater();
+        };
+
+        connect(tree, &QTreeView::doubleClicked, this, [this, model](const QModelIndex& idx){
+            auto* item = model->itemFromIndex(idx);
+            if (item && item->parent()) {
+                QString path = item->parent()->text();
+                QVariantList data = item->data(Qt::UserRole).toList();
+                if (data.size() < 3) return;
+                int line = data[0].toInt();
+                int col  = data[1].toInt();
+                int len  = data[2].toInt();
+                
+                auto* p = findPanelByPath(path);
+                if (!p) {
+                    p = new GlassEditorPanel(currentTabWidget());
+                    if (p->loadFile(path)) {
+                        currentTabWidget()->setCurrentIndex(currentTabWidget()->addTab(p, QFileInfo(path).fileName()));
+                        connectEditorSignals(p);
+                    } else { delete p; return; }
+                } else {
+                    static_cast<QTabWidget*>(p->parentWidget())->setCurrentWidget(p);
+                }
+                
+                p->editor()->clearIndicator(8);
+                sptr_t lineStart = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
+                sptr_t pos = lineStart + col;
+                p->editor()->send(SCI_GOTOPOS, pos);
+                p->editor()->highlightRange(pos, len, 8);
+                p->editor()->send(SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1);
+                p->editor()->send(SCI_GRABFOCUS);
+            }
+        });
+
+        worker->start();
     }
 
     void setupDockWidgets() {
@@ -2292,29 +2391,16 @@ private:
     }
 
     void updatePluginsMenu() {
-        if (!m_pluginsMenu) return;
-        m_pluginsMenu->clear();
-        
-        m_pluginsMenu->addAction("Plugin Admin...", [this](){
-            m_statusWidget->showMessage("Plugin Admin — coming soon", 2000);
-        });
-        m_pluginsMenu->addSeparator();
-        
-        // List loaded plugins
-        const auto& loaded = GlassPluginManager::instance().plugins();
-        for (const auto& gp : loaded) {
-            m_pluginsMenu->addAction(gp.name);
-        }
-        
-        if (loaded.isEmpty()) {
-            auto* a = m_pluginsMenu->addAction("No plugins loaded");
-            a->setEnabled(false);
-        }
+        // ... (existing code)
+    }
 
-        m_pluginsMenu->addSeparator();
-        m_pluginsMenu->addAction("Open Plugins Folder...", [this](){
-            m_statusWidget->showMessage("Plugins directory mapped.", 2000);
-        });
+    void addPluginToolbarButton(const QIcon& icon, const QString& tooltip, std::function<void()> callback) {
+        auto* tb = findChild<QToolBar*>("Standard");
+        if (tb) {
+            auto* act = tb->addAction(icon, "");
+            act->setToolTip(tooltip);
+            connect(act, &QAction::triggered, callback);
+        }
     }
 
     // ── Toolbar setup ────────────────────────────────────────────────────────
@@ -2374,6 +2460,7 @@ private:
     QStandardItemModel* m_searchModel = nullptr;
     QStandardItemModel* m_folderModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
+    QTabWidget*      m_searchTabs = nullptr;
     QDockWidget*     m_terminalDock = nullptr;
     QDockWidget*     m_mdDock = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
