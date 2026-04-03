@@ -43,11 +43,14 @@
 - [ ] Connect native Qt QPrinter mapping for printing Scintilla documents.
 - [ ] Complete `QPluginLoader` bridge injecting legacy `NppData` structs.
 
-## Phase 7: OS Integration & Advanced UX (Complete)
-- [x] Integrated `GlassSplashScreen` with boot progress telemetry.
-- [x] Engineered `GlassPluginManager` providing the native `NppData` bridge.
-- [x] Implemented native DLL loading for legacy Notepad++ plugins.
-- [x] Wired `SCN_*` notifications to the plugin notification loop.
-- [ ] Implement System Tray icon with Glass context menu.
-- [ ] Window Snap layout support for Windows 11.
-- [ ] Multi-cursor focus tree virtualization for collaborative editing.
+## Phase 8: Advanced OS Features (Complete)
+- [x] Implemented Glass Command Palette (`Ctrl+Shift+P`) for rapid action searching.
+- [x] Integrated `QSystemTrayIcon` with custom-painted Liquid Glass context menu.
+- [x] Enhanced Status Bar with "Display Line" virtualization for Word Wrap modes.
+- [x] Implemented "Restore" and "Minimize to Tray" functionality.
+
+## Phase 9: Multi-Cursor & Collaboration (Pending)
+- [ ] Implement multi-cursor focus tree virtualization.
+- [ ] Add support for Windows 11 Snap Layouts.
+- [ ] Integrate a real-time collaborative editing backend (WebSocket/CRDT).
+- [ ] Build a "Glass Terminal" dock widget.

@@ -1,5 +1,6 @@
-# Immediate Tasks (Phase 8: Advanced OS Features)
-- [ ] Implement System Tray icon with Liquid Glass context menu.
-- [ ] Add support for Windows 11 Snap Layouts (interception of `WM_NCHITTEST`).
-- [ ] Implement multi-cursor virtualization for shared collaborative sessions.
-- [ ] Create a "Glass Command Palette" (Ctrl+Shift+P) for rapid feature access.
+# Immediate Tasks (Phase 9: Multi-Cursor & Collaboration)
+- [ ] Implement multi-cursor virtualization: multiple independent Scintilla selections.
+- [ ] Connect a WebSocket client to allow remote shared editing sessions.
+- [ ] Implement native Windows 11 Snap Layouts.
+- [ ] Build a "Glass Terminal" utilizing `QProcess` and Scintilla as the TTY.
+- [ ] Add support for "Glass Drag-and-Drop" of files from the OS.

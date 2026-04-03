@@ -10,27 +10,24 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Splash Screens, Plugin Bridges & Boot Telemetry (v1.1.4)
+## THIS SESSION: Command Palettes, System Tray & UI Virtualization (v1.1.5)
 
 ### Major Achievements
-1. **Glass Splash Screen:** Built a high-fidelity startup screen (`GlassSplashScreen.h`) featuring the Liquid Glass backdrop, a blurred radial glow, and real-time engine initialization telemetry.
-2. **Plugin Data Bridge:** Engineered `GlassPluginManager.h` which recreates the legacy **Notepad++ SDK (`NppData`)**. 
-   * **Handle Mapping:** Automatically maps the `HWND` handles for the Main Window and the active Scintilla control to the plugin's `setInfo` call.
-   * **Legacy Support:** Decoupled DLL loading via `QLibrary` to resolve `getName`, `beNotified`, and `setInfo` exports from standard NPP plugins.
-3. **Notification Loop:** Wired the native Win32 notification pipeline so that Scintilla's `WM_NOTIFY` events are broadcasted to all loaded plugins in real-time.
-4. **Bootstrapping:** Automated the discovery and loading of `.dll` modules from the `plugins/` directory during the window's `showEvent`.
-5. **Stability Polish:** Fixed a major brace-imbalance regression that had accidentally closed the main window class prematurely, restoring all toolbar and menu functionality.
+1. **Glass Command Palette:** Built a VS Code-inspired command overlay (`GlassCommandPalette.h`) triggered by `Ctrl+Shift+P`.
+   * **Action Indexing:** Automatically crawls the entire `QMenuBar` tree to index all available `QAction`s.
+   * **Fuzzy Filtering:** Real-time search with keyboard-driven selection (Up/Down/Enter).
+2. **System Tray Integration:** Implemented `QSystemTrayIcon` with a custom Liquid Glass context menu. Supports minimizing to tray and rapid file creation/opening without restoring the main window.
+3. **Status Bar Virtualization:** Upgraded the status bar telemetry to calculate **"Display Line"** offsets. When Word Wrap is active, it now distinguishes between physical source lines and wrapped visual lines.
+4. **Enhanced Desktop UX:** Added "Restore" and "Minimize/Hide" logic to the tray icon, allowing the editor to live persistently in the background.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassSplashScreen.h` | Custom `QSplashScreen` with Liquid Glass painting. |
-| `PowerEditor/src/GlassPluginManager.h` | The `NppData` bridge and DLL loading logic. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated startup splash and plugin manager orchestration. |
-| `PowerEditor/src/BobScintilla.h` | Added plugin notification hooks and HWND accessors. |
-| `NPP_ROADMAP.md` | Marked Phase 7 (Splash & Plugins) as Complete. |
+| `PowerEditor/src/GlassCommandPalette.h` | Frameless, fuzzy-search dialog for app commands. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated tray icon, palette orchestration, and display-line math. |
+| `NPP_ROADMAP.md` | Marked Phase 8 as Complete. |
 
 ---
 
@@ -44,12 +41,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 8)
+## Next Steps for Implementor (Phase 9)
 
 ### Immediate (P0)
-1. **Glass Command Palette:** Implement a `Ctrl+Shift+P` overlay (similar to VS Code) using a glass-styled `QListWidget` for rapid action searching.
-2. **System Tray Integration:** Add a `QSystemTrayIcon` with a custom-painted Liquid Glass context menu for quick file access.
+1. **Multi-Cursor Virtualization:** Notepad++ supports multi-editing. Map our `BobScintilla` widget to support multiple independent caret/selection groups (`SCI_SETMULTIPLESELECTION`).
+2. **Glass Terminal:** Build a `QDockWidget` that spawns `cmd.exe` or `powershell` and pipes the output into a Scintilla control with a custom "Terminal Glass" theme.
 
 ### Short-term (P1)
-3. **Multi-Cursor Virtualization:** Begin architecting the focus-tree virtualization to support multiple independent hardware cursors (Phase 8 Roadmap).
-4. **Snap Layouts:** Intercept `WM_NCHITTEST` on the main window title bar to enable native Windows 11 snap behavior for the frameless-styled window.
+3. **Snap Layouts:** Further research into `WS_MAXIMIZEBOX` and `WM_NCHITTEST` is needed to correctly show the Windows 11 snap overlay on our custom-styled title bar.
+4. **Collaborative Editing:** Explore the `OmniWebSocket` integration from BobUI to allow two agents (or users) to type in the same Liquid Glass document simultaneously.

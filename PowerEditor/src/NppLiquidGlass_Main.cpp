@@ -43,6 +43,7 @@
 #include <QDockWidget>
 #include <QTreeView>
 #include <QListWidget>
+#include <QSystemTrayIcon>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFile>
@@ -106,6 +107,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassPreferencesDialog.h"
 #include "GlassSearchWorker.h"
 #include "GlassFindInFilesDialog.h"
+#include "GlassCommandPalette.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -417,10 +419,16 @@ public:
         sptr_t col = editor->send(SCI_GETCOLUMN, pos) + 1;
         sptr_t sel = editor->send(SCI_GETSELECTIONEND) - editor->send(SCI_GETSELECTIONSTART);
         
+        QString stats = QString("Ln %1, Col %2").arg(ln).arg(col);
+        if (editor->wordWrap()) {
+            sptr_t displayLn = editor->send(SCI_VISIBLEFROMDOCLINE, ln - 1) + 1;
+            stats += QString(" (Display Ln %1)").arg(displayLn);
+        }
+        m_lnColLabel->setText(stats);
+        
         QString text = editor->text();
         QStringList words = text.split(QRegularExpression(R"(\s+)"),
                                        Qt::SkipEmptyParts);
-        m_lnColLabel->setText(QString("Ln %1, Col %2").arg(ln).arg(col));
         m_selLabel->setText(QString("Sel: %1").arg(sel));
         m_wordsLabel->setText(QString("Words: %1").arg(words.size()));
     }
@@ -672,6 +680,7 @@ public:
         setupMenuBar();
         setupToolBar();
         setupDockWidgets();
+        setupSystemTray();
 
         // ── Bubble overlay (lives above everything) ──────────────────────────
         // The overlay must be a child of the central widget (not the window)
@@ -800,7 +809,59 @@ protected:
         QMainWindow::closeEvent(ev);
     }
 
+    void showCommandPalette() {
+        GlassCommandPalette dlg(this);
+        
+        // Collect all actions from the menu bar
+        QList<QAction*> actions;
+        for (auto* menu : menuBar()->findChildren<QMenu*>()) {
+            actions.append(menu->actions());
+        }
+        
+        dlg.populate(actions);
+        
+        // Center on screen
+        dlg.move(rect().center().x() - dlg.width() / 2, rect().top() + 100);
+        
+        dlg.exec();
+    }
+
 private:
+    void setupSystemTray() {
+        m_trayIcon = new QSystemTrayIcon(this);
+        // Create a basic pixel map for the icon if no icon is available
+        QPixmap pix(32, 32);
+        pix.fill(Qt::transparent);
+        QPainter p(&pix);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setBrush(QColor(80, 140, 255));
+        p.setPen(Qt::NoPen);
+        p.drawRoundedRect(4, 4, 24, 24, 6, 6);
+        p.setPen(QPen(Qt::white, 2));
+        p.drawText(pix.rect(), Qt::AlignCenter, "N+");
+        m_trayIcon->setIcon(QIcon(pix));
+        
+        QMenu* trayMenu = new QMenu(this);
+        trayMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        trayMenu->setAttribute(Qt::WA_TranslucentBackground);
+        
+        trayMenu->addAction("Restore", this, &QMainWindow::showNormal);
+        trayMenu->addSeparator();
+        trayMenu->addAction("New File", this, &BobNppGlassWindow::actionNew);
+        trayMenu->addAction("Open File...", this, &BobNppGlassWindow::actionOpen);
+        trayMenu->addSeparator();
+        trayMenu->addAction("Exit", this, &QMainWindow::close);
+        
+        m_trayIcon->setContextMenu(trayMenu);
+        connect(m_trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason){
+            if (reason == QSystemTrayIcon::Trigger) {
+                if (isVisible()) hide();
+                else { show(); raise(); activateWindow(); }
+            }
+        });
+        m_trayIcon->show();
+    }
+
     void setupDockWidgets() {
         // ── Folder as Workspace ─────────────────────────────────────────────
         m_folderDock = new QDockWidget("Folder as Workspace", this);
@@ -1403,6 +1464,11 @@ private:
         addAct(view, "Toggle &Full Screen", [this](){
             setWindowState(windowState() ^ Qt::WindowFullScreen);
         }, QKeySequence(Qt::Key_F11));
+        
+        addAct(view, "Command Palette...", [this](){
+            showCommandPalette();
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P));
+        
         view->addSeparator();
         auto* wrapAct = view->addAction("Word &Wrap");
         wrapAct->setCheckable(true);
@@ -1721,6 +1787,7 @@ private:
     QStandardItemModel* m_searchModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
+    QSystemTrayIcon* m_trayIcon = nullptr;
 };
 
 
