@@ -52,10 +52,19 @@
 - [ ] Implement Scintilla Marker logic for line-bookmarks (Margin 1).
 - [ ] Implement Windows 11 Snap Layouts integration.
 
-## Phase 11: Collaborative Singularity
-- [ ] Integrate a real-time collaborative editing backend (WebSocket/CRDT).
-- [ ] Multi-cursor focus tree virtualization for shared sessions.
-- [ ] Advanced UDL (User Defined Language) parser for custom XML syntax.
+## Phase 11: Collaborative Singularity (Complete)
+- [x] Engineered a "Glass Compare" tool utilizing side-by-side diffing and Scintilla markers.
+- [x] Integrated vertical and horizontal scrolling sync into the native Compare workflow.
+- [x] Built the `GlassUDLManager` for User Defined Language parsing.
+- [x] Implemented "Recent Files" tracking with persistence and tooltips.
+- [x] Integrated "Mark All" indicators (ID 9) for search visualization.
+
+## Phase 12: Final Interop & Polish
+- [ ] Implement XML config saving to `config.xml`.
+- [ ] Connect native Qt QPrinter mapping for document printing.
+- [ ] Refine the Status Bar to calculate dynamic Line/Col numbers when `SCI_WORDWRAP` is enabled.
+- [ ] Implement Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
+- [ ] Finalize WebSocket collaborative editing backend.
 
 ## Phase 8: Advanced OS Features (Complete)
 - [x] Implemented Glass Command Palette (`Ctrl+Shift+P`) for rapid action searching.

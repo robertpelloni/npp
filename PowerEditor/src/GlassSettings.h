@@ -94,6 +94,9 @@ public:
     int activeTab() const { return m_settings.value("Session/ActiveTab", 0).toInt(); }
     void setActiveTab(int index) { m_settings.setValue("Session/ActiveTab", index); }
 
+    QStringList recentFiles() const { return m_settings.value("Session/RecentFiles").toStringList(); }
+    void setRecentFiles(const QStringList& files) { m_settings.setValue("Session/RecentFiles", files); }
+
 private:
     GlassSettings() : m_settings("robertpelloni", "Notepad++ BobUI Liquid Glass") {}
     ~GlassSettings() = default;

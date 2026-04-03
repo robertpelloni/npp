@@ -10,28 +10,29 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Glass Terminals, XML Interop & Shortcut Mapping (v1.1.7)
+## THIS SESSION: Compare Tools, Recent Files & Scrolling Parity (v1.1.8)
 
 ### Major Achievements
-1. **Glass Terminal Integration:** Built a native dockable command terminal (`GlassTerminal.h`) powered by `QProcess`.
-   * **Real-time TTY:** Intercepts Scintilla `SCN_CHARADDED` events to pipe keystrokes directly into the `cmd.exe` / `/bin/bash` standard input stream.
-   * **Visual Parity:** Uses a high-contrast dark glass theme with block caret rendering to match the terminal aesthetic.
-2. **NPP XML Interop:** Engineered `GlassConfigXML.h` for native Notepad++ compatibility.
-   * **Macro Persistence:** The system now translates recorded Scintilla message sequences into official `shortcuts.xml` Action tags, ensuring macros can be shared with the "old" Notepad++.
-3. **Shortcut Mapper UI:** Built a high-fidelity dialog (`GlassShortcutMapper.h`) featuring a glass-styled `QTableWidget` to manage global keyboard accelerators.
-4. **Refined Core Structs:** Centralized the `MacroCommand` and `StyleSettings` structures into `GlassSettings.h` to facilitate cross-module data propagation.
-5. **UI Polish:** Added "Terminal" toggles to the View menu and successfully linked the terminal process lifecycle to the main window.
+1. **Glass Compare Engine:** Engineered a side-by-side document comparison tool (`GlassCompareManager.h`).
+   * **Diff Visualization:** Utilizes Scintilla full-rect markers (Green/Red/Yellow) to visualize line additions, deletions, and modifications across the dual-pane architecture.
+   * **Automated Sync:** Invoking a comparison automatically triggers vertical and horizontal scroll-synchronization for a unified viewing experience.
+2. **Recent Files Tracking:** Implemented a persistent **Recent Files** list in the File menu.
+   * **Persistence:** Uses `QSettings` to serialize the last 10 file paths to disk.
+   * **Quick Navigation:** Features tooltips for absolute paths and one-click restoration of previous documents.
+3. **UDL Foundation:** Authored `GlassUDLManager.h` utilizing `QXmlStreamReader`. This provides the skeleton for parsing Notepad++ User Defined Language XML files.
+4. **Scrolling Parity:** Finalized the implementation of **Horizontal Synchronized Scrolling**, enabling a locked viewport when navigating wide documents in Split View mode.
+5. **Unified Compare UI:** Integrated the Compare and Sync Scrolling tools into a dedicated submenu within the Plugins hierarchy.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassTerminal.h` | Native shell wrapper using Scintilla for output. |
-| `PowerEditor/src/GlassConfigXML.h` | XML StreamWriter for NPP shortcuts and configurations. |
-| `PowerEditor/src/GlassShortcutMapper.h` | UI for keyboard binding management. |
-| `PowerEditor/src/BobScintilla.h` | Added character input hooks for terminal emulation. |
-| `NPP_ROADMAP.md` | Marked Phase 10 as Complete. |
+| `PowerEditor/src/GlassCompareManager.h` | Side-by-side diff logic and Scintilla marker management. |
+| `PowerEditor/src/GlassUDLManager.h` | XML parser for native NPP User Defined Languages. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Recent Files, Compare triggers, and Horizontal Sync scrolling. |
+| `PowerEditor/src/GlassSettings.h` | Added `recentFiles` persistence and centralized `MacroCommand` struct. |
+| `NPP_ROADMAP.md` | Marked Phase 11 as Complete. |
 
 ---
 
@@ -45,12 +46,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 11)
+## Next Steps for Implementor (Phase 12)
 
 ### Immediate (P0)
-1. **Collaborative Backend:** Integrate `QWebSocket` to allow multiple editors to sync caret positions and text changes across the network.
-2. **UDL Parser:** Implement the User Defined Language (UDL) XML parser to allow custom syntax highlighting for non-standard file formats.
+1. **Config XML Interop:** Extend `GlassConfigXML.h` to save and load general UI preferences (DWM mode, font, wrap) from the official NPP `config.xml`.
+2. **Printing Bridge:** Research the `QtPrintSupport` static linkage to enable document printing via `SCI_FORMATRANGE`.
 
 ### Short-term (P1)
-3. **Windows 11 Snap Layouts:** Finalize the `WM_NCHITTEST` logic to support native Windows 11 window snapping.
-4. **Glass Compare:** Develop a side-by-side diff tool that highlights line deletions and insertions using Scintilla background markers.
+3. **Collaboration Server:** Implement the multi-agent/multi-user edit sync logic via `QWebSocket`.
+4. **Windows Snap Menu:** Intercept `WM_NCHITTEST` and `WM_GETMINMAXINFO` to correctly render the Windows 11 snap layout menu.

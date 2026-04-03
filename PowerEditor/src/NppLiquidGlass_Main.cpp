@@ -115,6 +115,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassTerminal.h"
 #include "GlassConfigXML.h"
 #include "GlassShortcutMapper.h"
+#include "GlassCompareManager.h"
+#include "GlassUDLManager.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -1236,6 +1238,7 @@ private:
                 int idx = tw->addTab(panel, QFileInfo(path).fileName());
                 tw->setCurrentIndex(idx);
                 connectEditorSignals(panel);
+                updateRecentFiles(path);
                 m_statusWidget->showMessage("Opened: " + path, 3000);
             } else {
                 delete panel;
@@ -1279,6 +1282,22 @@ private:
         }
         m_statusWidget->showMessage("Saved: " + path, 2000);
         return true;
+    }
+
+    void actionCompare() {
+        if (m_tabs->count() > 0 && m_tabsSecondary->count() > 0) {
+            auto* p1 = static_cast<GlassEditorPanel*>(m_tabs->currentWidget());
+            auto* p2 = static_cast<GlassEditorPanel*>(m_tabsSecondary->currentWidget());
+            if (p1 && p2) {
+                GlassCompareManager::compare(p1->editor(), p2->editor());
+                // Auto-sync scroll
+                m_syncScrollingV = true;
+                m_syncScrollingH = true;
+                m_statusWidget->showMessage("Comparison complete. Synchronized scrolling enabled.", 3000);
+            }
+        } else {
+            m_statusWidget->showMessage("Compare requires documents in both views.", 2000);
+        }
     }
 
     void actionSaveAll() {
@@ -1555,6 +1574,48 @@ private:
         }
     }
 
+    void updateRecentFiles(const QString& path) {
+        auto& s = GlassSettings::instance();
+        QStringList recent = s.recentFiles();
+        recent.removeAll(path);
+        recent.prepend(path);
+        while (recent.size() > 10) recent.removeLast();
+        s.setRecentFiles(recent);
+        updateRecentFilesMenu();
+    }
+
+    void updateRecentFilesMenu() {
+        if (!m_recentMenu) return;
+        m_recentMenu->clear();
+        const auto& recent = GlassSettings::instance().recentFiles();
+        for (const auto& path : recent) {
+            m_recentMenu->addAction(QFileInfo(path).fileName(), [this, path](){
+                openFile(path);
+            })->setToolTip(path);
+        }
+        if (recent.isEmpty()) {
+            m_recentMenu->addAction("No recent files")->setEnabled(false);
+        }
+    }
+
+    void openFile(const QString& path) {
+        auto* tw = currentTabWidget();
+        auto* panel = findPanelByPath(path);
+        if (!panel) {
+            panel = new GlassEditorPanel(tw);
+            if (panel->loadFile(path)) {
+                tw->addTab(panel, QFileInfo(path).fileName());
+                tw->setCurrentWidget(panel);
+                connectEditorSignals(panel);
+                updateRecentFiles(path);
+            } else {
+                delete panel;
+            }
+        } else {
+            static_cast<QTabWidget*>(panel->parentWidget())->setCurrentWidget(panel);
+        }
+    }
+
     void performBackup() {
         QDir backupDir("backup");
         if (!backupDir.exists()) backupDir.mkpath(".");
@@ -1592,6 +1653,10 @@ private:
         file->setStyleSheet(LiquidGlassStyleSheet::kMenu);
         addAct(file, "&New",       [this](){ actionNew(); },  QKeySequence::New);
         addAct(file, "&Open...",   [this](){ actionOpen(); }, QKeySequence::Open);
+        m_recentMenu = file->addMenu("Recent Files");
+        m_recentMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        updateRecentFilesMenu();
+        
         addAct(file, "&Save",      [this](){ actionSave(); }, QKeySequence::Save);
         addAct(file, "Save &As...", [this](){
             if (auto* p = currentPanel()) saveFileAs(p);
@@ -1992,6 +2057,31 @@ private:
         // ─── PLUGINS ──────────────────────────────────────────────────────
         m_pluginsMenu = menuBar()->addMenu("&Plugins");
         m_pluginsMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        
+        // Native Compare Plugin
+        QMenu* compareMenu = m_pluginsMenu->addMenu("Compare");
+        compareMenu->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        compareMenu->addAction("Compare", this, &BobNppGlassWindow::actionCompare, QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_C));
+        compareMenu->addAction("Clear Results", this, [this](){
+            for (auto* tw : {m_tabs, m_tabsSecondary}) {
+                for (int i = 0; i < tw->count(); ++i) {
+                    auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                    GlassCompareManager::clear(p->editor());
+                }
+            }
+        });
+        compareMenu->addSeparator();
+        auto* syncScrollVAct_C = compareMenu->addAction("Sync Vertical Scrolling");
+        syncScrollVAct_C->setCheckable(true);
+        syncScrollVAct_C->setChecked(m_syncScrollingV);
+        connect(syncScrollVAct_C, &QAction::toggled, this, [this](bool on){ m_syncScrollingV = on; });
+        
+        auto* syncScrollHAct_C = compareMenu->addAction("Sync Horizontal Scrolling");
+        syncScrollHAct_C->setCheckable(true);
+        syncScrollHAct_C->setChecked(m_syncScrollingH);
+        connect(syncScrollHAct_C, &QAction::toggled, this, [this](bool on){ m_syncScrollingH = on; });
+        
+        m_pluginsMenu->addSeparator();
         updatePluginsMenu();
 
         // ─── WINDOW ───────────────────────────────────────────────────────
@@ -2197,6 +2287,7 @@ private:
     GlassSearchWorker* m_searchWorker = nullptr;
     QDockWidget*     m_terminalDock = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
+    QMenu*           m_recentMenu = nullptr;
     QSystemTrayIcon* m_trayIcon = nullptr;
     QTimer*          m_backupTimer = nullptr;
     bool             m_syncScrollingV = false;
