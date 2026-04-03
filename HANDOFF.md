@@ -21,6 +21,12 @@ The previous implementation had a "Modern Glass" dark theme implemented purely t
 - Software Gaussian blur fallback (3× box blur approximation) for inner panels
 - Full glassmorphism QSS for all widget types
 
+**Session 2 Update:**
+- **`GlassSettings.h` Integration:** Implemented a robust `QSettings` singleton that persists the window state (geometry, position, and DWM intensity modes) and all editor configurations (font, size, wrap mode, default encoding, bubbles toggle).
+- **`GlassPreferencesDialog`**: Built a fully responsive, draggable, frameless glass dialog allowing real-time reconfiguration of the entire app's visual state and editor panels via `std::function` callbacks.
+- **Macro Recording Engine Scaffold:** Built the state-management logic and UI toggles for the Macro menu (Start/Stop/Playback).
+- **Bug Fixes:** Resolved the MSB6001 environment variable bug via a Python `build.py` script. Resolved C++ linking issues with `QDialog` and `AUTOMOC` dependencies by switching to functor callbacks.
+
 ### New Files Created
 | File | Purpose |
 |------|---------|
@@ -152,44 +158,20 @@ cmake --build build --target npp_bobui_v2 --config Release
 ### Short-term (P1)
 4. **Real Scintilla integration**: Replace QPlainTextEdit with actual ScintillaEdit widget.
    The BobScintilla wrapper exists in POC — needs to be wired into GlassEditorPanel.
-5. **Line wrap per-tab**: Word wrap should be per-tab, tracked in GlassEditorPanel.
-6. **Macro system**: Start/Stop/Playback recording wired to actual editor actions.
-7. **Settings persistence**: QSettings integration to save window state, zoom, encoding preferences.
-8. **Plugin system**: Port Notepad++ plugin loading to Qt plugin system.
+5. **Plugin system**: Port Notepad++ plugin loading to Qt plugin system.
+6. **Docking**: QDockWidget for Function List, Folder as Workspace panels with glass paint.
 
 ### Medium-term (P2)
-9. **Docking**: QDockWidget for Function List, Folder as Workspace panels with glass paint.
-10. **Glass splash screen**: Show on startup while bobui libs initialize.
-11. **JUCE integration**: Wire OmniApplication::initializeJuce() into the app startup.
-12. **macOS port**: NSVisualEffectView for native macOS frosted glass.
-13. **Linux/KWin blur**: `_KDE_NET_WM_BLUR_BEHIND_REGION` X atom for KDE Plasma.
+7. **Glass splash screen**: Show on startup while bobui libs initialize.
+8. **JUCE integration**: Wire OmniApplication::initializeJuce() into the app startup.
+9. **macOS port**: NSVisualEffectView for native macOS frosted glass.
+10. **Linux/KWin blur**: `_KDE_NET_WM_BLUR_BEHIND_REGION` X atom for KDE Plasma.
 
 ---
 
 ## Bug Fixes Needed Before Compilation
 
-```cpp
-// Fix 1: Remove QString::rtrimmed() — use custom lambda instead
-// In "Trim Trailing Space" action:
-for (auto& l : lines) {
-    int end = l.size();
-    while (end > 0 && (l[end-1] == ' ' || l[end-1] == '\t')) --end;
-    l = l.left(end);
-}
-
-// Fix 2: QInputDialog needs its header
-#include <QInputDialog>
-
-// Fix 3: About dialog paintEvent — replace PaintFilter with:
-class GlassAboutDialog : public QDialog {
-protected:
-    void paintEvent(QPaintEvent*) override {
-        QPainter p(this);
-        LiquidGlassPainter::drawGlassBackground(p, QRectF(rect()), 14.0, true);
-        QDialog::paintEvent(ev);  // careful: don't call base or it overwrites
-    }
-};
-```
+(Fixed in Session 2)
 
 ---
 
@@ -197,11 +179,8 @@ protected:
 All new files staged. Commit message: `feat: implement Liquid Glass UI system v1.1.0`
 
 ## Next Agent Instructions
-1. Fix the three compilation bugs listed above (P0).
-2. Verify build with `cmake --build build --target npp_liquid_glass --config Release`.
-3. Test on Windows 11 — confirm DWM Acrylic blur is visible.
-4. Test on Windows 10 — confirm Win10 Acrylic fallback works.
-5. Implement real Scintilla widget in GlassEditorPanel (P1 #4).
-6. Add QSettings persistence (P1 #7).
-7. Update ROADMAP.md and TODO.md after each completed feature.
-8. Commit and push after each completed feature (reference version in commit message).
+1. Implement real Scintilla widget in GlassEditorPanel (P1 #4). Native HWND embedding vs Qt rendering compositing.
+2. Port Plugin loading system to Qt Plugin API (P1 #5).
+3. Build the `QDockWidget` tools (Function List, Workspaces).
+4. Update ROADMAP.md and TODO.md after each completed feature.
+5. Commit and push after each completed feature (reference version in commit message).

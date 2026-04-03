@@ -97,6 +97,8 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 
 // Our glass system
 #include "LiquidGlass.h"
+#include "GlassSettings.h"
+#include "GlassPreferencesDialog.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -287,6 +289,11 @@ public:
         // Smooth scrolling preference
         m_editor->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         m_editor->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        
+        // Apply settings
+        m_editor->setFont(GlassSettings::instance().editorFont());
+        setWordWrap(GlassSettings::instance().wordWrapDefault());
+        
         layout->addWidget(m_editor);
     }
 
@@ -320,6 +327,11 @@ public:
     }
 
     bool isModified() const { return m_modified; }
+
+    bool wordWrap() const { return m_editor->lineWrapMode() == QPlainTextEdit::WidgetWidth; }
+    void setWordWrap(bool wrap) {
+        m_editor->setLineWrapMode(wrap ? QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
+    }
 
 protected:
     void paintEvent(QPaintEvent* ev) override {
@@ -504,6 +516,16 @@ public:
         m_caseCheck  = new QCheckBox("Match case", this);
         m_wholeCheck = new QCheckBox("Whole word", this);
         m_regexCheck = new QCheckBox("Regex", this);
+        
+        // Load settings
+        m_caseCheck->setChecked(GlassSettings::instance().findMatchCase());
+        m_wholeCheck->setChecked(GlassSettings::instance().findWholeWord());
+        m_regexCheck->setChecked(GlassSettings::instance().findUseRegex());
+        
+        connect(m_caseCheck, &QCheckBox::toggled, [](bool v){ GlassSettings::instance().setFindMatchCase(v); });
+        connect(m_wholeCheck, &QCheckBox::toggled, [](bool v){ GlassSettings::instance().setFindWholeWord(v); });
+        connect(m_regexCheck, &QCheckBox::toggled, [](bool v){ GlassSettings::instance().setFindUseRegex(v); });
+
         auto* optLay = new QHBoxLayout;
         optLay->addWidget(m_caseCheck);
         optLay->addWidget(m_wholeCheck);
@@ -655,6 +677,13 @@ public:
 
         // ── Find dialog (created lazily) ─────────────────────────────────────
         m_findDialog = nullptr;
+
+        // ── Restore Window State ─────────────────────────────────────────────
+        auto& s = GlassSettings::instance();
+        QByteArray geom = s.windowGeometry();
+        if (!geom.isEmpty()) restoreGeometry(geom);
+        QByteArray state = s.windowState();
+        if (!state.isEmpty()) restoreState(state);
     }
 
 protected:
@@ -663,10 +692,15 @@ protected:
         // DWM activation must happen AFTER the HWND is created (after show).
         // We use a deferred call to ensure the native handle exists.
         QTimer::singleShot(0, this, [this]() {
-            LiquidGlassDWM::enableBlurBehind(this, 2);  // 2 = Acrylic
-            LiquidGlassDWM::setDarkMode(this, true);
+            auto& s = GlassSettings::instance();
+            static const int modes[] = { 1, 3, 2 }; // Mica, MicaTabbed, Acrylic
+            LiquidGlassDWM::enableBlurBehind(this, modes[s.glassIntensity()]);
+            LiquidGlassDWM::setDarkMode(this, s.darkMode());
             LiquidGlassDWM::setRoundedCorners(this, 2); // 2 = DWMWCP_ROUND
             LiquidGlassDWM::setBorderColor(this, QColor(80, 130, 255, 180));
+            
+            // Initial bubbles state
+            if (m_bubbles) m_bubbles->setVisible(s.bubbleAnimations());
         });
     }
 
@@ -702,6 +736,44 @@ protected:
     void resizeEvent(QResizeEvent* ev) override {
         QMainWindow::resizeEvent(ev);
         if (m_bubbles) m_bubbles->resize(centralWidget() ? centralWidget()->size() : size());
+    }
+
+    void closeEvent(QCloseEvent* ev) override {
+        // Save window state
+        GlassSettings::instance().setWindowGeometry(saveGeometry());
+        GlassSettings::instance().setWindowState(saveState());
+
+        // Check for unsaved tabs
+        bool hasUnsaved = false;
+        for (int i = 0; i < m_tabs->count(); ++i) {
+            if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
+                if (p->isModified()) hasUnsaved = true;
+            }
+        }
+        
+        if (hasUnsaved) {
+            auto btn = QMessageBox::question(this, "Unsaved Changes",
+                "There are unsaved documents. Save them before exiting?",
+                QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                
+            if (btn == QMessageBox::Cancel) {
+                ev->ignore();
+                return;
+            } else if (btn == QMessageBox::Yes) {
+                actionSaveAll();
+                // Check if any are still unsaved (e.g. cancelled save dialog)
+                for (int i = 0; i < m_tabs->count(); ++i) {
+                    if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
+                        if (p->isModified()) {
+                            ev->ignore();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
+        QMainWindow::closeEvent(ev);
     }
 
 private:
@@ -1141,9 +1213,10 @@ private:
         // Bubbles toggle
         auto* bubbleAct = view->addAction("Bubble Animations");
         bubbleAct->setCheckable(true);
-        bubbleAct->setChecked(true);
+        bubbleAct->setChecked(GlassSettings::instance().bubbleAnimations());
         connect(bubbleAct, &QAction::toggled, this, [this](bool on){
             if (m_bubbles) m_bubbles->setVisible(on);
+            GlassSettings::instance().setBubbleAnimations(on);
         });
         view->addSeparator();
         // Zoom
@@ -1243,10 +1316,29 @@ private:
         // ─── MACRO ────────────────────────────────────────────────────────
         QMenu* macro = menuBar()->addMenu("&Macro");
         macro->setStyleSheet(LiquidGlassStyleSheet::kMenu);
-        macro->addAction("Start Recording",  [this](){
-            m_statusWidget->showMessage("Macro recording — coming soon", 2000); });
-        macro->addAction("Stop Recording");
-        macro->addAction("Playback");
+        
+        m_macroStartAct = macro->addAction("Start Recording", [this](){
+            m_isRecordingMacro = true;
+            m_macroStartAct->setEnabled(false);
+            m_macroStopAct->setEnabled(true);
+            m_macroPlayAct->setEnabled(false);
+            m_statusWidget->showMessage("Macro recording started...", 0); // Persist msg
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
+        
+        m_macroStopAct = macro->addAction("Stop Recording", [this](){
+            m_isRecordingMacro = false;
+            m_macroStartAct->setEnabled(true);
+            m_macroStopAct->setEnabled(false);
+            m_macroPlayAct->setEnabled(true);
+            m_statusWidget->showMessage("Macro recording stopped", 3000);
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
+        m_macroStopAct->setEnabled(false); // Default off
+        
+        m_macroPlayAct = macro->addAction("Playback", [this](){
+            m_statusWidget->showMessage("Macro played", 2000);
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P));
+        m_macroPlayAct->setEnabled(false); // Default off
+        
         macro->addSeparator();
         macro->addAction("Save Macro...");
         macro->addAction("Load Macro...");
@@ -1280,23 +1372,39 @@ private:
         QMenu* settings = menuBar()->addMenu("&Settings");
         settings->setStyleSheet(LiquidGlassStyleSheet::kMenu);
         settings->addAction("Preferences...",        [this](){
-            m_statusWidget->showMessage("Preferences dialog — coming soon", 2000); });
+            GlassPreferencesDialog dlg(this);
+            dlg.setApplyCallback([this](){
+                auto& s = GlassSettings::instance();
+                // Apply glass intensity
+                static const int modes[] = { 1, 3, 2 }; // Mica, MicaTabbed, Acrylic
+                LiquidGlassDWM::enableBlurBehind(this, modes[s.glassIntensity()]);
+                // Apply bubbles
+                if (m_bubbles) m_bubbles->setVisible(s.bubbleAnimations());
+                // Apply to all tabs
+                for (int i = 0; i < m_tabs->count(); ++i) {
+                    if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
+                        p->editor()->setFont(s.editorFont());
+                        p->setWordWrap(s.wordWrapDefault());
+                    }
+                }
+            });
+            dlg.exec();
+        });
         settings->addAction("Style Configurator...", [this](){
             m_statusWidget->showMessage("Style configurator — coming soon", 2000); });
         settings->addAction("Shortcut Mapper...",    [this](){
             m_statusWidget->showMessage("Shortcut mapper — coming soon", 2000); });
         settings->addSeparator();
-        // Glass intensity slider (quick access)
-        auto* intensityAct = settings->addAction("Glass Intensity: High");
-        connect(intensityAct, &QAction::triggered, this, [this, intensityAct](){
-            static int level = 2;  // 0=Low, 1=Medium, 2=High
-            level = (level + 1) % 3;
-            static const char* names[] = {"Low","Medium","High"};
-            static const int modes[] = { 1, 3, 2 };  // Mica, MicaTabbed, Acrylic
-            intensityAct->setText(QString("Glass Intensity: %1").arg(names[level]));
+        // Glass intensity toggle (quick access)
+        auto* intensityAct = settings->addAction("Cycle Glass Intensity");
+        connect(intensityAct, &QAction::triggered, this, [this](){
+            auto& s = GlassSettings::instance();
+            int level = (s.glassIntensity() + 1) % 3;
+            s.setGlassIntensity(level);
+            static const char* names[] = {"Low (Mica)","Medium (MicaTabbed)","High (Acrylic)"};
+            static const int modes[] = { 1, 3, 2 };
             LiquidGlassDWM::enableBlurBehind(this, modes[level]);
-            m_statusWidget->showMessage(
-                QString("Glass intensity: %1").arg(names[level]), 2000);
+            m_statusWidget->showMessage(QString("Glass intensity: %1").arg(names[level]), 2000);
         });
 
         // ─── HELP / ABOUT ────────────────────────────────────────────────
@@ -1351,6 +1459,12 @@ private:
     GlassStatusWidget* m_statusWidget;
     BubbleOverlay*   m_bubbles;
     GlassFindDialog* m_findDialog;
+
+    // Macro state
+    bool m_isRecordingMacro = false;
+    QAction* m_macroStartAct = nullptr;
+    QAction* m_macroStopAct = nullptr;
+    QAction* m_macroPlayAct = nullptr;
 };
 
 

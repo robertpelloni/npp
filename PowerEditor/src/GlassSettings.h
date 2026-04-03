@@ -1,0 +1,74 @@
+/**
+ * GlassSettings.h — Persistent configuration for Notepad++ BobUI
+ *
+ * Uses QSettings to store and retrieve user preferences, window state,
+ * and editor configurations (font, word wrap, themes, glass intensity).
+ * Provides a centralized singleton manager.
+ */
+
+#ifndef GLASS_SETTINGS_H
+#define GLASS_SETTINGS_H
+
+#include <QSettings>
+#include <QString>
+#include <QFont>
+#include <QColor>
+#include <QSize>
+#include <QPoint>
+
+class GlassSettings {
+public:
+    static GlassSettings& instance() {
+        static GlassSettings instance;
+        return instance;
+    }
+
+    // ── Window State ──
+    QByteArray windowGeometry() const { return m_settings.value("Window/Geometry").toByteArray(); }
+    void setWindowGeometry(const QByteArray& geom) { m_settings.setValue("Window/Geometry", geom); }
+
+    QByteArray windowState() const { return m_settings.value("Window/State").toByteArray(); }
+    void setWindowState(const QByteArray& state) { m_settings.setValue("Window/State", state); }
+
+    // ── UI Preferences ──
+    int glassIntensity() const { return m_settings.value("UI/GlassIntensity", 2).toInt(); } // 0=Mica, 1=MicaTabbed, 2=Acrylic
+    void setGlassIntensity(int level) { m_settings.setValue("UI/GlassIntensity", level); }
+
+    bool bubbleAnimations() const { return m_settings.value("UI/BubbleAnimations", true).toBool(); }
+    void setBubbleAnimations(bool enable) { m_settings.setValue("UI/BubbleAnimations", enable); }
+
+    bool darkMode() const { return m_settings.value("UI/DarkMode", true).toBool(); }
+    void setDarkMode(bool dark) { m_settings.setValue("UI/DarkMode", dark); }
+
+    // ── Editor Preferences ──
+    QFont editorFont() const { 
+        QFont defaultFont("Cascadia Code", 11);
+        defaultFont.setStyleHint(QFont::Monospace);
+        return m_settings.value("Editor/Font", defaultFont).value<QFont>(); 
+    }
+    void setEditorFont(const QFont& font) { m_settings.setValue("Editor/Font", font); }
+
+    bool wordWrapDefault() const { return m_settings.value("Editor/WordWrap", false).toBool(); }
+    void setWordWrapDefault(bool wrap) { m_settings.setValue("Editor/WordWrap", wrap); }
+
+    QString defaultEncoding() const { return m_settings.value("Editor/Encoding", "UTF-8").toString(); }
+    void setDefaultEncoding(const QString& enc) { m_settings.setValue("Editor/Encoding", enc); }
+
+    // ── Find & Replace State ──
+    bool findMatchCase() const { return m_settings.value("Find/MatchCase", false).toBool(); }
+    void setFindMatchCase(bool val) { m_settings.setValue("Find/MatchCase", val); }
+
+    bool findWholeWord() const { return m_settings.value("Find/WholeWord", false).toBool(); }
+    void setFindWholeWord(bool val) { m_settings.setValue("Find/WholeWord", val); }
+
+    bool findUseRegex() const { return m_settings.value("Find/UseRegex", false).toBool(); }
+    void setFindUseRegex(bool val) { m_settings.setValue("Find/UseRegex", val); }
+
+private:
+    GlassSettings() : m_settings("robertpelloni", "Notepad++ BobUI Liquid Glass") {}
+    ~GlassSettings() = default;
+
+    QSettings m_settings;
+};
+
+#endif // GLASS_SETTINGS_H
