@@ -89,6 +89,9 @@
 #include <QMap>
 #include <QDateTime>
 #include <QSettings>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QInputDialog>
 #include <QRegularExpression>
 #include <QStandardItemModel>
@@ -113,9 +116,11 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassCommandPalette.h"
 #include "GlassStyleConfigurator.h"
 #include "GlassTerminal.h"
+#include "GlassMarkdownPreview.h"
 #include "GlassConfigXML.h"
 #include "GlassShortcutMapper.h"
 #include "GlassCompareManager.h"
+#include "GlassFunctionParser.h"
 #include "GlassUDLManager.h"
 
 // TextFX algorithm engine
@@ -1017,61 +1022,45 @@ private:
         m_trayIcon->show();
     }
 
+    void updateFunctionList(GlassEditorPanel* panel) {
+        if (!panel || !m_functionDock || !m_functionDock->isVisible()) return;
+        
+        auto* list = static_cast<QListWidget*>(m_functionDock->widget());
+        list->clear();
+        
+        QString ext = QFileInfo(panel->filePath()).suffix();
+        auto funcs = GlassFunctionParser::parse(panel->text(), ext);
+        
+        for (const auto& f : funcs) {
+            auto* item = new QListWidgetItem(f.name, list);
+            item->setData(Qt::UserRole, f.line);
+        }
+    }
+
     void setupDockWidgets() {
-        // ── Folder as Workspace ─────────────────────────────────────────────
-        m_folderDock = new QDockWidget("Folder as Workspace", this);
-        m_folderDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        // ... (previous docks)
         
-        auto* tree = new QTreeView(m_folderDock);
-        tree->setHeaderHidden(true);
-        tree->setContextMenuPolicy(Qt::CustomContextMenu);
-        
-        m_folderModel = new QStandardItemModel(tree);
-        tree->setModel(m_folderModel);
-        
-        m_folderDock->setWidget(tree);
-        addDockWidget(Qt::LeftDockWidgetArea, m_folderDock);
-        m_folderDock->hide();
-
-        connect(tree, &QTreeView::customContextMenuRequested, this, [this, tree](const QPoint& pos){
-            QMenu menu(this);
-            menu.setStyleSheet(LiquidGlassStyleSheet::kMenu);
-            menu.addAction("Add Root Folder...", this, [this](){
-                QString dir = QFileDialog::getExistingDirectory(this, "Select Folder");
-                if (!dir.isEmpty()) addWorkspaceRoot(dir);
-            });
-            menu.exec(tree->viewport()->mapToGlobal(pos));
-        });
-
-        // Connect double-click to open file
-        connect(tree, &QTreeView::doubleClicked, this, [this](const QModelIndex& index){
-            QString path = m_folderModel->data(index, Qt::UserRole).toString();
-            if (!path.isEmpty() && QFileInfo(path).isFile()) {
-                auto* p = findPanelByPath(path);
-                if (!p) {
-                    p = new GlassEditorPanel(m_tabs);
-                    if (p->loadFile(path)) {
-                        m_tabs->setCurrentIndex(m_tabs->addTab(p, QFileInfo(path).fileName()));
-                        connectEditorSignals(p);
-                    } else {
-                        delete p;
-                    }
-                } else {
-                    m_tabs->setCurrentWidget(p);
-                }
-            }
-        });
-
         // ── Function List ───────────────────────────────────────────────────
         m_functionDock = new QDockWidget("Function List", this);
         m_functionDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         auto* list = new QListWidget(m_functionDock);
-        list->addItem("main(int argc, char* argv[])");
-        list->addItem("drawGlassBackground(QPainter& p)");
-        list->addItem("enableBlurBehind(QWidget* w)");
         m_functionDock->setWidget(list);
         addDockWidget(Qt::RightDockWidgetArea, m_functionDock);
         m_functionDock->hide();
+
+        connect(list, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* item){
+            if (auto* p = currentPanel()) {
+                int line = item->data(Qt::UserRole).toInt();
+                sptr_t pos = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
+                p->editor()->send(SCI_GOTOPOS, pos);
+                p->editor()->send(SCI_GRABFOCUS);
+            }
+        });
+        
+        // Connect visibility to refresh
+        connect(m_functionDock, &QDockWidget::visibilityChanged, this, [this](bool visible){
+            if (visible) updateFunctionList(currentPanel());
+        });
         
         // ── Search Results ──────────────────────────────────────────────────
         m_searchDock = new QDockWidget("Search Results", this);
@@ -1092,6 +1081,23 @@ private:
         addDockWidget(Qt::BottomDockWidgetArea, m_terminalDock);
         m_terminalDock->hide();
         term->startShell();
+        
+        // ── Markdown Preview ────────────────────────────────────────────────
+        m_mdDock = new QDockWidget("Markdown Preview", this);
+        m_mdDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        auto* md = new GlassMarkdownPreview(m_mdDock);
+        m_mdDock->setWidget(md);
+        addDockWidget(Qt::RightDockWidgetArea, m_mdDock);
+        m_mdDock->hide();
+
+        // Connect visibility to refresh
+        connect(m_mdDock, &QDockWidget::visibilityChanged, this, [this](bool visible){
+            if (visible && currentPanel()) {
+                if (QFileInfo(currentPanel()->filePath()).suffix() == "md") {
+                    static_cast<GlassMarkdownPreview*>(m_mdDock->widget())->updateMarkdown(currentPanel()->text());
+                }
+            }
+        });
 
         // Connect search result clicking to open file and jump to line
         connect(m_searchTree, &QTreeView::doubleClicked, this, [this](const QModelIndex& idx){
@@ -1154,7 +1160,13 @@ private:
             if (currentTabWidget()->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
         };
         panel->m_onContentsChanged = [this, panel]() { 
-            if (currentTabWidget()->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+            if (currentTabWidget()->currentWidget() == panel) {
+                m_statusWidget->updateStats(panel->editor()); 
+                updateFunctionList(panel);
+                if (m_mdDock && m_mdDock->isVisible() && QFileInfo(panel->filePath()).suffix() == "md") {
+                    static_cast<GlassMarkdownPreview*>(m_mdDock->widget())->updateMarkdown(panel->text());
+                }
+            }
         };
         
         // Synchronized Scrolling
@@ -1690,6 +1702,36 @@ private:
             }
         });
         file->addSeparator();
+        addAct(file, "Save Workspace...", [this](){
+            QString path = QFileDialog::getSaveFileName(this, "Save Workspace", "", "NPP Workspace (*.nppw)");
+            if (path.isEmpty()) return;
+            QFile f(path);
+            if (f.open(QIODevice::WriteOnly)) {
+                QJsonObject obj;
+                QJsonArray files;
+                for (auto* tw : {m_tabs, m_tabsSecondary}) {
+                    for (int i = 0; i < tw->count(); ++i) {
+                        auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                        if (p && !p->filePath().isEmpty()) files.append(p->filePath());
+                    }
+                }
+                obj["files"] = files;
+                f.write(QJsonDocument(obj).toJson());
+            }
+        });
+        addAct(file, "Load Workspace...", [this](){
+            QString path = QFileDialog::getOpenFileName(this, "Load Workspace", "", "NPP Workspace (*.nppw)");
+            if (path.isEmpty()) return;
+            QFile f(path);
+            if (f.open(QIODevice::ReadOnly)) {
+                QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+                QJsonArray files = obj["files"].toArray();
+                for (const auto& v : files) {
+                    openFile(v.toString());
+                }
+            }
+        });
+        file->addSeparator();
         addAct(file, "E&xit",  [this](){ close(); }, QKeySequence::Quit);
 
         // ─── EDIT ─────────────────────────────────────────────────────────
@@ -1924,6 +1966,13 @@ private:
             if (m_terminalDock) m_terminalDock->setVisible(on);
         });
         connect(m_terminalDock, &QDockWidget::visibilityChanged, terminalAct, &QAction::setChecked);
+
+        auto* mdAct = view->addAction("Markdown Preview");
+        mdAct->setCheckable(true);
+        connect(mdAct, &QAction::toggled, this, [this](bool on){
+            if (m_mdDock) m_mdDock->setVisible(on);
+        });
+        connect(m_mdDock, &QDockWidget::visibilityChanged, mdAct, &QAction::setChecked);
 
         view->addSeparator();
         // Bubbles toggle
@@ -2326,6 +2375,7 @@ private:
     QStandardItemModel* m_folderModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
     QDockWidget*     m_terminalDock = nullptr;
+    QDockWidget*     m_mdDock = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
     QMenu*           m_recentMenu = nullptr;
     QSystemTrayIcon* m_trayIcon = nullptr;

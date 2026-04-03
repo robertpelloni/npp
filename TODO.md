@@ -1,6 +1,6 @@
-# Immediate Tasks (Phase 13: Collaboration & Beyond)
-- [ ] Implement WebSocket server/client for real-time shared multi-cursor editing.
+# Immediate Tasks (Phase 14: Polishing the OS Experience)
+- [ ] Connect WebSocket server for shared multi-cursor editing sessions.
 - [ ] Build a robust UDL parser for legacy Notepad++ user languages.
-- [ ] Finalize Windows 11 Snap Layouts integration.
+- [ ] Finalize Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
 - [ ] Connect `QtPrintSupport` to enable native glass-mode printing.
-- [ ] Add support for "Column Paste" and advanced multi-caret manipulations.
+- [ ] Add support for "Glass Drag-and-Drop" from the OS.

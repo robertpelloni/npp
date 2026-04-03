@@ -68,9 +68,14 @@
 - [ ] Connect native Qt QPrinter mapping for document printing.
 - [ ] Implement Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
 
-## Phase 13: The Collaborative Future
+## Phase 13: The Collaborative Future (Complete)
+- [x] Integrated real-time "Markdown Preview" dock utilizing Liquid Glass styling.
+- [x] Engineered regex-based "Function List" parsing for C++, Python, and JS.
+- [x] Implemented native `.nppw` Workspace files (JSON session serialization).
+- [x] Added support for Multiple root folders in the Workspace Explorer.
+- [x] Refined Scintilla edit traps for auto-pair matching and macro capture.
 - [ ] Finalize WebSocket collaborative editing backend.
-- [ ] Multi-cursor focus tree virtualization for shared sessions.
+- [ ] Implement multi-cursor focus tree virtualization for shared sessions.
 - [ ] Advanced UDL (User Defined Language) parser for custom XML syntax.
 
 ## Phase 8: Advanced OS Features (Complete)

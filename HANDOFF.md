@@ -10,31 +10,30 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Final Parity, Config Mapping & Multi-Selection (v1.1.9)
+## THIS SESSION: Markdown Preview, Function Parsing & Workspace Files (v1.1.10)
 
 ### Major Achievements
-1. **Config XML Interoperability:** Completed the `config.xml` bridge in `GlassConfigXML.h`.
-   * **Persistence:** Natively saves and restores UI design tokens (Glass intensity, bubbles, dark mode) and Editor preferences (Font, size, wrap) to the standard NPP configuration file.
-2. **Intelligent Editing (Auto-Pairs):** Implemented **Auto-insert matching braces/quotes**.
-   * **Scope:** Automatically generates closing pairs for `()`, `{}`, `[]`, `""`, and `''` while preserving caret positioning.
-3. **Multi-Caret Mastery:**
-   * **Select All Occurrences:** Mapped `Ctrl+Shift+L` to Scintilla's `SCI_ADDSELECTION`. It now performs a project-wide search of the selected word and instantiates independent carets for each match.
-   * **Rectangular Selection:** Column-mode editing is now fully enabled via `SCVS_RECTANGULARSELECTION`.
-4. **Professional Line Operations:** Integrated a full suite of line manipulation tools:
-   * **Duplicate:** `Ctrl+D` (`SCI_LINEDUPLICATE`).
-   * **Remove:** `Ctrl+Shift+K` (`SCI_LINEDELETE`).
-   * **Re-order:** `Ctrl+Shift+Up/Down` (`SCI_MOVESELECTEDLINESUP/DOWN`).
-5. **UI Unified State:** Orchestrated the **Minimap** and **Status Bar** toggles to sync across the Dual-Pane architecture, ensuring a consistent aesthetic across all active views.
+1. **Live Markdown Preview:** Built a dedicated **Markdown Preview** dock (`GlassMarkdownPreview.h`) featuring real-time rendering and Liquid Glass styling.
+   * **Reactive Sync:** Automatically updates the preview panel when `.md` files are edited in the Scintilla core.
+2. **Dynamic Function Discovery:** Engineered a regex-based **Function List Parser** (`GlassFunctionParser.h`).
+   * **Language Support:** Natively parses C++, Python, and JavaScript method signatures to populate the side panel.
+   * **Telemetry:** Features double-click navigation to jump the caret to specific function definitions.
+3. **Project Interoperability:**
+   * **`.nppw` Workspaces:** Implemented a JSON-based project format that allows you to save and load entire Dual-View sessions (paths, views, and active states).
+   * **Config Auto-Sync:** Integrated `config.xml` loading into the splash-screen boot sequence.
+4. **Enhanced Workspace Explorer:** Finalized the **Multiple Root Folder** support, allowing for complex multi-project management within a single glass sidebar.
+5. **Editing Intelligence:** Refined the **Auto-Brace/Quote** logic and fixed several Scintilla notification-loop edge cases.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassConfigXML.h` | Added `loadConfig` / `saveConfig` logic for NPP `config.xml`. |
-| `PowerEditor/src/BobScintilla.h` | Injected Auto-brace logic and `selectAllOccurrences()` routines. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Line Operations menu and global config serialization. |
-| `NPP_ROADMAP.md` | Marked Phase 12 as Complete. |
+| `PowerEditor/src/GlassMarkdownPreview.h` | live Markdown renderer using `QTextBrowser`. |
+| `PowerEditor/src/GlassFunctionParser.h` | Regex signatures for C++, Python, and JS discovery. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Markdown/Function docks and `.nppw` serialization. |
+| `PowerEditor/src/GlassConfigXML.h` | Added `loadConfig` / `saveConfig` logic for UI design tokens. |
+| `NPP_ROADMAP.md` | Marked Phase 13 as Complete. |
 
 ---
 
@@ -48,12 +47,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 13)
+## Next Steps for Implementor (Phase 14)
 
 ### Immediate (P0)
-1. **Shared Multi-Cursor:** Utilize the `GlassCollabClient.h` skeleton to sync Scintilla's multiple selections across a WebSocket backend.
-2. **UDL Advanced Parser:** Ingest the `userDefineLang.xml` to allow user-defined syntax styles.
+1. **Collab Backend:** Implement the `GlassCollabClient.h` logic using `QWebSocket` to enable shared document editing.
+2. **UDL Advanced Styles:** Extend the UDL parser to handle custom lexical states and keyword coloring.
 
 ### Short-term (P1)
-3. **Printing:** Fix the `QtPrintSupport` linkage in `CMakeLists.txt` to enable the "Print" command.
-4. **Window Snap:** Finalize the native Windows 11 snap layout integration.
+3. **Drag and Drop:** Implement native OS drag-and-drop into the editor space for opening files.
+4. **Window Snapping:** Fine-tune `WM_NCHITTEST` to return `HTMAXBUTTON` on the glass title bar for Windows 11 layouts.
