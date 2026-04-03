@@ -40,6 +40,18 @@ public:
     bool darkMode() const { return m_settings.value("UI/DarkMode", true).toBool(); }
     void setDarkMode(bool dark) { m_settings.setValue("UI/DarkMode", dark); }
 
+    // ── Backup / Auto-save ──
+    bool backupEnabled() const { return m_settings.value("Backup/Enabled", true).toBool(); }
+    void setBackupEnabled(bool enable) { m_settings.setValue("Backup/Enabled", enable); }
+    int backupInterval() const { return m_settings.value("Backup/Interval", 30000).toInt(); }
+    void setBackupInterval(int ms) { m_settings.setValue("Backup/Interval", ms); }
+
+    // ── View Modes ──
+    bool distractionFree() const { return m_settings.value("View/DistractionFree", false).toBool(); }
+    void setDistractionFree(bool enable) { m_settings.setValue("View/DistractionFree", enable); }
+    bool showMinimap() const { return m_settings.value("View/ShowMinimap", true).toBool(); }
+    void setShowMinimap(bool show) { m_settings.setValue("View/ShowMinimap", show); }
+
     // ── Editor Preferences ──
     QFont editorFont() const { 
         QFont defaultFont("Cascadia Code", 11);
@@ -63,6 +75,13 @@ public:
 
     bool findUseRegex() const { return m_settings.value("Find/UseRegex", false).toBool(); }
     void setFindUseRegex(bool val) { m_settings.setValue("Find/UseRegex", val); }
+
+    // ── Session Management ──
+    QStringList openFiles() const { return m_settings.value("Session/OpenFiles").toStringList(); }
+    void setOpenFiles(const QStringList& files) { m_settings.setValue("Session/OpenFiles", files); }
+    
+    int activeTab() const { return m_settings.value("Session/ActiveTab", 0).toInt(); }
+    void setActiveTab(int index) { m_settings.setValue("Session/ActiveTab", index); }
 
 private:
     GlassSettings() : m_settings("robertpelloni", "Notepad++ BobUI Liquid Glass") {}

@@ -10,24 +10,31 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Command Palettes, System Tray & UI Virtualization (v1.1.5)
+## THIS SESSION: Workspace Roots, Sync Scrolling & Multi-Cursor Parity (v1.1.6)
 
 ### Major Achievements
-1. **Glass Command Palette:** Built a VS Code-inspired command overlay (`GlassCommandPalette.h`) triggered by `Ctrl+Shift+P`.
-   * **Action Indexing:** Automatically crawls the entire `QMenuBar` tree to index all available `QAction`s.
-   * **Fuzzy Filtering:** Real-time search with keyboard-driven selection (Up/Down/Enter).
-2. **System Tray Integration:** Implemented `QSystemTrayIcon` with a custom Liquid Glass context menu. Supports minimizing to tray and rapid file creation/opening without restoring the main window.
-3. **Status Bar Virtualization:** Upgraded the status bar telemetry to calculate **"Display Line"** offsets. When Word Wrap is active, it now distinguishes between physical source lines and wrapped visual lines.
-4. **Enhanced Desktop UX:** Added "Restore" and "Minimize/Hide" logic to the tray icon, allowing the editor to live persistently in the background.
+1. **Dynamic Workspace Explorer:** Transformed the Folder Workspace into a real, reactive file explorer.
+   * **Multiple Roots:** Added support for anchoring multiple root directories via the custom context menu.
+   * **Hierarchical State:** Uses `QStandardItemModel` to persist absolute file paths across sub-folder levels.
+2. **View Synchronization:** Implemented full **Dual-Pane Synchronized Scrolling**.
+   * **Bi-directional Sync:** Scrolling in the primary view now optionally locks the secondary view's vertical AND horizontal scroll offsets (`SCI_SETFIRSTVISIBLELINE` / `SCI_SETXOFFSET`).
+3. **Advanced Editing Engine:**
+   * **Column Mode:** Enabled Scintilla's rectangular selection and multiple selection features (`SCI_SETMULTIPLESELECTION`).
+   * **Macro Core:** Successfully trapped `SCN_MACRORECORD` to capture a sequence of raw Scintilla message triplets for automated playback.
+4. **UX Persistence:**
+   * **Session Management:** The application now remembers every open file across all tab widgets and restores them precisely on reboot.
+   * **Auto-Backup:** Integrated a background `QTimer` that performs incremental backups of all modified documents to a local `backup/` directory.
+5. **Mark All Visualization:** Integrated Scintilla Indicators (ID 9) for "Mark All" operations, utilizing a straight-box green glass overlay.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassCommandPalette.h` | Frameless, fuzzy-search dialog for app commands. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated tray icon, palette orchestration, and display-line math. |
-| `NPP_ROADMAP.md` | Marked Phase 8 as Complete. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Workspace roots, Sync Scrolling, and Session logic. |
+| `PowerEditor/src/BobScintilla.h` | Enabled Column Mode, Multi-selection, and Macro recording triggers. |
+| `PowerEditor/src/GlassPreferencesDialog.h` | Expanded to a multi-page sidebar with Backup and General categories. |
+| `NPP_ROADMAP.md` | Marked Phase 9 as Complete. |
 
 ---
 
@@ -41,12 +48,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 9)
+## Next Steps for Implementor (Phase 10)
 
 ### Immediate (P0)
-1. **Multi-Cursor Virtualization:** Notepad++ supports multi-editing. Map our `BobScintilla` widget to support multiple independent caret/selection groups (`SCI_SETMULTIPLESELECTION`).
-2. **Glass Terminal:** Build a `QDockWidget` that spawns `cmd.exe` or `powershell` and pipes the output into a Scintilla control with a custom "Terminal Glass" theme.
+1. **Config Persistence:** Settings are currently stored in `QSettings` (Registry/INI). We need to implement an XML writer that translates these design tokens into standard `config.xml` and `shortcuts.xml` for full NPP interoperability.
+2. **Glass Terminal:** Build a `QDockWidget` that spawns `cmd.exe` or `powershell` and pipes the output into a Scintilla control.
 
 ### Short-term (P1)
-3. **Snap Layouts:** Further research into `WS_MAXIMIZEBOX` and `WM_NCHITTEST` is needed to correctly show the Windows 11 snap overlay on our custom-styled title bar.
-4. **Collaborative Editing:** Explore the `OmniWebSocket` integration from BobUI to allow two agents (or users) to type in the same Liquid Glass document simultaneously.
+3. **Line Bookmarks:** Map Scintilla Margin 1 (ID 1) to a toggle-able bookmark system with glass-styled markers.
+4. **UDL Support:** Begin architecting the "User Defined Language" (UDL) parser to allow custom syntax highlighting XMLs.

@@ -82,12 +82,22 @@ public:
         send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
         send(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
         
+        // Bookmark marker (ID 1)
+        send(SCI_MARKERDEFINE, 1, SC_MARK_CIRCLE);
+        send(SCI_MARKERSETFORE, 1, 0xFFFFFF);
+        send(SCI_MARKERSETBACK, 1, 0xFF8040); // Blue glass bookmark (BGR: FF 80 40)
+
         // Style them
         for (int i = SC_MARKNUM_FOLDEREND; i <= SC_MARKNUM_FOLDEROPEN; i++) {
             send(SCI_MARKERSETFORE, i, 0x1A140E); // Match background
             send(SCI_MARKERSETBACK, i, 0x88AAFF); // Subtle blue/cyan for glass aesthetic
             send(SCI_MARKERSETBACKSELECTED, i, 0xFFFFFF);
         }
+        
+        // Enable Multi-Selection and Rectangular Selection (Column Mode)
+        send(SCI_SETMULTIPLESELECTION, 1);
+        send(SCI_SETADDITIONALSELECTIONTYPING, 1);
+        send(SCI_SETVIRTUALSPACEOPTIONS, SCVS_RECTANGULARSELECTION);
         
         // Enable folding in lexers
         send(SCI_SETPROPERTY, reinterpret_cast<sptr_t>("fold"), reinterpret_cast<sptr_t>("1"));
@@ -152,18 +162,27 @@ public:
 
     HWND getHwnd() const { return m_sciHwnd; }
 
-    void highlightRange(sptr_t start, sptr_t length) {
-        // Use indicator 8 (standard for search)
-        send(SCI_SETINDICATORCURRENT, 8);
-        send(SCI_INDICSETSTYLE, 8, INDIC_ROUNDBOX);
-        send(SCI_INDICSETFORE, 8, 0x00A0FF); // Electric orange (BGR: 00 A0 FF)
-        send(SCI_INDICSETALPHA, 8, 100);
-        send(SCI_INDICSETOUTLINEALPHA, 8, 200);
+    void highlightRange(sptr_t start, sptr_t length, int indicator = 8) {
+        // Use specified indicator
+        send(SCI_SETINDICATORCURRENT, indicator);
+        if (indicator == 8) {
+            send(SCI_INDICSETSTYLE, 8, INDIC_ROUNDBOX);
+            send(SCI_INDICSETFORE, 8, 0x00A0FF); // Electric orange
+            send(SCI_INDICSETALPHA, 8, 100);
+            send(SCI_INDICSETOUTLINEALPHA, 8, 200);
+        } else if (indicator == 9) {
+            send(SCI_INDICSETSTYLE, 9, INDIC_STRAIGHTBOX);
+            send(SCI_INDICSETFORE, 9, 0x00FF00); // Green for Mark All
+            send(SCI_INDICSETALPHA, 9, 60);
+        }
         
-        // Clear previous
-        send(SCI_INDICATORCLEARRANGE, 0, send(SCI_GETLENGTH));
         // Fill new
         send(SCI_INDICATORFILLRANGE, start, length);
+    }
+
+    void clearIndicator(int indicator = 8) {
+        send(SCI_SETINDICATORCURRENT, indicator);
+        send(SCI_INDICATORCLEARRANGE, 0, send(SCI_GETLENGTH));
     }
 
     // Dummy properties for font compatibility with settings
@@ -307,6 +326,10 @@ public:
     std::function<void()> onContentsChanged;
     std::function<void(bool)> onModificationChanged;
 
+    std::function<void(unsigned int, uptr_t, sptr_t)> onMacroRecord;
+
+    std::function<void()> onScroll;
+
 protected:
     bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
         MSG* msg = static_cast<MSG*>(message);
@@ -316,11 +339,17 @@ protected:
                 // Notify Plugins
                 GlassPluginManager::instance().notifyAll(scn);
 
+                // Macro recording
+                if (onMacroRecord && scn->nmhdr.code == SCN_MACRORECORD) {
+                    onMacroRecord(scn->message, scn->wParam, scn->lParam);
+                }
+
                 if (scn->nmhdr.code == SCN_MODIFIED) {
                     if (onContentsChanged) onContentsChanged();
                     if (onModificationChanged) onModificationChanged(true);
                 } else if (scn->nmhdr.code == SCN_UPDATEUI) {
                     if (onCursorPositionChanged) onCursorPositionChanged();
+                    if (onScroll) onScroll();
                 } else if (scn->nmhdr.code == SCN_CHARADDED) {
                     // Simple C++ / Python Autocomplete Trigger
                     char ch = static_cast<char>(scn->ch);

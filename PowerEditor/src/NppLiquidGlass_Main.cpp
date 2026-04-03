@@ -92,6 +92,8 @@
 #include <QRegularExpression>
 #include <QStandardItemModel>
 #include <QStandardItem>
+#include <QFileSystemModel>
+#include <QSortFilterProxyModel>
 #include <QtPlugin>
 #include <random>
 #include <cmath>
@@ -108,6 +110,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "GlassSearchWorker.h"
 #include "GlassFindInFilesDialog.h"
 #include "GlassCommandPalette.h"
+#include "GlassStyleConfigurator.h"
 
 // TextFX algorithm engine
 #include "TextFXEngine.h"
@@ -290,9 +293,13 @@ public:
         setAttribute(Qt::WA_TranslucentBackground);
         setFrameShape(QFrame::NoFrame);
 
-        auto* layout = new QVBoxLayout(this);
-        layout->setContentsMargins(1, 1, 1, 1);  // thin glass border margin
-        layout->setSpacing(0);
+        m_mainLayout = new QHBoxLayout(this);
+        m_mainLayout->setContentsMargins(1, 1, 1, 1);
+        m_mainLayout->setSpacing(0);
+
+        m_leftSpacer = new QSpacerItem(0, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
+        m_rightSpacer = new QSpacerItem(0, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
+        m_mainLayout->addSpacerItem(m_leftSpacer);
 
         // The native Scintilla text editor
         m_editor = new BobScintilla(this);
@@ -301,8 +308,46 @@ public:
         m_editor->setFont(GlassSettings::instance().editorFont());
         setWordWrap(GlassSettings::instance().wordWrapDefault());
         
-        layout->addWidget(m_editor);
+        m_mainLayout->addWidget(m_editor, 1);
+
+        // Minimap
+        m_minimap = new BobScintilla(this);
+        m_minimap->setFixedWidth(100);
+        m_minimap->send(SCI_SETZOOM, -10); // zoom way out
+        m_minimap->send(SCI_SETREADONLY, 1);
+        m_minimap->send(SCI_SETVSCROLLBAR, 0);
+        m_minimap->send(SCI_SETHSCROLLBAR, 0);
+        m_minimap->send(SCI_SETMARGINWIDTHN, 0, 0);
+        m_minimap->send(SCI_SETMARGINWIDTHN, 1, 0);
+        m_minimap->send(SCI_SETMARGINWIDTHN, 2, 0);
+        m_minimap->setVisible(GlassSettings::instance().showMinimap());
+        m_mainLayout->addWidget(m_minimap, 0);
+        m_mainLayout->addSpacerItem(m_rightSpacer);
+
+        // Sync Minimap
+        m_editor->onContentsChanged = [this]() {
+            m_minimap->send(SCI_SETREADONLY, 0);
+            m_minimap->setText(m_editor->text());
+            m_minimap->send(SCI_SETREADONLY, 1);
+            if (m_onContentsChanged) m_onContentsChanged();
+        };
+        m_editor->onCursorPositionChanged = [this]() {
+            sptr_t line = m_editor->send(SCI_LINEFROMPOSITION, m_editor->send(SCI_GETCURRENTPOS));
+            m_minimap->send(SCI_GOTOLINE, line);
+            if (m_onCursorPositionChanged) m_onCursorPositionChanged();
+        };
     }
+
+    void setDistractionFree(bool on) {
+        int margin = on ? 200 : 0;
+        m_leftSpacer->changeSize(margin, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
+        m_rightSpacer->changeSize(margin, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
+        m_mainLayout->invalidate();
+        m_minimap->setVisible(!on && GlassSettings::instance().showMinimap());
+    }
+
+    std::function<void()> m_onCursorPositionChanged;
+    std::function<void()> m_onContentsChanged;
 
     BobScintilla* editor() { return m_editor; }
 
@@ -360,6 +405,10 @@ protected:
 
 private:
     BobScintilla* m_editor;
+    BobScintilla* m_minimap;
+    QHBoxLayout*  m_mainLayout;
+    QSpacerItem*  m_leftSpacer;
+    QSpacerItem*  m_rightSpacer;
     QString       m_filePath;
     bool            m_modified = false;
 };
@@ -554,11 +603,13 @@ public:
         m_findNextBtn  = new QPushButton("Find Next",    this);
         m_replaceBtn   = new QPushButton("Replace",      this);
         m_replAllBtn   = new QPushButton("Replace All",  this);
+        m_markAllBtn   = new QPushButton("Mark All",     this);
         m_closeBtn2    = new QPushButton("Close",        this);
         auto* btnLay   = new QHBoxLayout;
         btnLay->addWidget(m_findNextBtn);
         btnLay->addWidget(m_replaceBtn);
         btnLay->addWidget(m_replAllBtn);
+        btnLay->addWidget(m_markAllBtn);
         btnLay->addStretch();
         btnLay->addWidget(m_closeBtn2);
         grid->addLayout(btnLay, 4, 0, 1, 3);
@@ -578,6 +629,7 @@ public:
     QPushButton* findNextButton()  { return m_findNextBtn; }
     QPushButton* replaceButton()   { return m_replaceBtn; }
     QPushButton* replaceAllButton(){ return m_replAllBtn; }
+    QPushButton* markAllButton()   { return m_markAllBtn; }
 
 protected:
     void paintEvent(QPaintEvent*) override {
@@ -609,6 +661,7 @@ private:
     QPushButton* m_findNextBtn;
     QPushButton* m_replaceBtn;
     QPushButton* m_replAllBtn;
+    QPushButton* m_markAllBtn;
     QPushButton* m_closeBtn2;
     QPoint       m_dragPos;
 };
@@ -658,21 +711,42 @@ public:
         mainLay->setContentsMargins(0, 0, 0, 0);
         mainLay->setSpacing(0);
 
-        // ── Tab widget ───────────────────────────────────────────────────────
-        m_tabs = new QTabWidget(central);
+        // ── Main Splitter ──
+        m_mainSplitter = new QSplitter(Qt::Horizontal, central);
+        m_mainSplitter->setStyleSheet("QSplitter::handle { background: rgba(255,255,255,10); }");
+
+        // ── Tab widget 1 ──
+        m_tabs = new QTabWidget(m_mainSplitter);
         m_tabs->setMovable(true);
         m_tabs->setTabsClosable(true);
         m_tabs->setDocumentMode(true);
         m_tabs->setStyleSheet(LiquidGlassStyleSheet::kTabWidget);
         connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](int idx) {
-            onTabCloseRequested(idx);
+            onTabCloseRequested(m_tabs, idx);
         });
         connect(m_tabs, &QTabWidget::currentChanged, this, [this](int idx) {
-            onCurrentTabChanged(idx);
+            onCurrentTabChanged(m_tabs, idx);
         });
-        mainLay->addWidget(m_tabs, 1);
 
-        // ── Glass status widget (replaces QStatusBar) ────────────────────────
+        // ── Tab widget 2 ──
+        m_tabsSecondary = new QTabWidget(m_mainSplitter);
+        m_tabsSecondary->setMovable(true);
+        m_tabsSecondary->setTabsClosable(true);
+        m_tabsSecondary->setDocumentMode(true);
+        m_tabsSecondary->setStyleSheet(LiquidGlassStyleSheet::kTabWidget);
+        m_tabsSecondary->hide(); // Hidden by default
+        connect(m_tabsSecondary, &QTabWidget::tabCloseRequested, this, [this](int idx) {
+            onTabCloseRequested(m_tabsSecondary, idx);
+        });
+        connect(m_tabsSecondary, &QTabWidget::currentChanged, this, [this](int idx) {
+            onCurrentTabChanged(m_tabsSecondary, idx);
+        });
+
+        m_mainSplitter->addWidget(m_tabs);
+        m_mainSplitter->addWidget(m_tabsSecondary);
+        mainLay->addWidget(m_mainSplitter, 1);
+
+        // ── Glass status widget (replaces QStatusBar) ──
         m_statusWidget = new GlassStatusWidget(central);
         mainLay->addWidget(m_statusWidget, 0);
 
@@ -697,12 +771,44 @@ public:
         // ── Find dialog (created lazily) ─────────────────────────────────────
         m_findDialog = nullptr;
 
+        // ── Backup Timer ─────────────────────────────────────────────────────
+        m_backupTimer = new QTimer(this);
+        connect(m_backupTimer, &QTimer::timeout, this, &BobNppGlassWindow::performBackup);
+        if (GlassSettings::instance().backupEnabled()) {
+            m_backupTimer->start(GlassSettings::instance().backupInterval());
+        }
+
         // ── Restore Window State ─────────────────────────────────────────────
         auto& s = GlassSettings::instance();
         QByteArray geom = s.windowGeometry();
         if (!geom.isEmpty()) restoreGeometry(geom);
         QByteArray state = s.windowState();
         if (!state.isEmpty()) restoreState(state);
+
+        // ── Restore Session ──────────────────────────────────────────────────
+        QStringList sessionFiles = s.openFiles();
+        if (!sessionFiles.isEmpty()) {
+            // Remove the default "new 1" if we have a session
+            if (m_tabs->count() > 0 && static_cast<GlassEditorPanel*>(m_tabs->widget(0))->filePath().isEmpty()) {
+                m_tabs->removeTab(0);
+            }
+            for (const QString& path : sessionFiles) {
+                if (QFileInfo::exists(path)) {
+                    auto* panel = new GlassEditorPanel(m_tabs);
+                    if (panel->loadFile(path)) {
+                        m_tabs->addTab(panel, QFileInfo(path).fileName());
+                        connectEditorSignals(panel);
+                    } else {
+                        delete panel;
+                    }
+                }
+            }
+            if (m_tabs->count() > 0) {
+                m_tabs->setCurrentIndex(qBound(0, s.activeTab(), m_tabs->count() - 1));
+            } else {
+                addNewDocument("new 1");
+            }
+        }
     }
 
 protected:
@@ -773,10 +879,19 @@ protected:
 
     void closeEvent(QCloseEvent* ev) override {
         // Save window state
-        GlassSettings::instance().setWindowGeometry(saveGeometry());
-        GlassSettings::instance().setWindowState(saveState());
-
-        // Check for unsaved tabs
+        auto& s = GlassSettings::instance();
+        s.setWindowGeometry(saveGeometry());
+        s.setWindowState(saveState());
+        
+        // Save session
+        QStringList files;
+        for (int i = 0; i < m_tabs->count(); ++i) {
+            if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
+                if (!p->filePath().isEmpty()) files << p->filePath();
+            }
+        }
+        s.setOpenFiles(files);
+        s.setActiveTab(m_tabs->currentIndex());
         bool hasUnsaved = false;
         for (int i = 0; i < m_tabs->count(); ++i) {
             if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
@@ -807,6 +922,33 @@ protected:
         }
         
         QMainWindow::closeEvent(ev);
+    }
+
+    void toggleDistractionFree() {
+        bool on = !GlassSettings::instance().distractionFree();
+        GlassSettings::instance().setDistractionFree(on);
+        
+        menuBar()->setVisible(!on);
+        // Toolbars
+        for (auto* tb : findChildren<QToolBar*>()) tb->setVisible(!on);
+        // Status bar
+        m_statusWidget->setVisible(!on);
+        // Docks
+        if (on) {
+            m_folderDock->hide();
+            m_functionDock->hide();
+            m_searchDock->hide();
+        } else {
+            // Restore based on some logic or just keep hidden
+        }
+        
+        // Centering the editor panel (add margins)
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                p->setDistractionFree(on);
+            }
+        }
     }
 
     void showCommandPalette() {
@@ -866,21 +1008,46 @@ private:
         // ── Folder as Workspace ─────────────────────────────────────────────
         m_folderDock = new QDockWidget("Folder as Workspace", this);
         m_folderDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+        
         auto* tree = new QTreeView(m_folderDock);
         tree->setHeaderHidden(true);
-        auto* model = new QStandardItemModel(tree);
-        auto* root = model->invisibleRootItem();
-        auto* proj = new QStandardItem("LiquidGlassProject");
-        proj->appendRow(new QStandardItem("src/"));
-        proj->appendRow(new QStandardItem("include/"));
-        proj->appendRow(new QStandardItem("CMakeLists.txt"));
-        proj->appendRow(new QStandardItem("README.md"));
-        root->appendRow(proj);
-        tree->setModel(model);
-        tree->expandAll();
+        tree->setContextMenuPolicy(Qt::CustomContextMenu);
+        
+        m_folderModel = new QStandardItemModel(tree);
+        tree->setModel(m_folderModel);
+        
         m_folderDock->setWidget(tree);
         addDockWidget(Qt::LeftDockWidgetArea, m_folderDock);
         m_folderDock->hide();
+
+        connect(tree, &QTreeView::customContextMenuRequested, this, [this, tree](const QPoint& pos){
+            QMenu menu(this);
+            menu.setStyleSheet(LiquidGlassStyleSheet::kMenu);
+            menu.addAction("Add Root Folder...", this, [this](){
+                QString dir = QFileDialog::getExistingDirectory(this, "Select Folder");
+                if (!dir.isEmpty()) addWorkspaceRoot(dir);
+            });
+            menu.exec(tree->viewport()->mapToGlobal(pos));
+        });
+
+        // Connect double-click to open file
+        connect(tree, &QTreeView::doubleClicked, this, [this](const QModelIndex& index){
+            QString path = m_folderModel->data(index, Qt::UserRole).toString();
+            if (!path.isEmpty() && QFileInfo(path).isFile()) {
+                auto* p = findPanelByPath(path);
+                if (!p) {
+                    p = new GlassEditorPanel(m_tabs);
+                    if (p->loadFile(path)) {
+                        m_tabs->setCurrentIndex(m_tabs->addTab(p, QFileInfo(path).fileName()));
+                        connectEditorSignals(p);
+                    } else {
+                        delete p;
+                    }
+                } else {
+                    m_tabs->setCurrentWidget(p);
+                }
+            }
+        });
 
         // ── Function List ───────────────────────────────────────────────────
         m_functionDock = new QDockWidget("Function List", this);
@@ -932,10 +1099,11 @@ private:
                 }
                 
                 // Jump to line and highlight
+                p->editor()->clearIndicator(8);
                 sptr_t lineStart = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
                 sptr_t pos = lineStart + col;
                 p->editor()->send(SCI_GOTOPOS, pos);
-                p->editor()->highlightRange(pos, len);
+                p->editor()->highlightRange(pos, len, 8);
                 p->editor()->send(SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1);
                 p->editor()->send(SCI_GRABFOCUS);
             }
@@ -944,40 +1112,79 @@ private:
 
     // ── Document management ─────────────────────────────────────────────────
     void addNewDocument(const QString& name) {
-        auto* panel = new GlassEditorPanel(m_tabs);
-        int idx = m_tabs->addTab(panel, name);
-        m_tabs->setCurrentIndex(idx);
+        auto* tw = currentTabWidget();
+        auto* panel = new GlassEditorPanel(tw);
+        int idx = tw->addTab(panel, name);
+        tw->setCurrentIndex(idx);
         connectEditorSignals(panel);
+        
+        // Setup macro recording for this panel
+        panel->editor()->onMacroRecord = [this](unsigned int m, uptr_t w, sptr_t l){
+            if (m_isRecordingMacro) {
+                m_macroCommands.append({m, w, l});
+            }
+        };
     }
 
     void connectEditorSignals(GlassEditorPanel* panel) {
         // Update status bar on cursor movement / content change
-        panel->editor()->onCursorPositionChanged = [this, panel]() { 
-            if (m_tabs->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+        panel->m_onCursorPositionChanged = [this, panel]() { 
+            if (currentTabWidget()->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
         };
-        panel->editor()->onContentsChanged = [this, panel]() { 
-            if (m_tabs->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+        panel->m_onContentsChanged = [this, panel]() { 
+            if (currentTabWidget()->currentWidget() == panel) m_statusWidget->updateStats(panel->editor()); 
+        };
+        
+        // Synchronized Scrolling
+        panel->editor()->onScroll = [this, panel]() {
+            if (m_syncScrollingV || m_syncScrollingH) {
+                auto* edSrc = panel->editor();
+                sptr_t line = edSrc->send(SCI_GETFIRSTVISIBLELINE);
+                sptr_t xoff = edSrc->send(SCI_GETXOFFSET);
+                
+                // Find panels in other view
+                QTabWidget* otherTw = (qobject_cast<QTabWidget*>(panel->parentWidget()) == m_tabs) ? m_tabsSecondary : m_tabs;
+                if (auto* otherP = static_cast<GlassEditorPanel*>(otherTw->currentWidget())) {
+                    auto* edDst = otherP->editor();
+                    // Avoid recursive loop
+                    if (m_syncScrollingV && edDst->send(SCI_GETFIRSTVISIBLELINE) != line) {
+                        edDst->send(SCI_SETFIRSTVISIBLELINE, line);
+                    }
+                    if (m_syncScrollingH && edDst->send(SCI_GETXOFFSET) != xoff) {
+                        edDst->send(SCI_SETXOFFSET, xoff);
+                    }
+                }
+            }
         };
     }
 
     GlassEditorPanel* currentPanel() {
-        return static_cast<GlassEditorPanel*>(m_tabs->currentWidget());
+        return static_cast<GlassEditorPanel*>(currentTabWidget()->currentWidget());
+    }
+
+    QTabWidget* currentTabWidget() {
+        if (m_tabsSecondary->isVisible() && m_tabsSecondary->hasFocus()) return m_tabsSecondary;
+        // Check which one has a child with focus
+        if (m_tabsSecondary->isVisible() && m_tabsSecondary->findChildren<QWidget*>().contains(qApp->focusWidget())) return m_tabsSecondary;
+        return m_tabs;
     }
 
     GlassEditorPanel* findPanelByPath(const QString& path) {
-        for (int i = 0; i < m_tabs->count(); ++i) {
-            auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i));
-            if (p && p->filePath() == path) return p;
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                if (p && p->filePath() == path) return p;
+            }
         }
         return nullptr;
     }
 
-    void onTabCloseRequested(int idx) {
-        auto* panel = static_cast<GlassEditorPanel*>(m_tabs->widget(idx));
+    void onTabCloseRequested(QTabWidget* tw, int idx) {
+        auto* panel = static_cast<GlassEditorPanel*>(tw->widget(idx));
         if (panel && panel->isModified()) {
             auto btn = QMessageBox::question(this, "Unsaved Changes",
                 QString("'%1' has unsaved changes. Save before closing?")
-                    .arg(m_tabs->tabText(idx)),
+                    .arg(tw->tabText(idx)),
                 QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
             if (btn == QMessageBox::Cancel) return;
             if (btn == QMessageBox::Save) {
@@ -988,13 +1195,14 @@ private:
                 }
             }
         }
-        m_tabs->removeTab(idx);
+        tw->removeTab(idx);
         delete panel;
-        if (m_tabs->count() == 0) addNewDocument("new 1");
+        if (m_tabs->count() == 0 && m_tabsSecondary->count() == 0) addNewDocument("new 1");
+        if (tw->count() == 0 && tw == m_tabsSecondary) tw->hide();
     }
 
-    void onCurrentTabChanged(int idx) {
-        auto* panel = static_cast<GlassEditorPanel*>(m_tabs->widget(idx));
+    void onCurrentTabChanged(QTabWidget* tw, int idx) {
+        auto* panel = static_cast<GlassEditorPanel*>(tw->widget(idx));
         if (panel) m_statusWidget->updateStats(panel->editor());
     }
 
@@ -1008,11 +1216,12 @@ private:
             this, "Open File(s)", QString(),
             "All Files (*.*);;C++ (*.cpp *.h *.hpp *.cxx);;Python (*.py);"
             ";JavaScript (*.js *.ts);;Web (*.html *.css);;Text (*.txt *.md)");
+        auto* tw = currentTabWidget();
         for (const auto& path : files) {
-            auto* panel = new GlassEditorPanel(m_tabs);
+            auto* panel = new GlassEditorPanel(tw);
             if (panel->loadFile(path)) {
-                int idx = m_tabs->addTab(panel, QFileInfo(path).fileName());
-                m_tabs->setCurrentIndex(idx);
+                int idx = tw->addTab(panel, QFileInfo(path).fileName());
+                tw->setCurrentIndex(idx);
                 connectEditorSignals(panel);
                 m_statusWidget->showMessage("Opened: " + path, 3000);
             } else {
@@ -1026,9 +1235,10 @@ private:
     void actionSave() {
         auto* panel = currentPanel();
         if (!panel) return;
+        auto* tw = currentTabWidget();
         if (panel->filePath().isEmpty()) { saveFileAs(panel); return; }
         if (panel->saveFile()) {
-            m_tabs->setTabText(m_tabs->currentIndex(),
+            tw->setTabText(tw->currentIndex(),
                                QFileInfo(panel->filePath()).fileName());
             m_statusWidget->showMessage("Saved: " + panel->filePath(), 2000);
         } else {
@@ -1048,21 +1258,28 @@ private:
             QMessageBox::critical(this, "Save Failed", "Could not write: " + path);
             return false;
         }
-        m_tabs->setTabText(m_tabs->currentIndex(), QFileInfo(path).fileName());
+        // Find which tab widget owns this panel
+        QTabWidget* tw = qobject_cast<QTabWidget*>(panel->parentWidget());
+        if (tw) {
+            int idx = tw->indexOf(panel);
+            if (idx != -1) tw->setTabText(idx, QFileInfo(path).fileName());
+        }
         m_statusWidget->showMessage("Saved: " + path, 2000);
         return true;
     }
 
     void actionSaveAll() {
-        for (int i = 0; i < m_tabs->count(); ++i) {
-            auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i));
-            if (p && p->isModified()) {
-                if (p->filePath().isEmpty()) {
-                    m_tabs->setCurrentIndex(i);
-                    saveFileAs(p);
-                } else {
-                    p->saveFile();
-                    m_tabs->setTabText(i, QFileInfo(p->filePath()).fileName());
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                if (p && p->isModified()) {
+                    if (p->filePath().isEmpty()) {
+                        tw->setCurrentIndex(i);
+                        saveFileAs(p);
+                    } else {
+                        p->saveFile();
+                        tw->setTabText(i, QFileInfo(p->filePath()).fileName());
+                    }
                 }
             }
         }
@@ -1114,10 +1331,43 @@ private:
                     this, [this]() { doReplace(false); });
             connect(m_findDialog->replaceAllButton(), &QPushButton::clicked,
                     this, [this]() { doReplace(true); });
+            connect(m_findDialog->markAllButton(), &QPushButton::clicked, this, [this](){ doMarkAll(); });
         }
         m_findDialog->show();
         m_findDialog->raise();
         m_findDialog->activateWindow();
+    }
+
+    void doMarkAll() {
+        if (!m_findDialog) return;
+        auto* panel = currentPanel();
+        if (!panel) return;
+        QByteArray needle = m_findDialog->findText().toUtf8();
+        if (needle.isEmpty()) return;
+
+        auto* ed = panel->editor();
+        ed->clearIndicator(9); // Clear green marks
+
+        int flags = 0;
+        if (m_findDialog->matchCase()) flags |= SCFIND_MATCHCASE;
+        if (m_findDialog->wholeWord()) flags |= SCFIND_WHOLEWORD;
+        if (m_findDialog->useRegex())  flags |= SCFIND_REGEXP;
+        
+        ed->send(SCI_SETSEARCHFLAGS, flags);
+        ed->send(SCI_SETTARGETSTART, 0);
+        ed->send(SCI_SETTARGETEND, ed->send(SCI_GETLENGTH));
+        
+        int count = 0;
+        while (ed->send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData())) != -1) {
+            sptr_t matchStart = ed->send(SCI_GETTARGETSTART);
+            sptr_t matchEnd = ed->send(SCI_GETTARGETEND);
+            ed->highlightRange(matchStart, matchEnd - matchStart, 9);
+            
+            ed->send(SCI_SETTARGETSTART, matchEnd);
+            ed->send(SCI_SETTARGETEND, ed->send(SCI_GETLENGTH));
+            count++;
+        }
+        m_statusWidget->showMessage(QString("Marked %1 occurrence(s)").arg(count), 2500);
     }
 
     void doFind(bool backward) {
@@ -1278,6 +1528,40 @@ private:
     }
 
     // ── Menu setup ───────────────────────────────────────────────────────────
+    void addWorkspaceRoot(const QString& path) {
+        auto* root = new QStandardItem(QIcon::fromTheme("folder"), QFileInfo(path).fileName());
+        root->setData(path, Qt::UserRole);
+        m_folderModel->appendRow(root);
+        
+        // Scan directory (one level deep for simplicity in this turn)
+        QDir dir(path);
+        for (const auto& entry : dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot)) {
+            auto* item = new QStandardItem(entry.fileName());
+            item->setData(entry.absoluteFilePath(), Qt::UserRole);
+            root->appendRow(item);
+        }
+    }
+
+    void performBackup() {
+        QDir backupDir("backup");
+        if (!backupDir.exists()) backupDir.mkpath(".");
+        
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                if (p && p->isModified()) {
+                    QString name = p->filePath().isEmpty() ? QString("new_%1.bak").arg(i) : QFileInfo(p->filePath()).fileName() + ".bak";
+                    QFile f(backupDir.filePath(name));
+                    if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                        QTextStream out(&f);
+                        out << p->text();
+                        m_statusWidget->showMessage("Auto-backup performed", 1000);
+                    }
+                }
+            }
+        }
+    }
+
     void setupMenuBar() {
         // Apply glass QSS to the menu bar
         menuBar()->setStyleSheet(LiquidGlassStyleSheet::kMenuBar);
@@ -1310,11 +1594,14 @@ private:
         });
         file->addSeparator();
         addAct(file, "&Close",     [this](){
-            onTabCloseRequested(m_tabs->currentIndex()); }, QKeySequence::Close);
+            auto* tw = currentTabWidget();
+            onTabCloseRequested(tw, tw->currentIndex()); }, QKeySequence::Close);
         addAct(file, "Close All",  [this](){
-            while (m_tabs->count() > 0) {
-                onTabCloseRequested(0);
-                if (m_tabs->count() == 0) break;
+            for (auto* tw : {m_tabs, m_tabsSecondary}) {
+                while (tw->count() > 0) {
+                    onTabCloseRequested(tw, 0);
+                    if (tw->count() == 0) break;
+                }
             }
         });
         file->addSeparator();
@@ -1448,6 +1735,36 @@ private:
                 }
             }
         }, QKeySequence(Qt::CTRL | Qt::Key_G));
+        
+        search->addSeparator();
+        addAct(search, "Toggle Bookmark", [this](){
+            if (auto* p = currentPanel()) {
+                sptr_t line = p->editor()->send(SCI_LINEFROMPOSITION, p->editor()->send(SCI_GETCURRENTPOS));
+                if (p->editor()->send(SCI_MARKERGET, line) & (1 << 1)) {
+                    p->editor()->send(SCI_MARKERDELETE, line, 1);
+                } else {
+                    p->editor()->send(SCI_MARKERADD, line, 1);
+                }
+            }
+        }, QKeySequence(Qt::CTRL | Qt::Key_F2));
+        
+        addAct(search, "Next Bookmark", [this](){
+            if (auto* p = currentPanel()) {
+                sptr_t line = p->editor()->send(SCI_LINEFROMPOSITION, p->editor()->send(SCI_GETCURRENTPOS));
+                sptr_t next = p->editor()->send(SCI_MARKERNEXT, line + 1, (1 << 1));
+                if (next == -1) next = p->editor()->send(SCI_MARKERNEXT, 0, (1 << 1));
+                if (next != -1) p->editor()->send(SCI_GOTOLINE, next);
+            }
+        }, QKeySequence(Qt::Key_F2));
+
+        addAct(search, "Previous Bookmark", [this](){
+            if (auto* p = currentPanel()) {
+                sptr_t line = p->editor()->send(SCI_LINEFROMPOSITION, p->editor()->send(SCI_GETCURRENTPOS));
+                sptr_t prev = p->editor()->send(SCI_MARKERPREVIOUS, line - 1, (1 << 1));
+                if (prev == -1) prev = p->editor()->send(SCI_MARKERPREVIOUS, p->editor()->send(SCI_GETLINECOUNT), (1 << 1));
+                if (prev != -1) p->editor()->send(SCI_GOTOLINE, prev);
+            }
+        }, QKeySequence(Qt::SHIFT | Qt::Key_F2));
 
         // ─── VIEW ─────────────────────────────────────────────────────────
         QMenu* view = menuBar()->addMenu("&View");
@@ -1464,6 +1781,10 @@ private:
         addAct(view, "Toggle &Full Screen", [this](){
             setWindowState(windowState() ^ Qt::WindowFullScreen);
         }, QKeySequence(Qt::Key_F11));
+
+        addAct(view, "Distraction Free Mode", [this](){
+            toggleDistractionFree();
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D));
         
         addAct(view, "Command Palette...", [this](){
             showCommandPalette();
@@ -1602,22 +1923,34 @@ private:
         
         m_macroStartAct = macro->addAction("Start Recording", [this](){
             m_isRecordingMacro = true;
+            m_macroCommands.clear();
             m_macroStartAct->setEnabled(false);
             m_macroStopAct->setEnabled(true);
             m_macroPlayAct->setEnabled(false);
-            m_statusWidget->showMessage("Macro recording started...", 0); // Persist msg
+            // Tell Scintilla to start recording
+            if (auto* p = currentPanel()) p->editor()->send(SCI_STARTRECORD);
+            m_statusWidget->showMessage("Macro recording started...", 0); 
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
         
         m_macroStopAct = macro->addAction("Stop Recording", [this](){
             m_isRecordingMacro = false;
             m_macroStartAct->setEnabled(true);
             m_macroStopAct->setEnabled(false);
-            m_macroPlayAct->setEnabled(true);
-            m_statusWidget->showMessage("Macro recording stopped", 3000);
+            m_macroPlayAct->setEnabled(!m_macroCommands.isEmpty());
+            // Tell Scintilla to stop recording
+            if (auto* p = currentPanel()) p->editor()->send(SCI_STOPRECORD);
+            m_statusWidget->showMessage(QString("Macro recording stopped (%1 actions)").arg(m_macroCommands.size()), 3000);
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
         m_macroStopAct->setEnabled(false); // Default off
         
         m_macroPlayAct = macro->addAction("Playback", [this](){
+            if (auto* p = currentPanel()) {
+                p->editor()->send(SCI_BEGINUNDOACTION);
+                for (const auto& cmd : m_macroCommands) {
+                    p->editor()->send(cmd.msg, cmd.wp, cmd.lp);
+                }
+                p->editor()->send(SCI_ENDUNDOACTION);
+            }
             m_statusWidget->showMessage("Macro played", 2000);
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_P));
         m_macroPlayAct->setEnabled(false); // Default off
@@ -1640,12 +1973,56 @@ private:
         // ─── WINDOW ───────────────────────────────────────────────────────
         QMenu* win = menuBar()->addMenu("&Window");
         win->setStyleSheet(LiquidGlassStyleSheet::kMenu);
-        addAct(win, "Next Tab",     [this](){ m_tabs->setCurrentIndex((m_tabs->currentIndex()+1) % m_tabs->count()); },
-               QKeySequence(Qt::CTRL | Qt::Key_PageDown));
+        win->addSeparator();
+        addAct(win, "Move to Other View", [this](){
+            auto* twSrc = currentTabWidget();
+            auto* twDst = (twSrc == m_tabs) ? m_tabsSecondary : m_tabs;
+            int idx = twSrc->currentIndex();
+            if (idx != -1) {
+                auto* p = static_cast<GlassEditorPanel*>(twSrc->widget(idx));
+                QString name = twSrc->tabText(idx);
+                twSrc->removeTab(idx);
+                p->setParent(twDst);
+                twDst->addTab(p, name);
+                twDst->show();
+                twDst->setCurrentWidget(p);
+            }
+        });
+        addAct(win, "Clone to Other View", [this](){
+            auto* p = currentPanel();
+            if (!p) return;
+            auto* twDst = (currentTabWidget() == m_tabs) ? m_tabsSecondary : m_tabs;
+            auto* np = new GlassEditorPanel(twDst);
+            np->setText(p->text());
+            np->setFilePath(p->filePath());
+            twDst->addTab(np, QFileInfo(p->filePath()).fileName());
+            twDst->show();
+            twDst->setCurrentWidget(np);
+            connectEditorSignals(np);
+        });
+        win->addSeparator();
+        addAct(win, "Next Tab",     [this](){ 
+            auto* tw = currentTabWidget();
+            tw->setCurrentIndex((tw->currentIndex()+1) % tw->count()); 
+        }, QKeySequence(Qt::CTRL | Qt::Key_PageDown));
         addAct(win, "Previous Tab", [this](){
-            int n = m_tabs->count();
-            m_tabs->setCurrentIndex((m_tabs->currentIndex()+n-1) % n);
+            auto* tw = currentTabWidget();
+            int n = tw->count();
+            tw->setCurrentIndex((tw->currentIndex()+n-1) % n);
         }, QKeySequence(Qt::CTRL | Qt::Key_PageUp));
+        
+        win->addSeparator();
+        auto* syncScrollAct = win->addAction("Synchronize Vertical Scrolling");
+        syncScrollAct->setCheckable(true);
+        connect(syncScrollAct, &QAction::toggled, this, [this](bool on){
+            m_syncScrollingV = on;
+        });
+
+        auto* syncScrollHAct = win->addAction("Synchronize Horizontal Scrolling");
+        syncScrollHAct->setCheckable(true);
+        connect(syncScrollHAct, &QAction::toggled, this, [this](bool on){
+            m_syncScrollingH = on;
+        });
         win->addSeparator();
         addAct(win, "Clone Current Tab", [this](){
             auto* p = currentPanel();
@@ -1679,7 +2056,9 @@ private:
             dlg.exec();
         });
         settings->addAction("Style Configurator...", [this](){
-            m_statusWidget->showMessage("Style configurator — coming soon", 2000); });
+            GlassStyleConfigurator dlg(this);
+            dlg.exec();
+        });
         settings->addAction("Shortcut Mapper...",    [this](){
             m_statusWidget->showMessage("Shortcut mapper — coming soon", 2000); });
         settings->addSeparator();
@@ -1770,12 +2149,16 @@ private:
 
     // ── Members ───────────────────────────────────────────────────────────────
     QTabWidget*      m_tabs;
+    QTabWidget*      m_tabsSecondary;
+    QSplitter*       m_mainSplitter;
     GlassStatusWidget* m_statusWidget;
     BubbleOverlay*   m_bubbles;
     GlassFindDialog* m_findDialog;
 
     // Macro state
     bool m_isRecordingMacro = false;
+    struct MacroCommand { unsigned int msg; uptr_t wp; sptr_t lp; };
+    QList<MacroCommand> m_macroCommands;
     QAction* m_macroStartAct = nullptr;
     QAction* m_macroStopAct = nullptr;
     QAction* m_macroPlayAct = nullptr;
@@ -1785,9 +2168,13 @@ private:
     QDockWidget*     m_searchDock = nullptr;
     QTreeView*       m_searchTree = nullptr;
     QStandardItemModel* m_searchModel = nullptr;
+    QStandardItemModel* m_folderModel = nullptr;
     GlassSearchWorker* m_searchWorker = nullptr;
     QMenu*           m_pluginsMenu = nullptr;
     QSystemTrayIcon* m_trayIcon = nullptr;
+    QTimer*          m_backupTimer = nullptr;
+    bool             m_syncScrollingV = false;
+    bool             m_syncScrollingH = false;
 };
 
 

@@ -1,6 +1,7 @@
-# Immediate Tasks (Phase 9: Multi-Cursor & Collaboration)
-- [ ] Implement multi-cursor virtualization: multiple independent Scintilla selections.
-- [ ] Connect a WebSocket client to allow remote shared editing sessions.
-- [ ] Implement native Windows 11 Snap Layouts.
+# Immediate Tasks (Phase 10: Final Parity & Polish)
+- [ ] Connect native Qt QPrinter mapping for document printing.
+- [ ] Implement XML config saving to `shortcuts.xml` and `config.xml`.
 - [ ] Build a "Glass Terminal" utilizing `QProcess` and Scintilla as the TTY.
-- [ ] Add support for "Glass Drag-and-Drop" of files from the OS.
+- [ ] Implement Scintilla Marker logic for line-bookmarks (Margin 1).
+- [ ] Implement Windows 11 Snap Layouts integration.
+- [ ] Add "Synchronize Horizontal Scrolling" toggle to the View menu. (Completed in logic, verify UI).

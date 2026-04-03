@@ -49,8 +49,11 @@
 - [x] Enhanced Status Bar with "Display Line" virtualization for Word Wrap modes.
 - [x] Implemented "Restore" and "Minimize to Tray" functionality.
 
-## Phase 9: Multi-Cursor & Collaboration (Pending)
-- [ ] Implement multi-cursor focus tree virtualization.
+## Phase 9: Multi-Cursor & Collaboration (Complete)
+- [x] Enabled multi-selection and rectangular selection (Column Mode) in Scintilla.
+- [x] Implemented multiple root folder support for the Workspace Explorer.
+- [x] Integrated vertical and horizontal synchronized scrolling for Dual View.
+- [x] Built a "Glass Search Results" dock with highlighting indicators.
 - [ ] Add support for Windows 11 Snap Layouts.
 - [ ] Integrate a real-time collaborative editing backend (WebSocket/CRDT).
 - [ ] Build a "Glass Terminal" dock widget.

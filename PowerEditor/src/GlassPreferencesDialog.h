@@ -1,5 +1,5 @@
 /**
- * GlassPreferencesDialog.h — Liquid Glass UI Preferences Dialog
+ * GlassPreferencesDialog.h — Comprehensive Liquid Glass Preferences
  */
 
 #ifndef GLASS_PREFERENCES_DIALOG_H
@@ -10,6 +10,8 @@
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QListWidget>
+#include <QStackedWidget>
 #include <QFormLayout>
 #include <QLabel>
 #include <QCheckBox>
@@ -24,94 +26,66 @@ public:
     explicit GlassPreferencesDialog(QWidget* parent = nullptr) : QDialog(parent) {
         setWindowTitle("Preferences");
         setModal(true);
-        setAttribute(Qt::WA_TranslucentBackground);
         setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
-        setFixedSize(500, 360);
+        setAttribute(Qt::WA_TranslucentBackground);
+        setFixedSize(700, 500);
         setStyleSheet(LiquidGlassStyleSheet::kDialog);
 
         auto* mainLay = new QVBoxLayout(this);
         mainLay->setContentsMargins(20, 20, 20, 20);
-        mainLay->setSpacing(15);
 
-        // Title bar
-        auto* titleBar = new QWidget(this);
-        auto* titleLay = new QHBoxLayout(titleBar);
-        titleLay->setContentsMargins(0,0,0,0);
-        auto* titleLabel = new QLabel("⚙ Preferences", titleBar);
-        titleLabel->setStyleSheet("color: rgba(240,245,255,240); font-size:16px; font-weight:bold;");
-        auto* closeBtn = new QPushButton("✕", titleBar);
+        // Header
+        auto* header = new QHBoxLayout;
+        auto* title = new QLabel("⚙ Preferences", this);
+        title->setStyleSheet("color: white; font-size: 18px; font-weight: bold;");
+        auto* closeBtn = new QPushButton("✕", this);
         closeBtn->setFixedSize(24, 24);
-        closeBtn->setStyleSheet("QPushButton{background:rgba(255,60,60,160);color:white;border:none;border-radius:12px;} QPushButton:hover{background:rgba(255,80,80,220);}");
+        closeBtn->setStyleSheet("QPushButton{background:rgba(255,60,60,160);color:white;border:none;border-radius:12px;}");
         connect(closeBtn, &QPushButton::clicked, this, &QDialog::reject);
-        titleLay->addWidget(titleLabel);
-        titleLay->addStretch();
-        titleLay->addWidget(closeBtn);
-        mainLay->addWidget(titleBar);
+        header->addWidget(title);
+        header->addStretch();
+        header->addWidget(closeBtn);
+        mainLay->addLayout(header);
 
-        // Form layout for settings
-        auto* formLay = new QFormLayout;
-        formLay->setVerticalSpacing(12);
-        formLay->setHorizontalSpacing(20);
-
-        // 1. Theme / Glass Intensity
-        m_glassCombo = new QComboBox(this);
-        m_glassCombo->addItems({"Low (Mica)", "Medium (Mica Tabbed)", "High (Acrylic)"});
-        m_glassCombo->setCurrentIndex(GlassSettings::instance().glassIntensity());
-        formLay->addRow("Glass Intensity:", m_glassCombo);
-
-        // 2. Bubble Animations
-        m_bubbleCheck = new QCheckBox("Enable liquid bubble animations", this);
-        m_bubbleCheck->setChecked(GlassSettings::instance().bubbleAnimations());
-        formLay->addRow("Visuals:", m_bubbleCheck);
-
-        // 3. Default Font
-        m_fontCombo = new QFontComboBox(this);
-        m_fontCombo->setFontFilters(QFontComboBox::MonospacedFonts);
-        m_fontCombo->setCurrentFont(GlassSettings::instance().editorFont());
+        auto* body = new QHBoxLayout;
         
-        m_fontSizeSpin = new QSpinBox(this);
-        m_fontSizeSpin->setRange(6, 72);
-        m_fontSizeSpin->setValue(GlassSettings::instance().editorFont().pointSize());
-        
-        auto* fontLay = new QHBoxLayout;
-        fontLay->addWidget(m_fontCombo);
-        fontLay->addWidget(new QLabel("Size:"));
-        fontLay->addWidget(m_fontSizeSpin);
-        formLay->addRow("Editor Font:", fontLay);
+        // Sidebar
+        m_sidebar = new QListWidget(this);
+        m_sidebar->setFixedWidth(150);
+        m_sidebar->addItem("General");
+        m_sidebar->addItem("Editing");
+        m_sidebar->addItem("Backup");
+        m_sidebar->addItem("Theme");
+        m_sidebar->setStyleSheet(
+            "QListWidget { background: rgba(255,255,255,10); border: none; border-radius: 8px; }"
+            "QListWidget::item { padding: 10px; color: rgba(235, 240, 255, 180); }"
+            "QListWidget::item:selected { background: rgba(90, 130, 255, 100); color: white; border-radius: 6px; }"
+        );
+        body->addWidget(m_sidebar);
 
-        // 4. Word Wrap
-        m_wrapCheck = new QCheckBox("Enable Word Wrap by default", this);
-        m_wrapCheck->setChecked(GlassSettings::instance().wordWrapDefault());
-        formLay->addRow("Word Wrap:", m_wrapCheck);
+        // Content
+        m_stack = new QStackedWidget(this);
+        m_stack->addWidget(createGeneralPage());
+        m_stack->addWidget(createEditingPage());
+        m_stack->addWidget(createBackupPage());
+        m_stack->addWidget(createThemePage());
+        body->addWidget(m_stack);
 
-        // 5. Default Encoding
-        m_encCombo = new QComboBox(this);
-        m_encCombo->addItems({"UTF-8", "UTF-8 BOM", "UTF-16 BE BOM", "UTF-16 LE BOM", "ANSI"});
-        m_encCombo->setCurrentText(GlassSettings::instance().defaultEncoding());
-        formLay->addRow("Default Encoding:", m_encCombo);
+        mainLay->addLayout(body);
 
-        mainLay->addLayout(formLay);
-        mainLay->addStretch();
-
-        // Bottom buttons
-        auto* btnLay = new QHBoxLayout;
-        btnLay->addStretch();
-        auto* cancelBtn = new QPushButton("Cancel", this);
-        auto* applyBtn = new QPushButton("Apply", this);
-        auto* okBtn = new QPushButton("OK", this);
-        okBtn->setDefault(true);
-        
-        btnLay->addWidget(cancelBtn);
-        btnLay->addWidget(applyBtn);
-        btnLay->addWidget(okBtn);
-        mainLay->addLayout(btnLay);
-
-        connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-        connect(applyBtn, &QPushButton::clicked, this, &GlassPreferencesDialog::applySettings);
-        connect(okBtn, &QPushButton::clicked, this, [this](){
+        auto* footer = new QHBoxLayout;
+        footer->addStretch();
+        auto* saveBtn = new QPushButton("Apply & Close", this);
+        saveBtn->setFixedWidth(120);
+        connect(saveBtn, &QPushButton::clicked, this, [this](){
             applySettings();
             accept();
         });
+        footer->addWidget(saveBtn);
+        mainLay->addLayout(footer);
+
+        connect(m_sidebar, &QListWidget::currentRowChanged, m_stack, &QStackedWidget::setCurrentIndex);
+        m_sidebar->setCurrentRow(0);
 
         installEventFilter(this);
     }
@@ -124,43 +98,97 @@ protected:
         p.setRenderHint(QPainter::Antialiasing);
         LiquidGlassPainter::drawGlassBackground(p, QRectF(rect()), 14.0, true);
     }
-
     void mousePressEvent(QMouseEvent* e) override {
-        if (e->button() == Qt::LeftButton) {
-            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
-            e->accept();
-        }
+        if (e->button() == Qt::LeftButton) m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+        e->accept();
     }
     void mouseMoveEvent(QMouseEvent* e) override {
-        if (e->buttons() & Qt::LeftButton) {
-            move(e->globalPosition().toPoint() - m_dragPos);
-            e->accept();
-        }
+        if (e->buttons() & Qt::LeftButton) move(e->globalPosition().toPoint() - m_dragPos);
+        e->accept();
     }
 
 private:
+    QWidget* createGeneralPage() {
+        auto* w = new QWidget;
+        auto* lay = new QFormLayout(w);
+        m_showMinimap = new QCheckBox("Show Document Minimap", this);
+        m_showMinimap->setChecked(GlassSettings::instance().showMinimap());
+        m_bubbleCheck = new QCheckBox("Enable Liquid Bubbles", this);
+        m_bubbleCheck->setChecked(GlassSettings::instance().bubbleAnimations());
+        lay->addRow("Visuals:", m_showMinimap);
+        lay->addRow("", m_bubbleCheck);
+        return w;
+    }
+
+    QWidget* createEditingPage() {
+        auto* w = new QWidget;
+        auto* lay = new QFormLayout(w);
+        m_fontCombo = new QFontComboBox(this);
+        m_fontCombo->setCurrentFont(GlassSettings::instance().editorFont());
+        m_fontSize = new QSpinBox(this);
+        m_fontSize->setRange(6, 72);
+        m_fontSize->setValue(GlassSettings::instance().editorFont().pointSize());
+        m_wrapCheck = new QCheckBox("Word Wrap by Default", this);
+        m_wrapCheck->setChecked(GlassSettings::instance().wordWrapDefault());
+        lay->addRow("Font:", m_fontCombo);
+        lay->addRow("Size:", m_fontSize);
+        lay->addRow("Editor:", m_wrapCheck);
+        return w;
+    }
+
+    QWidget* createBackupPage() {
+        auto* w = new QWidget;
+        auto* lay = new QFormLayout(w);
+        m_backupCheck = new QCheckBox("Enable Auto-backup", this);
+        m_backupCheck->setChecked(GlassSettings::instance().backupEnabled());
+        m_backupInterval = new QSpinBox(this);
+        m_backupInterval->setRange(5, 3600);
+        m_backupInterval->setSuffix(" seconds");
+        m_backupInterval->setValue(GlassSettings::instance().backupInterval() / 1000);
+        lay->addRow("Backup:", m_backupCheck);
+        lay->addRow("Interval:", m_backupInterval);
+        return w;
+    }
+
+    QWidget* createThemePage() {
+        auto* w = new QWidget;
+        auto* lay = new QFormLayout(w);
+        m_glassIntensity = new QComboBox(this);
+        m_glassIntensity->addItems({"Low (Mica)", "Medium (Mica Tabbed)", "High (Acrylic)"});
+        m_glassIntensity->setCurrentIndex(GlassSettings::instance().glassIntensity());
+        lay->addRow("Glass Mode:", m_glassIntensity);
+        return w;
+    }
+
     void applySettings() {
         auto& s = GlassSettings::instance();
-        s.setGlassIntensity(m_glassCombo->currentIndex());
+        s.setShowMinimap(m_showMinimap->isChecked());
         s.setBubbleAnimations(m_bubbleCheck->isChecked());
         
         QFont f = m_fontCombo->currentFont();
-        f.setPointSize(m_fontSizeSpin->value());
+        f.setPointSize(m_fontSize->value());
         s.setEditorFont(f);
         
         s.setWordWrapDefault(m_wrapCheck->isChecked());
-        s.setDefaultEncoding(m_encCombo->currentText());
+        s.setBackupEnabled(m_backupCheck->isChecked());
+        s.setBackupInterval(m_backupInterval->value() * 1000);
+        s.setGlassIntensity(m_glassIntensity->currentIndex());
         
         if (m_applyCb) m_applyCb();
     }
 
+    QListWidget* m_sidebar;
+    QStackedWidget* m_stack;
     std::function<void()> m_applyCb;
-    QComboBox* m_glassCombo;
+
+    QCheckBox* m_showMinimap;
     QCheckBox* m_bubbleCheck;
     QFontComboBox* m_fontCombo;
-    QSpinBox* m_fontSizeSpin;
+    QSpinBox* m_fontSize;
     QCheckBox* m_wrapCheck;
-    QComboBox* m_encCombo;
+    QCheckBox* m_backupCheck;
+    QSpinBox* m_backupInterval;
+    QComboBox* m_glassIntensity;
     QPoint m_dragPos;
 };
 
