@@ -10,29 +10,31 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Compare Tools, Recent Files & Scrolling Parity (v1.1.8)
+## THIS SESSION: Final Parity, Config Mapping & Multi-Selection (v1.1.9)
 
 ### Major Achievements
-1. **Glass Compare Engine:** Engineered a side-by-side document comparison tool (`GlassCompareManager.h`).
-   * **Diff Visualization:** Utilizes Scintilla full-rect markers (Green/Red/Yellow) to visualize line additions, deletions, and modifications across the dual-pane architecture.
-   * **Automated Sync:** Invoking a comparison automatically triggers vertical and horizontal scroll-synchronization for a unified viewing experience.
-2. **Recent Files Tracking:** Implemented a persistent **Recent Files** list in the File menu.
-   * **Persistence:** Uses `QSettings` to serialize the last 10 file paths to disk.
-   * **Quick Navigation:** Features tooltips for absolute paths and one-click restoration of previous documents.
-3. **UDL Foundation:** Authored `GlassUDLManager.h` utilizing `QXmlStreamReader`. This provides the skeleton for parsing Notepad++ User Defined Language XML files.
-4. **Scrolling Parity:** Finalized the implementation of **Horizontal Synchronized Scrolling**, enabling a locked viewport when navigating wide documents in Split View mode.
-5. **Unified Compare UI:** Integrated the Compare and Sync Scrolling tools into a dedicated submenu within the Plugins hierarchy.
+1. **Config XML Interoperability:** Completed the `config.xml` bridge in `GlassConfigXML.h`.
+   * **Persistence:** Natively saves and restores UI design tokens (Glass intensity, bubbles, dark mode) and Editor preferences (Font, size, wrap) to the standard NPP configuration file.
+2. **Intelligent Editing (Auto-Pairs):** Implemented **Auto-insert matching braces/quotes**.
+   * **Scope:** Automatically generates closing pairs for `()`, `{}`, `[]`, `""`, and `''` while preserving caret positioning.
+3. **Multi-Caret Mastery:**
+   * **Select All Occurrences:** Mapped `Ctrl+Shift+L` to Scintilla's `SCI_ADDSELECTION`. It now performs a project-wide search of the selected word and instantiates independent carets for each match.
+   * **Rectangular Selection:** Column-mode editing is now fully enabled via `SCVS_RECTANGULARSELECTION`.
+4. **Professional Line Operations:** Integrated a full suite of line manipulation tools:
+   * **Duplicate:** `Ctrl+D` (`SCI_LINEDUPLICATE`).
+   * **Remove:** `Ctrl+Shift+K` (`SCI_LINEDELETE`).
+   * **Re-order:** `Ctrl+Shift+Up/Down` (`SCI_MOVESELECTEDLINESUP/DOWN`).
+5. **UI Unified State:** Orchestrated the **Minimap** and **Status Bar** toggles to sync across the Dual-Pane architecture, ensuring a consistent aesthetic across all active views.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassCompareManager.h` | Side-by-side diff logic and Scintilla marker management. |
-| `PowerEditor/src/GlassUDLManager.h` | XML parser for native NPP User Defined Languages. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Recent Files, Compare triggers, and Horizontal Sync scrolling. |
-| `PowerEditor/src/GlassSettings.h` | Added `recentFiles` persistence and centralized `MacroCommand` struct. |
-| `NPP_ROADMAP.md` | Marked Phase 11 as Complete. |
+| `PowerEditor/src/GlassConfigXML.h` | Added `loadConfig` / `saveConfig` logic for NPP `config.xml`. |
+| `PowerEditor/src/BobScintilla.h` | Injected Auto-brace logic and `selectAllOccurrences()` routines. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Line Operations menu and global config serialization. |
+| `NPP_ROADMAP.md` | Marked Phase 12 as Complete. |
 
 ---
 
@@ -46,12 +48,12 @@ python build.py
 
 ---
 
-## Next Steps for Implementor (Phase 12)
+## Next Steps for Implementor (Phase 13)
 
 ### Immediate (P0)
-1. **Config XML Interop:** Extend `GlassConfigXML.h` to save and load general UI preferences (DWM mode, font, wrap) from the official NPP `config.xml`.
-2. **Printing Bridge:** Research the `QtPrintSupport` static linkage to enable document printing via `SCI_FORMATRANGE`.
+1. **Shared Multi-Cursor:** Utilize the `GlassCollabClient.h` skeleton to sync Scintilla's multiple selections across a WebSocket backend.
+2. **UDL Advanced Parser:** Ingest the `userDefineLang.xml` to allow user-defined syntax styles.
 
 ### Short-term (P1)
-3. **Collaboration Server:** Implement the multi-agent/multi-user edit sync logic via `QWebSocket`.
-4. **Windows Snap Menu:** Intercept `WM_NCHITTEST` and `WM_GETMINMAXINFO` to correctly render the Windows 11 snap layout menu.
+3. **Printing:** Fix the `QtPrintSupport` linkage in `CMakeLists.txt` to enable the "Print" command.
+4. **Window Snap:** Finalize the native Windows 11 snap layout integration.

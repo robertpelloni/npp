@@ -185,6 +185,40 @@ public:
         send(SCI_INDICATORCLEARRANGE, 0, send(SCI_GETLENGTH));
     }
 
+    void selectAllOccurrences() {
+        sptr_t selStart = send(SCI_GETSELECTIONSTART);
+        sptr_t selEnd = send(SCI_GETSELECTIONEND);
+        if (selStart == selEnd) return;
+
+        sptr_t len = selEnd - selStart;
+        QByteArray needle;
+        needle.resize(static_cast<int>(len));
+        
+        Sci_TextRangeFull tr;
+        tr.chrg.cpMin = static_cast<Sci_Position>(selStart);
+        tr.chrg.cpMax = static_cast<Sci_Position>(selEnd);
+        tr.lpstrText = needle.data();
+        send(SCI_GETTEXTRANGEFULL, 0, reinterpret_cast<sptr_t>(&tr));
+
+        send(SCI_SETTARGETSTART, 0);
+        send(SCI_SETTARGETEND, send(SCI_GETLENGTH));
+        send(SCI_SETSEARCHFLAGS, SCFIND_MATCHCASE);
+
+        bool first = true;
+        while (send(SCI_SEARCHINTARGET, needle.length(), reinterpret_cast<sptr_t>(needle.constData())) != -1) {
+            sptr_t matchStart = send(SCI_GETTARGETSTART);
+            sptr_t matchEnd = send(SCI_GETTARGETEND);
+            if (first) {
+                send(SCI_SETSEL, matchStart, matchEnd);
+                first = false;
+            } else {
+                send(SCI_ADDSELECTION, matchEnd, matchStart);
+            }
+            send(SCI_SETTARGETSTART, matchEnd);
+            send(SCI_SETTARGETEND, send(SCI_GETLENGTH));
+        }
+    }
+
     // Dummy properties for font compatibility with settings
     void setFont(const QFont& f) {
         QWidget::setFont(f);
@@ -354,8 +388,16 @@ protected:
                 } else if (scn->nmhdr.code == SCN_CHARADDED) {
                     if (onCharAdded) onCharAdded(scn->ch);
                     
-                    // Simple C++ / Python Autocomplete Trigger
+                    // Auto-insert matching braces/quotes
                     char ch = static_cast<char>(scn->ch);
+                    sptr_t pos = send(SCI_GETCURRENTPOS);
+                    if (ch == '(') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>(")")); }
+                    else if (ch == '{') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("}")); }
+                    else if (ch == '[') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("]")); }
+                    else if (ch == '"') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("\"")); }
+                    else if (ch == '\'') { send(SCI_INSERTTEXT, pos, reinterpret_cast<sptr_t>("'")); }
+
+                    // Simple C++ / Python Autocomplete Trigger
                     if (isalpha(ch) || ch == '_') {
                         sptr_t pos = send(SCI_GETCURRENTPOS);
                         sptr_t start = send(SCI_WORDSTARTPOSITION, pos, true);

@@ -1,6 +1,6 @@
-# Immediate Tasks (Phase 12: Final Polish & Printing)
-- [ ] Connect native Qt QPrinter mapping for document printing.
-- [ ] Implement XML config saving to `config.xml`.
-- [ ] Map native Windows 11 Snap Layout menus.
-- [ ] Connect WebSocket client for shared multi-cursor editing sessions.
-- [ ] Implement Scintilla Marker logic for line-bookmarks fully across session loads.
+# Immediate Tasks (Phase 13: Collaboration & Beyond)
+- [ ] Implement WebSocket server/client for real-time shared multi-cursor editing.
+- [ ] Build a robust UDL parser for legacy Notepad++ user languages.
+- [ ] Finalize Windows 11 Snap Layouts integration.
+- [ ] Connect `QtPrintSupport` to enable native glass-mode printing.
+- [ ] Add support for "Column Paste" and advanced multi-caret manipulations.

@@ -59,12 +59,19 @@
 - [x] Implemented "Recent Files" tracking with persistence and tooltips.
 - [x] Integrated "Mark All" indicators (ID 9) for search visualization.
 
-## Phase 12: Final Interop & Polish
-- [ ] Implement XML config saving to `config.xml`.
+## Phase 12: Final Interop & Polish (Complete)
+- [x] Engineered XML configuration interop for standard NPP `config.xml`.
+- [x] Implemented "Select All Occurrences" via Scintilla multi-selection.
+- [x] Integrated "Auto-insert Matching Braces/Quotes" logic.
+- [x] Implemented professional "Line Operations" (Duplicate, Remove, Move Up/Down).
+- [x] Unified document minimap toggles and status bar virtualization.
 - [ ] Connect native Qt QPrinter mapping for document printing.
-- [ ] Refine the Status Bar to calculate dynamic Line/Col numbers when `SCI_WORDWRAP` is enabled.
 - [ ] Implement Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
+
+## Phase 13: The Collaborative Future
 - [ ] Finalize WebSocket collaborative editing backend.
+- [ ] Multi-cursor focus tree virtualization for shared sessions.
+- [ ] Advanced UDL (User Defined Language) parser for custom XML syntax.
 
 ## Phase 8: Advanced OS Features (Complete)
 - [x] Implemented Glass Command Palette (`Ctrl+Shift+P`) for rapid action searching.

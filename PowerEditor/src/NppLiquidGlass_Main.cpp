@@ -891,17 +891,24 @@ protected:
         
         // Save session
         QStringList files;
-        for (int i = 0; i < m_tabs->count(); ++i) {
-            if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
-                if (!p->filePath().isEmpty()) files << p->filePath();
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                if (p && !p->filePath().isEmpty()) files << p->filePath();
             }
         }
         s.setOpenFiles(files);
-        s.setActiveTab(m_tabs->currentIndex());
+        s.setActiveTab(currentTabWidget()->currentIndex());
+
+        // Save to config.xml
+        GlassConfigXML::saveConfig("config.xml");
+
+        // Check for unsaved tabs
         bool hasUnsaved = false;
-        for (int i = 0; i < m_tabs->count(); ++i) {
-            if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {
-                if (p->isModified()) hasUnsaved = true;
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                auto* p = static_cast<GlassEditorPanel*>(tw->widget(i));
+                if (p && p->isModified()) hasUnsaved = true;
             }
         }
         
@@ -1705,6 +1712,26 @@ private:
         addAct(edit, "Select &All", [this](){
             if (auto* p = currentPanel()) p->editor()->selectAll();
         }, QKeySequence::SelectAll);
+        addAct(edit, "Select All Occurrences", [this](){
+            if (auto* p = currentPanel()) p->editor()->selectAllOccurrences();
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L));
+        edit->addSeparator();
+        
+        QMenu* lineOps = edit->addMenu("Line Operations");
+        lineOps->setStyleSheet(LiquidGlassStyleSheet::kMenu);
+        addAct(lineOps, "Duplicate Current Line", [this](){
+            if (auto* p = currentPanel()) p->editor()->send(SCI_LINEDUPLICATE);
+        }, QKeySequence(Qt::CTRL | Qt::Key_D));
+        addAct(lineOps, "Remove Current Line", [this](){
+            if (auto* p = currentPanel()) p->editor()->send(SCI_LINEDELETE);
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
+        addAct(lineOps, "Move Line Up", [this](){
+            if (auto* p = currentPanel()) p->editor()->send(SCI_MOVESELECTEDLINESUP);
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Up));
+        addAct(lineOps, "Move Line Down", [this](){
+            if (auto* p = currentPanel()) p->editor()->send(SCI_MOVESELECTEDLINESDOWN);
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Down));
+        
         edit->addSeparator();
         // Blank operations sub-menu
         QMenu* blankOps = edit->addMenu("Blank Operations");
@@ -2136,6 +2163,19 @@ private:
         syncScrollHAct->setCheckable(true);
         connect(syncScrollHAct, &QAction::toggled, this, [this](bool on){
             m_syncScrollingH = on;
+        });
+
+        auto* minimapAct = view->addAction("Document Minimap");
+        minimapAct->setCheckable(true);
+        minimapAct->setChecked(GlassSettings::instance().showMinimap());
+        connect(minimapAct, &QAction::toggled, this, [this](bool on){
+            GlassSettings::instance().setShowMinimap(on);
+            for (auto* tw : {m_tabs, m_tabsSecondary}) {
+                for (int i = 0; i < tw->count(); ++i) {
+                    static_cast<GlassEditorPanel*>(tw->widget(i))->editor()->send(SCI_SETVSCROLLBAR, !on);
+                    // Minimap visibility is handled in GlassEditorPanel
+                }
+            }
         });
         win->addSeparator();
         addAct(win, "Clone Current Tab", [this](){
