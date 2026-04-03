@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+    <LexerStyles>
+        <LexerType name="cpp" desc="C++" ext="">
+            <WordsStyle name="DEFAULT" styleID="0" fgColor="EBEBEB" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="608060" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="608060" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="A0A0FF" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="KEYWORD1" styleID="5" fgColor="FF9040" bgColor="1A140E" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="STRING" styleID="6" fgColor="60C0FF" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="PREPROCESSOR" styleID="9" fgColor="A060C0" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="FFD080" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+        </LexerType>
+        <LexerType name="python" desc="Python" ext="">
+            <WordsStyle name="DEFAULT" styleID="0" fgColor="EBEBEB" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="COMMENT LINE" styleID="1" fgColor="608060" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="NUMBER" styleID="2" fgColor="A0A0FF" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="STRING" styleID="3" fgColor="60C0FF" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="KEYWORD" styleID="5" fgColor="FF9040" bgColor="1A140E" fontName="" fontStyle="1" fontSize="" />
+        </LexerType>
+    </LexerStyles>
+    <GlobalStyles>
+        <WordsStyle name="Caret Colour" styleID="2048" fgColor="FFFFFF" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+        <WordsStyle name="Line Number Margin" styleID="33" fgColor="888888" bgColor="1A140E" fontName="" fontStyle="0" fontSize="" />
+    </GlobalStyles>
+</NotepadPlus>

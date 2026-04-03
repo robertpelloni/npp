@@ -13,6 +13,7 @@
 #include "ILexer.h"
 #include "Lexilla.h"
 #include "SciLexer.h"
+#include "GlassThemeManager.h"
 
 // Note: To compile this, the target must link against Scintilla and Lexilla.
 
@@ -148,6 +149,20 @@ public:
     void paste(){ send(SCI_PASTE); }
     void selectAll() { send(SCI_SELECTALL); }
 
+    void highlightRange(sptr_t start, sptr_t length) {
+        // Use indicator 8 (standard for search)
+        send(SCI_SETINDICATORCURRENT, 8);
+        send(SCI_INDICSETSTYLE, 8, INDIC_ROUNDBOX);
+        send(SCI_INDICSETFORE, 8, 0x00A0FF); // Electric orange (BGR: 00 A0 FF)
+        send(SCI_INDICSETALPHA, 8, 100);
+        send(SCI_INDICSETOUTLINEALPHA, 8, 200);
+        
+        // Clear previous
+        send(SCI_INDICATORCLEARRANGE, 0, send(SCI_GETLENGTH));
+        // Fill new
+        send(SCI_INDICATORFILLRANGE, start, length);
+    }
+
     // Dummy properties for font compatibility with settings
     void setFont(const QFont& f) {
         QWidget::setFont(f);
@@ -194,65 +209,90 @@ public:
         if (lexer) {
             send(SCI_SETILEXER, 0, reinterpret_cast<sptr_t>(lexer));
             
-            // Set base styles for syntax highlighting mapped to Liquid Glass theme
-            // Base colors (BGR format)
+            // Try to load from Theme Manager
+            auto styles = GlassThemeManager::instance().getStyles(lexerName);
+            // Also get global styles for defaults
+            auto global = GlassThemeManager::instance().getStyles("global");
+            
             int bg = 0x1A140E;
             int fg = 0xEBEBEB;
-            int comment = 0x608060; // green-ish
-            int keyword = 0xFF9040; // orange/gold
-            int string = 0x60C0FF;  // yellow-ish
-            int number = 0xA0A0FF;  // cyan-ish
-            int op = 0xFFD080;      // light blue-ish
-            int preproc = 0xA060C0; // purple-ish
-            
-            if (lexerName == "cpp") {
-                send(SCI_STYLESETFORE, SCE_C_DEFAULT, fg);
-                send(SCI_STYLESETFORE, SCE_C_COMMENT, comment);
-                send(SCI_STYLESETFORE, SCE_C_COMMENTLINE, comment);
-                send(SCI_STYLESETFORE, SCE_C_COMMENTDOC, comment);
-                send(SCI_STYLESETFORE, SCE_C_NUMBER, number);
-                send(SCI_STYLESETFORE, SCE_C_WORD, keyword);
-                send(SCI_STYLESETBOLD, SCE_C_WORD, 1);
-                send(SCI_STYLESETFORE, SCE_C_STRING, string);
-                send(SCI_STYLESETFORE, SCE_C_CHARACTER, string);
-                send(SCI_STYLESETFORE, SCE_C_OPERATOR, op);
-                send(SCI_STYLESETFORE, SCE_C_PREPROCESSOR, preproc);
+
+            // Apply global first
+            for (const auto& s : global) {
+                if (s.fg.isValid()) send(SCI_STYLESETFORE, s.id, GlassThemeManager::toSciColor(s.fg));
+                if (s.bg.isValid()) send(SCI_STYLESETBACK, s.id, GlassThemeManager::toSciColor(s.bg));
+                send(SCI_STYLESETBOLD, s.id, s.bold ? 1 : 0);
+                send(SCI_STYLESETITALIC, s.id, s.italic ? 1 : 0);
+            }
+
+            if (!styles.isEmpty()) {
+                for (const auto& s : styles) {
+                    if (s.fg.isValid()) send(SCI_STYLESETFORE, s.id, GlassThemeManager::toSciColor(s.fg));
+                    if (s.bg.isValid()) send(SCI_STYLESETBACK, s.id, GlassThemeManager::toSciColor(s.bg));
+                    send(SCI_STYLESETBOLD, s.id, s.bold ? 1 : 0);
+                    send(SCI_STYLESETITALIC, s.id, s.italic ? 1 : 0);
+                }
+            } else {
+                // Fallback for hardcoded mapping if XML is missing or doesn't have this lexer
+                int comment = 0x608060; // green-ish
+                int keyword = 0xFF9040; // orange/gold
+                int string = 0x60C0FF;  // yellow-ish
+                int number = 0xA0A0FF;  // cyan-ish
+                int op = 0xFFD080;      // light blue-ish
+                int preproc = 0xA060C0; // purple-ish
                 
-                // Keywords definition for C++
+                if (lexerName == "cpp") {
+                    send(SCI_STYLESETFORE, SCE_C_DEFAULT, fg);
+                    send(SCI_STYLESETFORE, SCE_C_COMMENT, comment);
+                    send(SCI_STYLESETFORE, SCE_C_COMMENTLINE, comment);
+                    send(SCI_STYLESETFORE, SCE_C_COMMENTDOC, comment);
+                    send(SCI_STYLESETFORE, SCE_C_NUMBER, number);
+                    send(SCI_STYLESETFORE, SCE_C_WORD, keyword);
+                    send(SCI_STYLESETBOLD, SCE_C_WORD, 1);
+                    send(SCI_STYLESETFORE, SCE_C_STRING, string);
+                    send(SCI_STYLESETFORE, SCE_C_CHARACTER, string);
+                    send(SCI_STYLESETFORE, SCE_C_OPERATOR, op);
+                    send(SCI_STYLESETFORE, SCE_C_PREPROCESSOR, preproc);
+                } else if (lexerName == "python") {
+                    send(SCI_STYLESETFORE, SCE_P_DEFAULT, fg);
+                    send(SCI_STYLESETFORE, SCE_P_COMMENTLINE, comment);
+                    send(SCI_STYLESETFORE, SCE_P_NUMBER, number);
+                    send(SCI_STYLESETFORE, SCE_P_STRING, string);
+                    send(SCI_STYLESETFORE, SCE_P_CHARACTER, string);
+                    send(SCI_STYLESETFORE, SCE_P_WORD, keyword);
+                    send(SCI_STYLESETBOLD, SCE_P_WORD, 1);
+                    send(SCI_STYLESETFORE, SCE_P_TRIPLE, string);
+                    send(SCI_STYLESETFORE, SCE_P_TRIPLEDOUBLE, string);
+                    send(SCI_STYLESETFORE, SCE_P_CLASSNAME, preproc);
+                    send(SCI_STYLESETFORE, SCE_P_DEFNAME, op);
+                    send(SCI_STYLESETFORE, SCE_P_OPERATOR, op);
+                } else if (lexerName == "html") {
+                    send(SCI_STYLESETFORE, SCE_H_DEFAULT, fg);
+                    send(SCI_STYLESETFORE, SCE_H_TAG, keyword);
+                    send(SCI_STYLESETFORE, SCE_H_TAGUNKNOWN, keyword);
+                    send(SCI_STYLESETFORE, SCE_H_ATTRIBUTE, op);
+                    send(SCI_STYLESETFORE, SCE_H_ATTRIBUTEUNKNOWN, op);
+                    send(SCI_STYLESETFORE, SCE_H_NUMBER, number);
+                    send(SCI_STYLESETFORE, SCE_H_DOUBLESTRING, string);
+                    send(SCI_STYLESETFORE, SCE_H_SINGLESTRING, string);
+                    send(SCI_STYLESETFORE, SCE_H_OTHER, fg);
+                    send(SCI_STYLESETFORE, SCE_H_COMMENT, comment);
+                }
+            }
+
+            // Set keywords for C++/Python if not handled by XML
+            if (lexerName == "cpp") {
                 send(SCI_SETKEYWORDS, 0, reinterpret_cast<sptr_t>(
                     "auto break case char const continue default do double else enum extern float for goto if int long register return short signed sizeof static struct switch typedef union unsigned void volatile while "
                     "asm bool catch class const_cast delete dynamic_cast explicit export false friend inline mutable namespace new operator private protected public reinterpret_cast static_cast template this throw true try typeid typename using virtual wchar_t "
                     "alignas alignof char16_t char32_t constexpr decltype noexcept nullptr static_assert thread_local"
                 ));
             } else if (lexerName == "python") {
-                send(SCI_STYLESETFORE, SCE_P_DEFAULT, fg);
-                send(SCI_STYLESETFORE, SCE_P_COMMENTLINE, comment);
-                send(SCI_STYLESETFORE, SCE_P_NUMBER, number);
-                send(SCI_STYLESETFORE, SCE_P_STRING, string);
-                send(SCI_STYLESETFORE, SCE_P_CHARACTER, string);
-                send(SCI_STYLESETFORE, SCE_P_WORD, keyword);
-                send(SCI_STYLESETBOLD, SCE_P_WORD, 1);
-                send(SCI_STYLESETFORE, SCE_P_TRIPLE, string);
-                send(SCI_STYLESETFORE, SCE_P_TRIPLEDOUBLE, string);
-                send(SCI_STYLESETFORE, SCE_P_CLASSNAME, preproc);
-                send(SCI_STYLESETFORE, SCE_P_DEFNAME, op);
-                send(SCI_STYLESETFORE, SCE_P_OPERATOR, op);
-                
                 send(SCI_SETKEYWORDS, 0, reinterpret_cast<sptr_t>(
                     "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield"
                 ));
-            } else if (lexerName == "html") {
-                send(SCI_STYLESETFORE, SCE_H_DEFAULT, fg);
-                send(SCI_STYLESETFORE, SCE_H_TAG, keyword);
-                send(SCI_STYLESETFORE, SCE_H_TAGUNKNOWN, keyword);
-                send(SCI_STYLESETFORE, SCE_H_ATTRIBUTE, op);
-                send(SCI_STYLESETFORE, SCE_H_ATTRIBUTEUNKNOWN, op);
-                send(SCI_STYLESETFORE, SCE_H_NUMBER, number);
-                send(SCI_STYLESETFORE, SCE_H_DOUBLESTRING, string);
-                send(SCI_STYLESETFORE, SCE_H_SINGLESTRING, string);
-                send(SCI_STYLESETFORE, SCE_H_OTHER, fg);
-                send(SCI_STYLESETFORE, SCE_H_COMMENT, comment);
             }
+
             // For all lexers, ensure background is consistent
             for (int i = 0; i <= STYLE_MAX; ++i) {
                 send(SCI_STYLESETBACK, i, bg);

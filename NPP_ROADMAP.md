@@ -38,6 +38,13 @@
 - [x] Integrated `GlassSearchWorker` (QThread) for directory recursive search.
 - [x] Integrated `GlassFindInFilesDialog` frameless UI.
 - [x] Built Search Results `QDockWidget` with double-click navigation to file/line.
-- [ ] Real-time parsing of legacy `themes/*.xml` color schemes into `SCI_STYLESET*` mappings.
+- [x] Real-time parsing of legacy `themes/*.xml` color schemes into `SCI_STYLESET*` mappings via `GlassThemeManager`.
+- [x] Implemented Scintilla Indicator Highlighting for Search Results.
 - [ ] Connect native Qt QPrinter mapping for printing Scintilla documents.
 - [ ] Complete `QPluginLoader` bridge injecting legacy `NppData` structs.
+
+## Phase 7: OS Integration & Advanced UX
+- [ ] Implement System Tray icon with Glass context menu.
+- [ ] Window Snap layout support for Windows 11.
+- [ ] "Glass Splash" boot screen with dynamic loading progress.
+- [ ] Multi-cursor focus tree virtualization for collaborative editing.

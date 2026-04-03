@@ -114,6 +114,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include "Scintilla.h"
 #include "Sci_Position.h"
 #include "BobScintilla.h"
+#include "GlassThemeManager.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VERSION — loaded from ../../VERSION (one source of truth)
@@ -833,7 +834,11 @@ private:
             if (item && item->parent()) {
                 // It's a line number node
                 QString path = item->parent()->text();
-                int line = item->data(Qt::UserRole).toInt();
+                QVariantList data = item->data(Qt::UserRole).toList();
+                if (data.size() < 3) return;
+                int line = data[0].toInt();
+                int col  = data[1].toInt();
+                int len  = data[2].toInt();
                 
                 // Open file
                 auto* p = findPanelByPath(path);
@@ -850,9 +855,11 @@ private:
                     m_tabs->setCurrentWidget(p);
                 }
                 
-                // Jump to line
-                sptr_t pos = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
+                // Jump to line and highlight
+                sptr_t lineStart = p->editor()->send(SCI_POSITIONFROMLINE, line - 1);
+                sptr_t pos = lineStart + col;
                 p->editor()->send(SCI_GOTOPOS, pos);
+                p->editor()->highlightRange(pos, len);
                 p->editor()->send(SCI_ENSUREVISIBLEENFORCEPOLICY, line - 1);
                 p->editor()->send(SCI_GRABFOCUS);
             }
@@ -1331,7 +1338,7 @@ private:
                         searchNode->appendRow(fileItem);
                     }
                     auto* lineItem = new QStandardItem(QString("Line %1: %2").arg(res.lineNum).arg(res.text));
-                    lineItem->setData(res.lineNum, Qt::UserRole);
+                    lineItem->setData(QVariantList({res.lineNum, res.column, res.length}), Qt::UserRole);
                     fileItem->appendRow(lineItem);
                     m_searchTree->expand(fileItem->index());
                     m_searchTree->expand(searchNode->index());
@@ -1689,6 +1696,9 @@ int main(int argc, char* argv[]) {
 #ifdef Q_OS_WIN
     Scintilla_RegisterClasses(GetModuleHandle(NULL));
 #endif
+
+    // Load Default Liquid Glass Theme
+    GlassThemeManager::instance().loadTheme("PowerEditor/src/stylers.xml");
 
     // Enable DWM composition / high-DPI before QApplication is created.
     // On Windows, DWM must be enabled before the message loop starts.

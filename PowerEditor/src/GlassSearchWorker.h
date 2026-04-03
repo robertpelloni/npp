@@ -15,6 +15,8 @@
 struct SearchResultItem {
     QString filePath;
     int lineNum;
+    int column; // Start column (0-based)
+    int length; // Length of the match
     QString text;
 };
 
@@ -74,19 +76,22 @@ protected:
                 while (!stream.atEnd()) {
                     QString line = stream.readLine();
                     
-                    bool match = false;
+                    int posInLine = -1;
                     if (m_wholeWord) {
                         QRegularExpression rx(QString("\\b%1\\b").arg(QRegularExpression::escape(m_needle)), 
                             m_matchCase ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
-                        match = line.contains(rx);
+                        auto matchObj = rx.match(line);
+                        if (matchObj.hasMatch()) {
+                            posInLine = matchObj.capturedStart();
+                        }
                     } else {
-                        match = line.contains(m_needle, cs);
+                        posInLine = line.indexOf(m_needle, 0, cs);
                     }
                     
-                    if (match) {
+                    if (posInLine != -1) {
                         totalMatches++;
                         if (onResultFound) {
-                            SearchResultItem item = {filePath, lineNum, line.trimmed()};
+                            SearchResultItem item = {filePath, lineNum, posInLine, (int)m_needle.length(), line.trimmed()};
                             QMetaObject::invokeMethod(qApp, [this, item](){
                                 onResultFound(item);
                             }, Qt::QueuedConnection);
