@@ -2,9 +2,11 @@
 <NotepadPlus>
     <functionList>
         <parser id="cpp" displayName="C++" commentExpr="//.*|/\*.*?\*/">
+            <class mainExpr="(?:class|struct)\s+([a-zA-Z_][a-zA-Z0-9_]*)" />
             <function mainExpr="(?:[a-zA-Z_][a-zA-Z0-9_*&amp;]*\s+)+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*\{" />
         </parser>
         <parser id="python" displayName="Python" commentExpr="#.*">
+            <class mainExpr="class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[:\(]" />
             <function mainExpr="def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(" />
         </parser>
     </functionList>

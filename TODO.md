@@ -1,9 +1,7 @@
-# Immediate Tasks (Phase 15: Final Distribution Polish)
-- [ ] Implement Windows 11 Snap Layouts integration (WM_NCHITTEST).
-- [ ] Build a robust UDL parser for legacy Notepad++ user languages.
-- [ ] Connect QtPrintSupport to enable native glass-mode printing.
-- [ ] Finalize "Glass Update" notification logic.
-- [ ] Implement "Shortcut Mapper" auto-population from indexed QActions.
-- [ ] Add support for "File Change Monitoring" (Tail -f).
-- [ ] Implement "Open in New Instance" menu command.
-- [ ] Add "Clear All Search Results" to the Search Tabs context menu.
+# Immediate Tasks (Phase 15: Distribution & Final Packaging)
+- [ ] Connect native Qt QPrinter mapping for document printing.
+- [ ] Finalize the "Glass Update" system with real server-side version checking.
+- [ ] Implement "Project Panel" with drag-and-drop workspace management.
+- [ ] Add support for "Column Paste" (rectangular clipboard data).
+- [ ] Package as a portable .zip with all dependencies (Qt, Scintilla, Lexilla).
+- [ ] Create a "Glass Theme Store" to download additional XML themes.

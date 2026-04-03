@@ -10,28 +10,28 @@ now featuring a full **Liquid Glass** visual system inspired by Apple's visionOS
 
 ---
 
-## THIS SESSION: Geany Parity, Build Systems & Plugin Porting (v1.1.11)
+## THIS SESSION: OS Polish, Symbol Categorization & Multi-Instance (v1.1.12)
 
 ### Major Achievements
-1. **Integrated Build System:** Implemented a Geany-style build/execute pipeline.
-   * **Configurable Commands:** Supports custom shell execution logic (F8 to build, F5 to run) with macro expansion for paths (`%f`) and filenames (`%e`).
-   * **Terminal Routing:** Standard output is piped directly into the native Glass Terminal.
-2. **Native Plugin Porting (Converter & Mime):** Ported the core logic of several high-demand NPP plugins into the program's native codebase.
-   * **Tools Suite:** Added support for Base64 encoding/decoding, URL percent-encoding, and Hex-to-ASCII bi-directional conversion.
-3. **Architectural Parity (XML Function List):** Refactored the discovery engine to utilize an external **`functionList.xml`**. Regex signatures for C++ and Python are now user-configurable, reaching 1:1 structural parity with the Notepad++ language engine.
-4. **Auto-Closing Tag Engine:** Upgraded the Scintilla character trap to automatically generate closing tags for HTML and XML documents.
-5. **UI Logic Consolidation:** Integrated the Build configuration dialog and refined the status bar feedback loops.
+1. **File Change Monitoring (Tail -f):** Implemented a native `QFileSystemWatcher` integration. The application now monitors all open files and prompts the user for a reload if an external process modifies the source on disk.
+2. **Multi-Instance Support:** Added "Open in New Instance" to the File menu, allowing users to spawn independent `npp_liquid_glass` processes.
+3. **Advanced Symbol Parsing:**
+   * **Categorization:** Upgraded the `functionList.xml` and `GlassFunctionParser.h` to distinguish between **Classes** and **Functions**.
+   * **Visuals:** The sidebar now displays type prefixes (e.g., `[Class] MyClass`) for better code navigation.
+4. **Shortcut Mapper Automation:** The Shortcut Mapper now dynamically indexes every `QAction` registered in the `QMenuBar`, automatically populating the configuration table with current keybindings.
+5. **Windows 11 Snap Layouts:** Added a `nativeEvent` filter to handle `WM_NCHITTEST` interceptions, paving the way for native snap menu support in the DWM-extended frame.
+6. **Self-Update System:** Integrated a "Check for Updates" routine into the Help menu, providing a UI bridge for future GitHub-hosted release notifications.
 
 ---
 
 ### Files Modified & Created
 | File | Changes |
 |------|---------|
-| `PowerEditor/src/GlassBuildConfigDialog.h` | UI for managing Build and Execute shell commands. |
-| `PowerEditor/src/functionList.xml` | XML definitions for regex function discovery. |
-| `PowerEditor/src/GlassFunctionParser.h` | Refactored to ingest XML-based language signatures. |
-| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated Tools menu, Build system, and JSON macro maps. |
-| `NPP_ROADMAP.md` | Marked Geany & Plugin parity as Complete. |
+| `PowerEditor/src/NppLiquidGlass_Main.cpp` | Integrated File Watcher, New Instance, and Snap Layout stubs. |
+| `PowerEditor/src/GlassShortcutMapper.h` | Upgraded to auto-populate from `QAction` lists. |
+| `PowerEditor/src/GlassFunctionParser.h` | Injected symbol type categorization (Class vs Function). |
+| `PowerEditor/src/functionList.xml` | Added class-level regex signatures. |
+| `NPP_ROADMAP.md` | Marked Phase 12 as 90% Complete. |
 
 ---
 
@@ -48,9 +48,9 @@ python build.py
 ## Next Steps for Implementor (Phase 15)
 
 ### Immediate (P0)
-1. **Windows 11 Snap Layouts:** Implement `nativeEvent` filtering to support the native snap menu in the DWM frame.
-2. **File Monitoring (Tail -f):** Port the "Document Monitor" plugin logic to automatically detect and reload external file changes.
+1. **Printing Support:** Resolve the `QtPrintSupport` static linkage to enable `actionPrint()`.
+2. **Column Paste:** Implement a clipboard interceptor to handle rectangular data pasting into multiple Scintilla selections.
 
 ### Short-term (P1)
-3. **Shortcut Mapper Automation:** Finish the QAction indexing to allow users to bind custom keys to any menu item via the Shortcut Mapper UI.
-4. **UDL Advanced Styles:** Support nested block definitions in the User Defined Language parser.
+3. **Distribution Packaging:** Create an installer script (NSIS or InnoSetup) to bundle the executable with its necessary XML configuration files.
+4. **Theme Store:** Prototype a `QNetworkAccessManager` bridge to download community-made `stylers.xml` themes.

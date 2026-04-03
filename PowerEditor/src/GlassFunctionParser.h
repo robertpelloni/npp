@@ -13,6 +13,7 @@
 
 struct FunctionItem {
     QString name;
+    QString type; // "Function", "Class", "Variable"
     int line;
 };
 
@@ -36,7 +37,9 @@ public:
                 while (!(xml.isEndElement() && xml.name() == "parser")) {
                     xml.readNext();
                     if (xml.isStartElement() && xml.name() == "function") {
-                        m_parsers[id] = xml.attributes().value("mainExpr").toString();
+                        m_parsers[id]["Function"] = xml.attributes().value("mainExpr").toString();
+                    } else if (xml.isStartElement() && xml.name() == "class") {
+                        m_parsers[id]["Class"] = xml.attributes().value("mainExpr").toString();
                     }
                 }
             }
@@ -51,22 +54,25 @@ public:
 
         if (!m_parsers.contains(lang)) return results;
 
-        QRegularExpression rx(m_parsers[lang]);
-        auto it = rx.globalMatch(text);
-        
-        while (it.hasNext()) {
-            auto match = it.next();
-            QString name = match.captured(1);
-            int offset = match.capturedStart();
-            int lineNum = text.left(offset).count('\n') + 1;
-            results.append({name, lineNum});
+        for (auto itMap = m_parsers[lang].begin(); itMap != m_parsers[lang].end(); ++itMap) {
+            QString type = itMap.key();
+            QRegularExpression rx(itMap.value());
+            auto it = rx.globalMatch(text);
+            
+            while (it.hasNext()) {
+                auto match = it.next();
+                QString name = match.captured(1);
+                int offset = match.capturedStart();
+                int lineNum = text.left(offset).count('\n') + 1;
+                results.append({name, type, lineNum});
+            }
         }
         return results;
     }
 
 private:
     GlassFunctionParser() = default;
-    QMap<QString, QString> m_parsers;
+    QMap<QString, QMap<QString, QString>> m_parsers; // lang -> (type -> regex)
 };
 
 #endif // GLASS_FUNCTION_PARSER_H

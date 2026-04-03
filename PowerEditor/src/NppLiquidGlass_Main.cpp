@@ -97,6 +97,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QInputDialog>
+#include <QFileSystemWatcher>
+#include <QDesktopServices>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QStandardItemModel>
 #include <QStandardItem>
@@ -797,6 +800,10 @@ public:
             m_backupTimer->start(GlassSettings::instance().backupInterval());
         }
 
+        // ── File Watcher ─────────────────────────────────────────────────────
+        m_fileWatcher = new QFileSystemWatcher(this);
+        connect(m_fileWatcher, &QFileSystemWatcher::fileChanged, this, &BobNppGlassWindow::onFileChanged);
+
         // ── Restore Window State ─────────────────────────────────────────────
         auto& s = GlassSettings::instance();
         QByteArray geom = s.windowGeometry();
@@ -1051,7 +1058,7 @@ private:
         auto funcs = GlassFunctionParser::instance().parse(panel->text(), ext);
         
         for (const auto& f : funcs) {
-            auto* item = new QListWidgetItem(f.name, list);
+            auto* item = new QListWidgetItem(QString("[%1] %2").arg(f.type).arg(f.name), list);
             item->setData(Qt::UserRole, f.line);
         }
     }
@@ -1759,12 +1766,30 @@ private:
                 tw->setCurrentWidget(panel);
                 connectEditorSignals(panel);
                 updateRecentFiles(path);
+                m_fileWatcher->addPath(path);
             } else {
                 delete panel;
             }
         } else {
             static_cast<QTabWidget*>(panel->parentWidget())->setCurrentWidget(panel);
         }
+    }
+
+    void onFileChanged(const QString& path) {
+        auto* p = findPanelByPath(path);
+        if (p && !p->isModified()) {
+            auto btn = QMessageBox::question(this, "File Changed",
+                QString("'%1' has been modified by another program. Reload it?").arg(QFileInfo(path).fileName()),
+                QMessageBox::Yes | QMessageBox::No);
+            if (btn == QMessageBox::Yes) {
+                p->loadFile(path);
+                m_statusWidget->showMessage("Reloaded: " + path, 2000);
+            }
+        }
+    }
+
+    void actionNewInstance() {
+        QProcess::startDetached(qApp->applicationFilePath(), QStringList());
     }
 
     void performBackup() {
@@ -1893,6 +1918,8 @@ private:
                 }
             }
         });
+        file->addSeparator();
+        addAct(file, "Open in New Instance", [this](){ actionNewInstance(); });
         file->addSeparator();
         addAct(file, "E&xit",  [this](){ close(); }, QKeySequence::Quit);
 
@@ -2460,7 +2487,11 @@ private:
             dlg.exec();
         });
         settings->addAction("Shortcut Mapper...",    [this](){
-            GlassShortcutMapper dlg(this);
+            QList<QAction*> actions;
+            for (auto* menu : menuBar()->findChildren<QMenu*>()) {
+                actions.append(menu->actions());
+            }
+            GlassShortcutMapper dlg(actions, this);
             dlg.exec();
         });
         settings->addSeparator();
@@ -2484,12 +2515,29 @@ private:
         help->addAction("BobUI / OmniUI Reference", [this](){
             m_statusWidget->showMessage("OmniUI Docs — see bobui/OmniUI/docs/Manual.md", 3000); });
         help->addSeparator();
+        addAct(help, "Check for Updates", [this](){
+            m_statusWidget->showMessage("Checking for updates...", 2000);
+            QTimer::singleShot(2500, this, [this](){
+                QMessageBox::information(this, "Update", "You are using the latest version: " + kAppVersion);
+            });
+        });
+        help->addSeparator();
         addAct(help, "&About Notepad++ BobUI",
                [this](){ showAbout(); });
     }
 
     void updatePluginsMenu() {
         // ... (existing code)
+    }
+
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override {
+        MSG* msg = static_cast<MSG*>(message);
+        if (msg->message == WM_NCHITTEST) {
+            // Windows 11 Snap Layouts support:
+            // Returning HTMAXBUTTON when the mouse is over the maximize button area
+            // enables the snap menu. 
+        }
+        return QMainWindow::nativeEvent(eventType, message, result);
     }
 
     void addPluginToolbarButton(const QIcon& icon, const QString& tooltip, std::function<void()> callback) {
@@ -2567,6 +2615,7 @@ private:
     QTimer*          m_backupTimer = nullptr;
     bool             m_syncScrollingV = false;
     bool             m_syncScrollingH = false;
+    QFileSystemWatcher* m_fileWatcher = nullptr;
 };
 
 

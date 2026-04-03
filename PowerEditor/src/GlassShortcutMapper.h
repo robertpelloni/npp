@@ -15,7 +15,7 @@
 
 class GlassShortcutMapper : public QDialog {
 public:
-    explicit GlassShortcutMapper(QWidget* parent = nullptr) : QDialog(parent) {
+    explicit GlassShortcutMapper(const QList<QAction*>& actions, QWidget* parent = nullptr) : QDialog(parent) {
         setWindowTitle("Shortcut Mapper");
         setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
         setAttribute(Qt::WA_TranslucentBackground);
@@ -29,13 +29,22 @@ public:
         title->setStyleSheet("color: white; font-size: 18px; font-weight: bold;");
         mainLay->addWidget(title);
 
-        m_table = new QTableWidget(10, 2, this);
+        m_table = new QTableWidget(actions.size(), 2, this);
         m_table->setHorizontalHeaderLabels({"Action", "Shortcut"});
         m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         m_table->setStyleSheet(
             "QTableWidget { background: rgba(0,0,0,50); color: white; border: 1px solid rgba(255,255,255,10); }"
             "QHeaderView::section { background: rgba(255,255,255,15); color: white; padding: 5px; }"
         );
+        
+        for (int i = 0; i < actions.size(); ++i) {
+            auto* a = actions[i];
+            QString name = a->text().replace("&", "");
+            if (name.isEmpty()) name = a->toolTip();
+            m_table->setItem(i, 0, new QTableWidgetItem(name));
+            m_table->setItem(i, 1, new QTableWidgetItem(a->shortcut().toString()));
+        }
+        
         mainLay->addWidget(m_table);
 
         auto* closeBtn = new QPushButton("Close", this);

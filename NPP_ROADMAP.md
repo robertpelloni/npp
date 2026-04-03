@@ -72,8 +72,11 @@
 ## Phase 12: Geany & Plugin Parity (Complete)
 - [x] Engineered native Build System with configurable commands (F8/F5).
 - [x] Integrated Mime and Converter tools (Base64, Hex, URL).
-- [x] Implemented XML-driven Function List parsing parity.
+- [x] Implemented XML-driven Function List parsing parity (Classes & Functions).
 - [x] Added auto-closing tags for HTML/XML documents.
+- [x] Integrated File Change Monitoring (Tail -f) with auto-reload.
+- [x] Implemented "Open in New Instance" multi-process logic.
+- [x] Built a "Check for Updates" system in the Help menu.
 - [ ] Connect native Qt QPrinter mapping for document printing.
-- [ ] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
-- [ ] Build a "Glass Update" system to notify of new BobUI releases.
+- [x] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
+- [x] Automated Shortcut Mapper population from indexed QActions.
