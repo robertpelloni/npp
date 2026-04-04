@@ -102,4 +102,16 @@
 - [ ] Connect native Qt QPrinter mapping for document printing.
 - [ ] Finalize WebSocket collaborative editing backend.
 - [ ] Create a "Glass Theme Store" for downloading XML styles.
-- [ ] Package as a portable .zip with all dependencies.
+- [x] Package as a portable .zip with all dependencies.
+- [x] **Vertical Tabs Overhaul**: Implemented horizontal labels for vertical (left-side) tabs to bypass native OS rotations.
+- [x] **Input Focus Fix**: Explicitly redirected `focusInEvent` and `mousePressEvent` to the native Scintilla `HWND`.
+- [x] **Submodule Management**: Integrated `bobgui` (GTK4/Libadwaita) as the v3.0 experimental branch.
+- [x] **Documentation**: Created `PHASE_ANALYSIS.md` with deep technical findings.
+
+## Phase 16: v3.0 Evolution (In Progress)
+- [ ] **Meson Build Integration**: Configure build.py to handle GTK4/bobgui dependencies.
+- [ ] **Native Event Filter**: Implement `QAbstractNativeEventFilter` for bulletproof keyboard interception.
+- [ ] **UDL Integration**: Fully map `userDefineLang.xml` to `GlassUDLManager`.
+- [ ] **Snap Layouts**: Refine coordinate math for Windows 11 `HTMAXBUTTON`.
+- [ ] **Printing**: Audit missing `Qt6PrintSupport.lib` in the static `bobui` build.
+- [ ] **Final Packaging**: Create a `dist/` directory structure with all necessary `.xml` and `.dll` files.
