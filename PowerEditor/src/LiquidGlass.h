@@ -731,7 +731,18 @@ namespace LiquidGlassStyleSheet {
                 stop:1 rgba(12,14,22,200));
             color: rgba(240, 245, 255, 255);
             border-color: rgba(255,255,255,35);
+        }
+        QTabBar::tab:top:selected {
             border-bottom: 2px solid rgba(90,130,255,200);
+        }
+        QTabBar::tab:bottom:selected {
+            border-top: 2px solid rgba(90,130,255,200);
+        }
+        QTabBar::tab:left:selected {
+            border-right: 2px solid rgba(90,130,255,200);
+        }
+        QTabBar::tab:right:selected {
+            border-left: 2px solid rgba(90,130,255,200);
         }
         QTabBar::tab:hover:!selected {
             background: rgba(40, 44, 65, 150);

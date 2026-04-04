@@ -107,6 +107,10 @@ public:
     bool autoReload() const { return m_settings.value("Backup/AutoReload", false).toBool(); }
     void setAutoReload(bool enable) { m_settings.setValue("Backup/AutoReload", enable); }
 
+    // 0=Top, 1=Bottom, 2=Left, 3=Right
+    int tabPosition() const { return m_settings.value("UI/TabPosition", 0).toInt(); }
+    void setTabPosition(int pos) { m_settings.setValue("UI/TabPosition", pos); }
+
 private:
     GlassSettings() : m_settings("robertpelloni", "Notepad++ BobUI Liquid Glass") {}
     ~GlassSettings() = default;

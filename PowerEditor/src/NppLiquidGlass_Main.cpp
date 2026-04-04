@@ -777,6 +777,12 @@ public:
             onCurrentTabChanged(m_tabsSecondary, idx);
         });
 
+        // Set initial tab position from settings
+        static const QTabWidget::TabPosition positions[] = { QTabWidget::North, QTabWidget::South, QTabWidget::West, QTabWidget::East };
+        int tabPosIdx = GlassSettings::instance().tabPosition();
+        m_tabs->setTabPosition(positions[tabPosIdx]);
+        m_tabsSecondary->setTabPosition(positions[tabPosIdx]);
+
         m_mainSplitter->addWidget(m_tabs);
         m_mainSplitter->addWidget(m_tabsSecondary);
         mainLay->addWidget(m_mainSplitter, 1);
@@ -2659,6 +2665,13 @@ private:
                 LiquidGlassDWM::enableBlurBehind(this, modes[s.glassIntensity()]);
                 // Apply bubbles
                 if (m_bubbles) m_bubbles->setVisible(s.bubbleAnimations());
+                
+                // Apply Tab Position
+                static const QTabWidget::TabPosition positions[] = { QTabWidget::North, QTabWidget::South, QTabWidget::West, QTabWidget::East };
+                int posIdx = s.tabPosition();
+                m_tabs->setTabPosition(positions[posIdx]);
+                m_tabsSecondary->setTabPosition(positions[posIdx]);
+
                 // Apply to all tabs
                 for (int i = 0; i < m_tabs->count(); ++i) {
                     if (auto* p = static_cast<GlassEditorPanel*>(m_tabs->widget(i))) {

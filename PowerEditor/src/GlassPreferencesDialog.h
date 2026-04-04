@@ -120,8 +120,14 @@ private:
         m_showMinimap->setChecked(GlassSettings::instance().showMinimap());
         m_bubbleCheck = new QCheckBox("Enable Liquid Bubbles", this);
         m_bubbleCheck->setChecked(GlassSettings::instance().bubbleAnimations());
+        
+        m_tabPos = new QComboBox(this);
+        m_tabPos->addItems({"Top", "Bottom", "Left", "Right"});
+        m_tabPos->setCurrentIndex(GlassSettings::instance().tabPosition());
+        
         lay->addRow("Visuals:", m_showMinimap);
         lay->addRow("", m_bubbleCheck);
+        lay->addRow("Tab Position:", m_tabPos);
         return w;
     }
 
@@ -169,6 +175,7 @@ private:
         auto& s = GlassSettings::instance();
         s.setShowMinimap(m_showMinimap->isChecked());
         s.setBubbleAnimations(m_bubbleCheck->isChecked());
+        s.setTabPosition(m_tabPos->currentIndex());
         
         QFont f = m_fontCombo->currentFont();
         f.setPointSize(m_fontSize->value());
@@ -185,6 +192,7 @@ private:
     void resetToDefaults() {
         m_showMinimap->setChecked(true);
         m_bubbleCheck->setChecked(true);
+        m_tabPos->setCurrentIndex(0); // Top
         QFont defaultFont("Cascadia Code", 11);
         defaultFont.setStyleHint(QFont::Monospace);
         m_fontCombo->setCurrentFont(defaultFont);
@@ -201,6 +209,7 @@ private:
 
     QCheckBox* m_showMinimap;
     QCheckBox* m_bubbleCheck;
+    QComboBox* m_tabPos;
     QFontComboBox* m_fontCombo;
     QSpinBox* m_fontSize;
     QCheckBox* m_wrapCheck;
