@@ -162,6 +162,12 @@ public:
         return send(SCI_GETWRAPMODE) != SC_WRAP_NONE;
     }
 
+    void grabFocus() {
+        if (m_sciHwnd) {
+            ::SetFocus(m_sciHwnd);
+        }
+    }
+
     void undo() { send(SCI_UNDO); }
     void redo() { send(SCI_REDO); }
     void cut()  { send(SCI_CUT); }

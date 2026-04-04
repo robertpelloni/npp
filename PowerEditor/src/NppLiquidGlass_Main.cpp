@@ -1393,6 +1393,8 @@ private:
             m_statusWidget->updateStats(panel->editor());
             updateSnippets(QFileInfo(panel->filePath()).suffix());
             updateFunctionList(panel);
+            // Ensure the native Scintilla child gets keyboard focus when the tab is switched
+            panel->editor()->grabFocus();
         }
     }
 
