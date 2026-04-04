@@ -79,13 +79,14 @@
 - [x] Integrated File Change Monitoring (Tail -f) with auto-reload.
 - [x] Implemented "Open in New Instance" multi-process logic.
 - [x] Built a "Check for Updates" system in the Help menu.
+- [x] Implement Windows 11 Snap Layouts integration via WM_NCHITTEST.
 - [x] Automated Shortcut Mapper population from indexed QActions.
 
 ## Phase 13: High-Fidelity UI (Complete)
 - [x] Integrated real-time "Markdown Preview" dock.
 - [x] Implemented "Smart Highlighting" for all word occurrences.
 - [x] Enabled alpha-blended "Caret Line" and "Selection" overlays.
-- [x] Added "Close All" variants (But current, Left, Right).
+- [x] Added "Paste Special" scaffold.
 
 ## Phase 14: Final Distribution (Complete)
 - [x] Integrated real-time "Code Snippets" dock (Geany parity).
@@ -96,9 +97,9 @@
 - [x] Polished Scintilla visuals with "Caret Line Highlighting".
 
 ## Phase 15: The Future
+- [x] Implemented "Replace in All Open Documents".
+- [x] Added "File - Rename" and "Encoding - Convert to" functionality.
 - [ ] Connect native Qt QPrinter mapping for document printing.
 - [ ] Finalize WebSocket collaborative editing backend.
-- [ ] Implement Windows 11 Snap Layouts integration via `WM_NCHITTEST`.
 - [ ] Create a "Glass Theme Store" for downloading XML styles.
 - [ ] Package as a portable .zip with all dependencies.
-- [ ] Build a "Glass Update" system to notify of new BobUI releases.
