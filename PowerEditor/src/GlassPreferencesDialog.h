@@ -74,6 +74,11 @@ public:
         mainLay->addLayout(body);
 
         auto* footer = new QHBoxLayout;
+        auto* resetBtn = new QPushButton("Reset Defaults", this);
+        connect(resetBtn, &QPushButton::clicked, this, [this](){
+            resetToDefaults();
+        });
+        footer->addWidget(resetBtn);
         footer->addStretch();
         auto* saveBtn = new QPushButton("Apply & Close", this);
         saveBtn->setFixedWidth(120);
@@ -175,6 +180,19 @@ private:
         s.setGlassIntensity(m_glassIntensity->currentIndex());
         
         if (m_applyCb) m_applyCb();
+    }
+
+    void resetToDefaults() {
+        m_showMinimap->setChecked(true);
+        m_bubbleCheck->setChecked(true);
+        QFont defaultFont("Cascadia Code", 11);
+        defaultFont.setStyleHint(QFont::Monospace);
+        m_fontCombo->setCurrentFont(defaultFont);
+        m_fontSize->setValue(11);
+        m_wrapCheck->setChecked(false);
+        m_backupCheck->setChecked(true);
+        m_backupInterval->setValue(30);
+        m_glassIntensity->setCurrentIndex(2);
     }
 
     QListWidget* m_sidebar;

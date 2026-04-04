@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <QResizeEvent>
+#include <QFocusEvent>
+#include <QMouseEvent>
+#include <QShowEvent>
 #include <QWindow>
 #include <QString>
 #include <QByteArray>
@@ -487,6 +490,27 @@ protected:
         QWidget::resizeEvent(e);
         if (m_sciHwnd) {
             MoveWindow(m_sciHwnd, 0, 0, width(), height(), TRUE);
+        }
+    }
+
+    void focusInEvent(QFocusEvent* e) override {
+        QWidget::focusInEvent(e);
+        if (m_sciHwnd) {
+            ::SetFocus(m_sciHwnd);
+        }
+    }
+
+    void mousePressEvent(QMouseEvent* e) override {
+        QWidget::mousePressEvent(e);
+        if (m_sciHwnd) {
+            ::SetFocus(m_sciHwnd);
+        }
+    }
+
+    void showEvent(QShowEvent* e) override {
+        QWidget::showEvent(e);
+        if (m_sciHwnd) {
+            ::SetFocus(m_sciHwnd);
         }
     }
 
