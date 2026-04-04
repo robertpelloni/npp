@@ -4,3 +4,6 @@
 [submodule "textfx"]
 	path = textfx
 	url = https://github.com/rainman74/NPPTextFX2.git
+[submodule "bobgui"]
+	path = bobgui
+	url = https://github.com/robertpelloni/bobgui
