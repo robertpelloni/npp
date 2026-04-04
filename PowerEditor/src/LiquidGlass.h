@@ -724,6 +724,14 @@ namespace LiquidGlassStyleSheet {
             font-size: 12px;
             min-width: 80px;
         }
+        QTabBar::tab:left, QTabBar::tab:right {
+            border-bottom: 1px solid rgba(255,255,255,12);
+            border-top-right-radius: 8px;
+            border-bottom-left-radius: 8px;
+            margin-right: 0px;
+            margin-bottom: 2px;
+            min-height: 32px;
+        }
         QTabBar::tab:selected {
             background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
                 stop:0 rgba(255,255,255,30),
