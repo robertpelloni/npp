@@ -1204,11 +1204,19 @@ private:
         m_searchDock = new QDockWidget("Search Results", this);
         m_searchDock->setObjectName("SearchResultsDock");
         m_searchDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
-        m_searchTree = new QTreeView(m_searchDock);
-        m_searchTree->setHeaderHidden(true);
-        m_searchModel = new QStandardItemModel(m_searchTree);
-        m_searchTree->setModel(m_searchModel);
-        m_searchDock->setWidget(m_searchTree);
+        
+        m_searchTabs = new QTabWidget(m_searchDock);
+        m_searchTabs->setTabsClosable(true);
+        m_searchTabs->setDocumentMode(true);
+        m_searchTabs->setStyleSheet(LiquidGlassStyleSheet::kTabWidget);
+        connect(m_searchTabs, &QTabWidget::tabCloseRequested, this, [this](int idx){
+            auto* w = m_searchTabs->widget(idx);
+            m_searchTabs->removeTab(idx);
+            delete w;
+            if (m_searchTabs->count() == 0) m_searchDock->hide();
+        });
+
+        m_searchDock->setWidget(m_searchTabs);
         addDockWidget(Qt::BottomDockWidgetArea, m_searchDock);
         m_searchDock->hide();
 
@@ -2222,6 +2230,14 @@ private:
             });
             dlg.exec();
         }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_F));
+        addAct(search, "Clear Search Results", [this](){
+            while (m_searchTabs->count() > 0) {
+                auto* w = m_searchTabs->widget(0);
+                m_searchTabs->removeTab(0);
+                delete w;
+            }
+            m_searchDock->hide();
+        }, QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
         addAct(search, "Find &Next",    [this](){ doFind(false); }, QKeySequence::FindNext);
         addAct(search, "Find &Previous",[this](){ doFind(true); },  QKeySequence::FindPrevious);
         search->addSeparator();
