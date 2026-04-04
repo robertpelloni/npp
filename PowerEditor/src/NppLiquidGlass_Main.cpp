@@ -785,10 +785,10 @@ public:
         m_statusWidget = new GlassStatusWidget(central);
         mainLay->addWidget(m_statusWidget, 0);
 
-        // ── Menus & toolbar ──────────────────────────────────────────────────
+        // ── Docks, menus & toolbar ───────────────────────────────────────────
+        setupDockWidgets();
         setupMenuBar();
         setupToolBar();
-        setupDockWidgets();
         setupSystemTray();
 
         // ── Bubble overlay (lives above everything) ──────────────────────────
@@ -1173,6 +1173,7 @@ private:
         
         // ── Function List ───────────────────────────────────────────────────
         m_functionDock = new QDockWidget("Function List", this);
+        m_functionDock->setObjectName("FunctionListDock");
         m_functionDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         auto* list = new QListWidget(m_functionDock);
         m_functionDock->setWidget(list);
@@ -1195,6 +1196,7 @@ private:
         
         // ── Search Results ──────────────────────────────────────────────────
         m_searchDock = new QDockWidget("Search Results", this);
+        m_searchDock->setObjectName("SearchResultsDock");
         m_searchDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         m_searchTree = new QTreeView(m_searchDock);
         m_searchTree->setHeaderHidden(true);
@@ -1206,6 +1208,7 @@ private:
 
         // ── Glass Terminal ──────────────────────────────────────────────────
         m_terminalDock = new QDockWidget("Glass Terminal", this);
+        m_terminalDock->setObjectName("GlassTerminalDock");
         m_terminalDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         auto* term = new GlassTerminal(m_terminalDock);
         m_terminalDock->setWidget(term);
@@ -1215,6 +1218,7 @@ private:
         
         // ── Markdown Preview ────────────────────────────────────────────────
         m_mdDock = new QDockWidget("Markdown Preview", this);
+        m_mdDock->setObjectName("MarkdownPreviewDock");
         m_mdDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         auto* md = new GlassMarkdownPreview(m_mdDock);
         m_mdDock->setWidget(md);
@@ -1223,6 +1227,7 @@ private:
 
         // ── Snippets ────────────────────────────────────────────────────────
         m_snippetsDock = new QDockWidget("Snippets", this);
+        m_snippetsDock->setObjectName("SnippetsDock");
         m_snippetsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
         auto* sList = new QListWidget(m_snippetsDock);
         m_snippetsDock->setWidget(sList);

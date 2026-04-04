@@ -46,6 +46,19 @@ public:
         // Actually for a simple terminal we just pipe everything
     }
 
+    ~GlassTerminal() override {
+        // Do not forcibly terminate an active shell process here.
+        // The user explicitly requested we do not kill processes.
+        // Detach the QProcess object from QWidget ownership to avoid the
+        // QProcess destructor warning when the application closes while the
+        // shell is still running.
+        if (m_process && m_process->state() != QProcess::NotRunning) {
+            m_process->setParent(nullptr);
+            m_process->disconnect(this);
+            m_process = nullptr;
+        }
+    }
+
     void startShell() {
 #ifdef Q_OS_WIN
         m_process->start("cmd.exe", QStringList());
