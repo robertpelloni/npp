@@ -7,3 +7,6 @@
 [submodule "bobgui"]
 	path = bobgui
 	url = https://github.com/robertpelloni/bobgui
+[submodule "btk"]
+	path = btk
+	url = https://github.com/robertpelloni/btk
