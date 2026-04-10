@@ -3,11 +3,10 @@
 This file tracks the latest actions and status for the next AI agent or human developer.
 
 ## Current Status
-- Version 1.0.4
-- The `go-port` directory has been initialized with a main entry point and the foundational `EventBus` logic, successfully tested.
-- Submodules (`bobui`, `btk`, `bobgui`, `textfx`) are configured.
-- Core interface abstractions (`EventBus`, `IScintillaBridge`, `VersioningAutosave`, `GeanyParity`) are designed in C++.
+- Version 1.0.5
+- The `go-port` directory now contains functioning modules for `autosave` (with snapshot deduplication) and core data models (`Buffer`, `BufferManager`).
+- ScintillaComponent Win32 coupling has been analyzed and documented in `PHASE_ANALYSIS.md`.
 
 ## Recent Analysis & Decisions
-- The Go port is actively underway. We have decided to mirror the clean C++ decoupling logic (like EventBus) directly into idiomatic Go.
-- Next steps involve systematically porting `Buffer.cpp`, `Parameters.cpp`, and other core parsing logic into Go packages (`pkg/core`), and exploring the `cgo` bindings required to link Go to the Qt/GTK submodules.
+- The Go port is rapidly taking shape. By storing file state independently in Go (`pkg/core/buffer.go`), we have successfully severed the tie to Scintilla's internal document pointers.
+- Next steps involve mapping the remaining C++ core logic (e.g., `Parameters.cpp` for config management) into Go, and exploring how to bind the Go backend to the Qt6 `bobui` submodule.

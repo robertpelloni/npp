@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.5] - 2026-04-10
+### Added
+- Completed `PHASE_ANALYSIS.md` detailing Win32 coupling in `ScintillaComponent`.
+- Implemented `autosave` package in Go with SHA-256 deduplication and continuous snapshotting.
+- Ported core `Buffer` and `BufferManager` data models to `go-port/pkg/core`, fully decoupling state from Win32 file handles and Scintilla document pointers.
+
 ## [1.0.4] - 2026-04-10
 ### Added
 - Initialized the `go-port` module.
