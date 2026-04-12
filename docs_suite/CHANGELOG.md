@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.10] - 2026-04-12
+### Added
+- Upgraded the flat-file Versioning Autosave logic in `pkg/autosave` to a robust local SQLite database using `github.com/mattn/go-sqlite3`. This resolves the issue of millions of snapshot files bloating the disk.
+- Established `core/GoBridge.h` and `core/GoBridge.cpp` as the stable ABI boundary. The native Qt/GTK submodules will link against this to initialize the Go backend and dispatch commands to the Go `CommandManager`.
+- Updated `ROADMAP.md` and `TODO.md` to reflect the transition from core foundational work into Phase 3 (CGO bindings and optimization).
+
 ## [1.0.9] - 2026-04-12
 ### Added
 - Ported core `TextFX2` functionality into Go (`pkg/textfx`), including strings sorting tools directly accessible by the CommandManager.
