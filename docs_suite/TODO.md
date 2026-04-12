@@ -11,8 +11,9 @@ This list tracks the granular, immediate tasks required to push the project forw
 - [x] Port `TextFX` sorting tools and `Markdown` parser foundations to Go.
 - [x] Fulfill user UX: Vertical tabs layout configuration (`workspace/layout.go`).
 - [x] Fulfill Geany Parity: `buildsys` and `terminal` scaffolding in Go.
+- [x] **Versioning Autosave DB:** Migrated the flat-file Versioning Autosave to a robust SQLite local database (`github.com/mattn/go-sqlite3`).
+- [x] **GoBridge C++ Scaffolding:** Created `core/GoBridge.h/cpp` as the stable C++ side of the CGO boundary.
 
-## Next Up (Version 1.0.10 Focus)
-- [ ] **Versioning Autosave DB:** The current Go implementation writes flat snapshot files. This needs to be upgraded to a robust SQLite local database to efficiently query/manage millions of file versions without blowing up disk inodes.
-- [ ] **GoBridge C++ Scaffolding:** Create `core/GoBridge.h/cpp` as the C++ side of the CGO interface. The legacy Notepad++ code (and the new submodules) must call this bridge to talk to `ExecuteCommandFromUI` in Go.
-- [ ] **LSP Research:** Investigate the cleanest way to embed a Go-based Language Server Protocol (LSP) client to replace legacy autocomplete logic for Geany parity.
+## Next Up (Version 1.0.11 Focus)
+- [ ] **LSP Research & Foundation:** Geany's code intelligence must be matched or exceeded. We will build a native Language Server Protocol (LSP) client in the Go backend (`pkg/lsp`). It must spawn external language servers (like `clangd` or `gopls`) and communicate via JSON-RPC.
+- [ ] **LSP Routing:** Connect the `BufferManager` events to the LSP client so that opening a `.go` file dynamically boots `gopls`.

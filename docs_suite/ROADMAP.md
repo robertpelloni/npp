@@ -18,9 +18,9 @@ This document outlines the major, long-term structural plans to evolve Notepad++
 ## Phase 3: The Go Port & CGO UI Binding (Active)
 - [x] **Go Backend Initialization:** Establish a Go project structure (`go-port/`).
 - [x] **Logic Translation:** Methodically translated decoupled C++ core logic into robust Go packages (Commands, IO, Buffer, Config).
-- [ ] **Data Optimization:** Migrate the flat-file Versioning Autosave to a robust SQLite database ledger to manage millions of diffs.
-- [ ] **LSP Foundation:** Replace legacy autocomplete with a native Language Server Protocol (LSP) client inside Go.
-- [ ] **UI Binding (CGO):** Implement `core/GoBridge.h` in C++ and bind the Qt6, Qt4, and GTK submodules to the new Go backend via `ExecuteCommandFromUI`.
+- [x] **Data Optimization:** Migrate the flat-file Versioning Autosave to a robust SQLite database ledger to manage millions of diffs.
+- [x] **UI Binding (CGO):** Implement `core/GoBridge.h` in C++ to act as the stable ABI boundary.
+- [ ] **LSP Foundation:** Replace legacy autocomplete with a native Language Server Protocol (LSP) client inside Go to guarantee 1:1 Geany parity for code intelligence.
 
 ## Phase 4: Refinement and Domination (Future)
 - [ ] **Submodule Assimilation:** Review all submodule repositories for missing features and incorporate them into the master ultra-project.

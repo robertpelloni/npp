@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.11] - 2026-04-12
+### Added
+- Developed native Language Server Protocol (`LSP`) foundations (`pkg/lsp`) directly into the Go backend.
+- Implemented `LSPManager` to dynamically boot and route requests (e.g., `gopls`, `clangd`) over JSON-RPC based on the active `core.Buffer` language type.
+- This ensures the Ultra-Project not only achieves 1:1 Geany parity but natively functions as a multi-language IDE without requiring external plugins like NppExec or legacy Ctags.
+
 ## [1.0.10] - 2026-04-12
 ### Added
 - Upgraded the flat-file Versioning Autosave logic in `pkg/autosave` to a robust local SQLite database using `github.com/mattn/go-sqlite3`. This resolves the issue of millions of snapshot files bloating the disk.
