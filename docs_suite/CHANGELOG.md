@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.8] - 2026-04-12
+### Added
+- Ported core File I/O operations into `pkg/io/fileio.go`, providing a platform-agnostic way to read/write raw bytes independent of the Win32 API.
+- Implemented Plugin Manager scaffolding (`pkg/plugins/manager.go`) establishing a generic Go interface for loading and managing extensions (like TextFX2) seamlessly across operating systems.
+
 ## [1.0.7] - 2026-04-12
 ### Added
 - Created `pkg/commands` defining a `CommandManager` to replace legacy Win32 Message routing.
