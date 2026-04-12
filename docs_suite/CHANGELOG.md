@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.7] - 2026-04-12
+### Added
+- Created `pkg/commands` defining a `CommandManager` to replace legacy Win32 Message routing.
+- Default commands (`File.New`, `View.ToggleVerticalTabs`) are now explicitly wired to the new Go state models (`BufferManager`, `AppConfig`, `Layout`).
+- Established `pkg/bindings` directory for CGO interfaces bridging Go state/commands with C++ UI submodules (`bobui`, `btk`, `bobgui`) and Scintilla.
+
 ## [1.0.6] - 2026-04-12
 ### Added
 - Ported `Parameters` configuration model to Go (`pkg/config/parameters.go`), adding native toggles for vertical tabs, typography mixing, and intelligent autocomplete behaviors.
