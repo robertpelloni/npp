@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.6] - 2026-04-12
+### Added
+- Ported `Parameters` configuration model to Go (`pkg/config/parameters.go`), adding native toggles for vertical tabs, typography mixing, and intelligent autocomplete behaviors.
+- Established Geany parity interfaces in Go: `pkg/buildsys` for executing external builds and `pkg/terminal` for PTY terminal emulation.
+- Created UI state data models (`pkg/workspace/layout.go`) enforcing Vertical Tabs as default with adjustable column widths.
+
 ## [1.0.5] - 2026-04-10
 ### Added
 - Completed `PHASE_ANALYSIS.md` detailing Win32 coupling in `ScintillaComponent`.
