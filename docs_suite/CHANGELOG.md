@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.9] - 2026-04-12
+### Added
+- Ported core `TextFX2` functionality into Go (`pkg/textfx`), including strings sorting tools directly accessible by the CommandManager.
+- Abstracted `Markdown` viewer parsing into Go (`pkg/markdown`), establishing an independent translation layer for future UI binding.
+- Implemented an `ARCHITECTURE_TRACKER.md` and `track_architecture.sh` to enforce oversight of Submodule versions against internal Go packages.
+
 ## [1.0.8] - 2026-04-12
 ### Added
 - Ported core File I/O operations into `pkg/io/fileio.go`, providing a platform-agnostic way to read/write raw bytes independent of the Win32 API.

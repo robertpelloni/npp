@@ -3,12 +3,11 @@
 This file tracks the latest actions and status for the next AI agent or human developer.
 
 ## Current Status
-- Version 1.0.8
-- Added `pkg/io/fileio.go` to abstract file reading/writing from Win32 APIs (`NppIO.cpp`).
-- Added `pkg/plugins/manager.go` to provide a cross-platform Go interface for dynamically loading UI or logic extensions (preparing for TextFX2 integration).
+- Version 1.0.9
+- The Go backend now includes robust text manipulation logic (replacing `TextFX2`) inside `pkg/textfx`.
+- A native Markdown parsing stub (`pkg/markdown`) is in place to decouple previewing logic from the Qt/GTK renderers.
+- Added an automated `track_architecture.sh` to enforce the visualization of the Go architecture against submodule tracking versions (`ARCHITECTURE_TRACKER.md`).
 
 ## Recent Analysis & Decisions
-- The Go backend now possesses the foundational primitives for the entire editor lifecycle: File loading (`pkg/io`), state management (`pkg/core`, `pkg/config`, `pkg/workspace`), action routing (`pkg/commands`), and extensibility (`pkg/plugins`).
-- The transition from C++ to Go is largely structurally complete at the high level. The upcoming phases must involve deep integration:
-    1) Tying `pkg/io` into `pkg/commands` so `File.Open` actually reads a file and creates a `Buffer`.
-    2) Resolving the specific CGO linkings required to compile the Qt/GTK submodules against these new Go models.
+- Phase 2 (Feature Injection & Parity) is largely functionally complete on the backend. We have established models for Vertical Tabs, Autosave, Geany Parity, and Core Plugins.
+- Next steps should focus heavily on the C++ side of the CGO boundary. The Native UI libraries (`bobui`, `btk`, `bobgui`) now have a robust Go engine to back them up, but the C++ code needs to be adjusted to query the Go `CommandManager` and `EventBus` rather than listening to Win32 Messages.
