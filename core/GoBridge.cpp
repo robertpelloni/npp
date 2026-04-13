@@ -10,9 +10,10 @@
 
 namespace Core {
 
-// Signature matching the CGO exports in `go-port/libultra.h`
+// Signatures matching the CGO exports in `go-port/libultra.h`
 typedef int (*ExecuteCmdFunc)(const char*);
 typedef int (*RegisterListenerFunc)(const char*, NativeEventCallback);
+typedef int (*RegisterScintillaFunc)(ScintillaFuncs);
 
 bool GoBridge::Initialize() {
     if (m_initialized) {
@@ -31,8 +32,9 @@ bool GoBridge::Initialize() {
     // Load symbols
     m_execCmdFunc = dlsym(m_libHandle, "ExecuteCommandFromUI");
     m_regListenerFunc = dlsym(m_libHandle, "RegisterNativeEventListener");
+    m_regScintillaFunc = dlsym(m_libHandle, "RegisterNativeScintilla");
 
-    if (!m_execCmdFunc || !m_regListenerFunc) {
+    if (!m_execCmdFunc || !m_regListenerFunc || !m_regScintillaFunc) {
         std::cerr << "[GoBridge Error] Failed to resolve CGO symbols." << std::endl;
         dlclose(m_libHandle);
         m_libHandle = nullptr;
@@ -51,7 +53,6 @@ bool GoBridge::ExecuteCommand(const std::string& commandID, const std::string& j
 
     std::cout << "[GoBridge] Dispatching Command to Go: " << commandID << std::endl;
 
-    // Invoke the CGO function
     ExecuteCmdFunc execFunc = reinterpret_cast<ExecuteCmdFunc>(m_execCmdFunc);
     int result = execFunc(commandID.c_str());
 
@@ -67,6 +68,19 @@ bool GoBridge::RegisterEventListener(const std::string& eventID, NativeEventCall
 
     RegisterListenerFunc regFunc = reinterpret_cast<RegisterListenerFunc>(m_regListenerFunc);
     int result = regFunc(eventID.c_str(), callback);
+
+    return result == 0;
+}
+
+bool GoBridge::RegisterScintilla(const ScintillaFuncs& funcs) {
+    if (!Initialize()) {
+        return false;
+    }
+
+    std::cout << "[GoBridge] Registering Native C++ Scintilla callbacks with Go backend." << std::endl;
+
+    RegisterScintillaFunc regFunc = reinterpret_cast<RegisterScintillaFunc>(m_regScintillaFunc);
+    int result = regFunc(funcs);
 
     return result == 0;
 }

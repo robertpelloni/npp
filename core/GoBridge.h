@@ -15,6 +15,13 @@ namespace Core {
 // Function pointer typedef expected by Go `RegisterNativeEventListener`
 typedef void (*NativeEventCallback)(const char* eventId, const char* jsonPayload);
 
+// Struct matching the CGO ScintillaFuncs definition in Go
+struct ScintillaFuncs {
+    void (*SetText)(const char* text);
+    void (*InsertText)(int pos, const char* text);
+    intptr_t (*SendScintillaMessage)(unsigned int message, uintptr_t wParam, intptr_t lParam);
+};
+
 class GoBridge {
 public:
     static GoBridge& GetInstance() {
@@ -32,6 +39,9 @@ public:
     // Allow UI frameworks to listen to Go state changes (e.g., Theme changed, File loaded)
     bool RegisterEventListener(const std::string& eventID, NativeEventCallback callback);
 
+    // Register the C++ Native Scintilla Bridge so Go commands can mutate the physical text buffer
+    bool RegisterScintilla(const ScintillaFuncs& funcs);
+
     ~GoBridge();
 
 private:
@@ -43,6 +53,7 @@ private:
     void* m_libHandle = nullptr;
     void* m_execCmdFunc = nullptr;
     void* m_regListenerFunc = nullptr;
+    void* m_regScintillaFunc = nullptr;
 };
 
 } // namespace Core

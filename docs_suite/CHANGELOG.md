@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.16] - 2026-04-13
+### Added
+- Completed `SCINTILLA_PORTING.md` establishing the architectural boundaries for Scintilla CGO manipulation.
+- Implemented `core/MockScintillaBridge.h`, a headless C++ mock to verify the backend Go commands (`pkg/bindings/scintilla_cgo.go`) can jump the CGO boundary and trigger C++ string manipulations.
+
 ## [1.0.15] - 2026-04-13
 ### Added
 - Created `build.sh` as the master orchestrator to sequentially compile the Go backend into a `c-shared` library, configure the modern CMake UI targets, and build the respective Qt/GTK frontend executables.

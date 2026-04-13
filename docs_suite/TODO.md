@@ -13,7 +13,9 @@ This list tracks the granular, immediate tasks required to push the project forw
 - [x] Fulfill Geany Parity: `buildsys` and `terminal` scaffolding in Go.
 - [x] **Versioning Autosave DB:** Migrated the flat-file Versioning Autosave to a robust SQLite local database (`github.com/mattn/go-sqlite3`).
 - [x] **GoBridge C++ Scaffolding:** Created `core/GoBridge.h/cpp` as the stable C++ side of the CGO boundary.
+- [x] **LSP Research & Foundation:** Geany's code intelligence must be matched or exceeded. We will build a native Language Server Protocol (LSP) client in the Go backend (`pkg/lsp`). It must spawn external language servers (like `clangd` or `gopls`) and communicate via JSON-RPC.
+- [x] **LSP Routing:** Connect the `BufferManager` events to the LSP client so that opening a `.go` file dynamically boots `gopls`.
 
-## Next Up (Version 1.0.11 Focus)
-- [ ] **LSP Research & Foundation:** Geany's code intelligence must be matched or exceeded. We will build a native Language Server Protocol (LSP) client in the Go backend (`pkg/lsp`). It must spawn external language servers (like `clangd` or `gopls`) and communicate via JSON-RPC.
-- [ ] **LSP Routing:** Connect the `BufferManager` events to the LSP client so that opening a `.go` file dynamically boots `gopls`.
+## Next Up (Version 1.0.16 Focus)
+- [ ] **Scintilla Roundtrip Architecture:** Implement a Mock `IScintillaBridge` in C++ that prints buffer manipulations to the console.
+- [ ] **Go CGO Scintilla Binding:** Just as C++ registers an EventListener to hear from Go, C++ must pass an `IScintillaBridge` instance pointer to Go. Go must save this pointer and use it to invoke text changes when a command like `TextFX.SortLines` completes.
