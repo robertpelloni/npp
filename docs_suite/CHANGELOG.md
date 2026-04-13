@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.15] - 2026-04-13
+### Added
+- Created `build.sh` as the master orchestrator to sequentially compile the Go backend into a `c-shared` library, configure the modern CMake UI targets, and build the respective Qt/GTK frontend executables.
+- Stubbed out the native entry points (`main.cpp`) for the `btk` (Qt4) and `bobgui` (GTK) UI submodules, bringing them to parity with the `bobui` (Qt6) linkage to the Go backend.
+- Added `SCINTILLA_PORTING.md` detailing the upcoming complex CGO boundary required to manipulate native C++ text editor state asynchronously from Go commands.
+
 ## [1.0.14] - 2026-04-13
 ### Added
 - Replaced the legacy, Win32-locked MSVC build system with a modern, cross-platform `CMakeLists.txt.ultra`. This master script handles optionally building the native Qt6/Qt4/GTK frontends via flags like `-DBUILD_UI_QT6=ON`.

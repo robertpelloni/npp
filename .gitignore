@@ -164,4 +164,7 @@ scintilla/win32/*.o
 PowerEditor/src/MISC/md5/RCa06792
 *.db
 *.sln
-*.opendb
+*.opendbbuild_native/
+go-port/libultra.so
+go-port/libultra.h
+exit_loop.py
