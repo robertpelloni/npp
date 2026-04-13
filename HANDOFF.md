@@ -3,11 +3,11 @@
 This file tracks the latest actions and status for the next AI agent or human developer.
 
 ## Current Status
-- Version 1.0.16
-- Successfully migrated to Phase 4 (Refinement and Native UI Implementation).
-- `core/MockScintillaBridge.h` established as the dummy receiver for testing Go-to-C++ text mutations without a physical window.
-- The CGO architecture is complete: C++ UI binds Event Listeners in Go, Go stores C++ Scintilla function pointers via `RegisterNativeScintilla`.
+- Version 1.0.17
+- The project is officially in Phase 4. We are building the native UI wrappers.
+- `bobui` (Qt6) has received `MockMainWindow.h`, which correctly implements the `UIWindow` loop and instantiates a `MockScintillaBridge.h` (in `core/`).
+- The full CGO boundary is intact. C++ code can dispatch strings to the Go `CommandManager`, and Go commands can dispatch string mutations backwards over CGO into the specific instance of `MockScintillaBridge`.
 
 ## Recent Analysis & Decisions
-- The entire application logic loop is now fully implemented and stubbed. C++ can click "File.New" -> Go creates a Buffer -> Go fires "FileCreated" Event -> C++ receives JSON payload -> C++ triggers Scintilla to draw.
-- *Next Major Milestone:* The UI developers MUST now use the respective frameworks (`bobui` / Qt6, etc.) to actually draw the windows, invoke `GoBridge::Initialize()`, and draw physical Scintilla widgets that route back to these CGO pointers. The backend architecting is essentially 100% complete for the foundation.
+- The architectural plumbing is complete. The system can successfully trigger a simulated UI "File.New" event or a simulated "TextFX.SortLines" event and pass the required text manipulations across the language barrier without throwing pointer exceptions or requiring the Win32 API.
+- The immediate next hurdle is for a specialized Qt Developer to open the `bobui` submodule and replace `MockMainWindow.h` with an actual Qt Window containing a `QScintilla` widget, and link up the actual `QMenuBar` signals to `ExecuteCommand`.

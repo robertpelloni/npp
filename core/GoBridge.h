@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <cstdint>
 
 // Deep comment: GoBridge provides the C++ side of the CGO boundary.
 // Why: The Qt (bobui, btk) and GTK (bobgui) native UI applications are written in C++.

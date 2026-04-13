@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.17] - 2026-04-13
+### Added
+- Advanced to Phase 4 (Refinement and Native UI).
+- Implemented `core/MockScintillaBridge.h` as a headless C++ sandbox to safely test Go backend CGO pointer execution.
+- Added `RegisterNativeScintilla` endpoint in `pkg/bindings/scintilla_cgo.go`, allowing the Native C++ UI to pass physical Scintilla `SetText` / `InsertText` mutators over the language boundary back to the Go command router.
+- Fully wired the Qt6 `bobui` GUI scaffolding `MockMainWindow.h`. This executes the full cross-language event loop: `main.cpp` requests `GoBridge::ExecuteCommand("File.New")`, Go creates the Buffer, and C++ listens for the EventBus repaint JSON callback.
+
 ## [1.0.16] - 2026-04-13
 ### Added
 - Completed `SCINTILLA_PORTING.md` establishing the architectural boundaries for Scintilla CGO manipulation.
