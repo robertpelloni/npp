@@ -24,6 +24,7 @@ endif()
 # Core abstracted library
 add_library(core_bridge STATIC
     core/GoBridge.cpp
+    core/NativeScintilla.cpp
 )
 # Link dl for dlopen/dlsym on POSIX systems
 target_link_libraries(core_bridge dl)

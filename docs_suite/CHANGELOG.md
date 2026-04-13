@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.18] - 2026-04-13
+### Added
+- Completed `NativeScintilla.h/.cpp` providing the final abstraction layer over the legacy Win32 `ScintillaEditView`. The native Qt/GTK wrappers can now pass a direct function pointer (`DirectFn`) to interact with the raw Scintilla engine without OS message passing.
+
 ## [1.0.17] - 2026-04-13
 ### Added
 - Advanced to Phase 4 (Refinement and Native UI).

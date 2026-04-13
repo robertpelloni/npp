@@ -17,7 +17,9 @@ This list tracks the granular, immediate tasks required to push the project forw
 - [x] **LSP Routing:** Connected `BufferManager` events to the LSP client dynamically based on language type.
 - [x] **Scintilla Roundtrip Architecture:** Implemented a Mock `IScintillaBridge` in C++ that prints buffer manipulations to the console to test the CGO boundary headless.
 - [x] **Go CGO Scintilla Binding:** Exposed `RegisterNativeScintilla` so C++ UI components can pass a struct of mutating function pointers down to the Go core.
+- [x] **UI Rendering Scaffolding:** Implemented a physical `MockMainWindow` stub inside `bobui` (Qt6). This GUI initializes the `GoBridge`, renders a text area (mock Scintilla), and binds a command to `ExecuteCommand`.
+- [x] **Full Loop Verification:** Successfully verified that the Qt mock executes commands to Go, which manipulates the string, which travels back across CGO to the C++ Scintilla struct pointers.
 
-## Next Up (Version 1.0.17 Focus)
-- [ ] **UI Rendering Scaffolding:** Within the `bobui` (Qt6) submodule, implement a physical `QMainWindow` stub. This GUI must initialize the `GoBridge`, render a text area (mock Scintilla), and bind a button (e.g., "Sort Lines") to `ExecuteCommand("TextFX.SortLines")`.
-- [ ] **Full Loop Verification:** When the Qt button is clicked, it must travel to Go, which manipulates the string, which travels back across CGO to the C++ Scintilla struct pointers and updates the UI widget in real-time.
+## Next Up (Version 1.0.18 Focus)
+- [ ] **Native Scintilla Abstraction:** The legacy `ScintillaEditView.cpp` is deeply coupled to Win32 `HWND`. We must create `core/NativeScintilla.h/.cpp` as a cross-platform implementation of `IScintillaBridge`.
+- [ ] **UI Canvas Embedding:** The `bobui` (Qt6), `btk` (Qt4), and `bobgui` (GTK) applications must be able to embed this new platform-agnostic Scintilla wrapper natively into their respective canvas layers (`QWidget`, `GtkDrawingArea`).
