@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.14] - 2026-04-13
+### Added
+- Replaced the legacy, Win32-locked MSVC build system with a modern, cross-platform `CMakeLists.txt.ultra`. This master script handles optionally building the native Qt6/Qt4/GTK frontends via flags like `-DBUILD_UI_QT6=ON`.
+- Added the core UI event loop stub (`main.cpp`) into the `bobui` (Qt6) submodule. This native C++ code now dynamically links to the Go backend (`libultra.so`) at runtime and registers to receive `AppConfig.ThemeChanged` UI redraw events.
+
+## [1.0.13] - 2026-04-13
+### Added
+- Successfully compiled the `go-port` backend into a C-shared dynamic library (`libultra.so`). This library encapsulates the CGO boundary and exposes `ExecuteCommandFromUI` and `RegisterNativeEventListener`.
+- Updated the C++ `GoBridge` layer to utilize dynamic loading (`dlopen`/`dlsym`). This ensures the UI executables can launch safely and capture backend binding failures securely without crashing the OS loader.
+
+## [1.0.12] - 2026-04-12
+### Added
+- Exposed the Go `EventBus` to C++ via `RegisterNativeEventListener` in `pkg/bindings/events_cgo.go`. The CGO bridge marshals internal Go states into JSON strings and triggers registered C++ function pointers, completing the reactive UI loop.
+- Added `core/UIWindow.h`, an abstract C++ interface that forces any UI submodule to implement standard display and backend event listeners.
+
 ## [1.0.11] - 2026-04-12
 ### Added
 - Developed native Language Server Protocol (`LSP`) foundations (`pkg/lsp`) directly into the Go backend.

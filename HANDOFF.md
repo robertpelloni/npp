@@ -3,10 +3,10 @@
 This file tracks the latest actions and status for the next AI agent or human developer.
 
 ## Current Status
-- Version 1.0.11
-- A native Language Server Protocol (`LSP`) backend (`pkg/lsp`) has been implemented to handle code intelligence, completely surpassing legacy Notepad++ autocomplete functionality and matching Geany 1:1 parity requirements.
-- The `ROADMAP.md` reflects that Phase 1 & 2 are complete.
+- Version 1.0.14
+- The legacy Win32/MSVC `CMakeLists.txt` has been bypassed with `CMakeLists.txt.ultra`, effectively breaking the last major tie to the legacy Windows compilation environment.
+- The UI framework is actively stubbed out. The Qt6 repository (`bobui`) now contains `main.cpp`, which acts as the frontend executable linking to the `libultra.so` Go backend.
 
 ## Recent Analysis & Decisions
-- We chose to build the LSP client directly into the Go backend rather than as a C++ submodule. This prevents the UI renderers (Qt/GTK) from having to deal with JSON-RPC piping directly. The Go backend acts as the intelligent core.
-- The next step will require fleshing out `pkg/bindings` to actually compile the Go module as a `c-shared` library (`.dll`, `.so`) so that the C++ `GoBridge` can load it and test the round-trip boundary (C++ UI -> Go Command -> C++ Event Listener).
+- At this point, the backend Go implementation and the CGO linkage are essentially complete for the current feature set (LSP, Autosave DB, UI Event Bus, Commands).
+- The focus going forward is entirely dependent on building out the Native UI components inside `bobui`, `btk`, and `bobgui`, drawing Qt/GTK widgets that read the Go state and fire off the registered commands.
