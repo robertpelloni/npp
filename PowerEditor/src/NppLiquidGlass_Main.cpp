@@ -1554,6 +1554,52 @@ private:
         m_statusWidget->showMessage("Converted to: " + enc, 2000);
     }
 
+    void actionResetSettings() {
+        auto btn = QMessageBox::question(this, "Reset Settings",
+            "Are you sure you want to reset all preferences to defaults?",
+            QMessageBox::Yes | QMessageBox::No);
+        if (btn == QMessageBox::Yes) {
+            // Re-apply internal defaults
+            auto& s = GlassSettings::instance();
+            s.setGlassIntensity(2); // Acrylic
+            s.setBubbleAnimations(true);
+            s.setDarkMode(true);
+            s.setTabPosition(0); // Top
+            s.setBackupEnabled(true);
+            s.setBackupInterval(30000);
+            
+            QFont f("Cascadia Code", 11);
+            f.setStyleHint(QFont::Monospace);
+            s.setEditorFont(f);
+            s.setWordWrapDefault(false);
+            
+            // Refresh UI
+            applyCurrentSettings();
+            m_statusWidget->showMessage("Settings reset to defaults", 3000);
+        }
+    }
+
+    void applyCurrentSettings() {
+        auto& s = GlassSettings::instance();
+        static const int modes[] = { 1, 3, 2 }; // Mica, MicaTabbed, Acrylic
+        LiquidGlassDWM::enableBlurBehind(this, modes[s.glassIntensity()]);
+        if (m_bubbles) m_bubbles->setVisible(s.bubbleAnimations());
+        
+        static const QTabWidget::TabPosition positions[] = { QTabWidget::North, QTabWidget::South, QTabWidget::West, QTabWidget::East };
+        int posIdx = s.tabPosition();
+        m_tabs->setTabPosition(positions[posIdx]);
+        m_tabsSecondary->setTabPosition(positions[posIdx]);
+
+        for (auto* tw : {m_tabs, m_tabsSecondary}) {
+            for (int i = 0; i < tw->count(); ++i) {
+                if (auto* p = static_cast<GlassEditorPanel*>(tw->widget(i))) {
+                    p->editor()->setFont(s.editorFont());
+                    p->setWordWrap(s.wordWrapDefault());
+                }
+            }
+        }
+    }
+
     void actionSaveAll() {
         for (auto* tw : {m_tabs, m_tabsSecondary}) {
             for (int i = 0; i < tw->count(); ++i) {

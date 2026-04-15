@@ -1,0 +1,16 @@
+{
+  "nextId": 2,
+  "tasks": [
+    {
+      "id": "1",
+      "subject": "Fix editor keyboard input issue in BobScintilla",
+      "description": "Investigate why typing doesn't work in the editor window. Check focus handling, event processing, and Scintilla integration in BobScintilla.h/.cpp. Ensure keyboard events are properly passed to the Scintilla control.",
+      "status": "in_progress",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": 1775751663009,
+      "updatedAt": 1775752555078
+    }
+  ]
+}
