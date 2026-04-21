@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NotepadPlus>
+    <GUIConfigs>
+        <GUIConfig name="AppGlassIntensity">1</GUIConfig>
+        <GUIConfig name="AppBubbleAnimations">yes</GUIConfig>
+        <GUIConfig name="AppDarkMode">yes</GUIConfig>
+        <GUIConfig name="EditorFontName">Cascadia Code</GUIConfig>
+        <GUIConfig name="EditorFontSize">11</GUIConfig>
+        <GUIConfig name="WordWrap">no</GUIConfig>
+    </GUIConfigs>
+</NotepadPlus>

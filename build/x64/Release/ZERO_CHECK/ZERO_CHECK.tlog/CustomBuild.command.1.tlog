@@ -1,0 +1,10 @@
+^C:\USERS\HYPER\WORKSPACE\NPP\BUILD\CMAKEFILES\3669A548A4E8A1161315F1132EF2443E\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/hyper/workspace/npp -BC:/Users/hyper/workspace/npp/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/hyper/workspace/npp/build/NotepadPlusPlus_BobUI.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

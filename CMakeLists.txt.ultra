@@ -1,0 +1,48 @@
+cmake_minimum_required(VERSION 3.10)
+project(NotepadPlusPlus_Ultra CXX)
+
+# Deep comment: This replaces the legacy CMakeLists.txt that was deeply tied to Win32/MSVC.
+# Why: To achieve the cross-platform multi-frontend vision, we need a modern CMake configuration
+#      that links our abstracted `core` layer and the Go-generated `libultra.so`, optionally
+#      including the Qt/GTK submodules based on user build flags.
+# Side effects: The old `PowerEditor` source tree is bypassed entirely here, as it contains
+#               uncorrectable Win32 API calls (`HWND`, `SendMessage`).
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Build Options
+option(BUILD_UI_QT6 "Build the modern bobui (Qt6) frontend" OFF)
+option(BUILD_UI_QT4 "Build the legacy btk (Qt4) frontend" OFF)
+option(BUILD_UI_GTK "Build the native bobgui (GTK) frontend" OFF)
+
+# Ensure the Go backend shared library exists
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/go-port/libultra.so")
+    message(FATAL_ERROR "libultra.so not found! Please build the Go backend first: cd go-port && make")
+endif()
+
+# Core abstracted library
+add_library(core_bridge STATIC
+    core/GoBridge.cpp
+    core/NativeScintilla.cpp
+)
+# Link dl for dlopen/dlsym on POSIX systems
+target_link_libraries(core_bridge dl)
+
+# UI Submodule processing (Stubbed until UI frameworks are implemented)
+if(BUILD_UI_QT6)
+    message(STATUS "Configuring build for bobui (Qt6)...")
+    add_subdirectory(bobui)
+endif()
+
+if(BUILD_UI_QT4)
+    message(STATUS "Configuring build for btk (Qt4)...")
+    add_subdirectory(btk)
+endif()
+
+if(BUILD_UI_GTK)
+    message(STATUS "Configuring build for bobgui (GTK)...")
+    add_subdirectory(bobgui)
+endif()
+
+message(STATUS "Ultra-Project CMake Configuration Complete.")
