@@ -1,3 +1,6 @@
 build_native/
 go-port/libultra.so
 go-port/libultra.h
+
+# Jules AI session logs (auto-generated, not needed in repo)
+.jules/sessions/
