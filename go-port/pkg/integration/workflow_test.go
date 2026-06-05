@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"os"
 	"testing"
 
 	"github.com/notepad-plus-plus/ultra-project/pkg/commands"
@@ -60,8 +61,51 @@ func TestEndToEndFileWorkflow(t *testing.T) {
 		t.Errorf("Expected layout placement to toggle, but it stayed %s", layout.Placement)
 	}
 
-	// 6. Verify Command Mapping
+	// 6. Execute "File.Open" and verify
+	// Create a dummy file for testing
+	dummyPath := "test_open.txt"
+	_ = os.WriteFile(dummyPath, []byte("test content"), 0644)
+	defer os.Remove(dummyPath)
+
+	err = cmdManager.Execute("File.Open", map[string]interface{}{"filepath": dummyPath})
+	if err != nil {
+		t.Fatalf("File.Open failed: %v", err)
+	}
+
+	activeBuf, _ := bufManager.GetActiveBuffer()
+	if activeBuf.Filepath != dummyPath {
+		t.Errorf("Expected active buffer to be %s, got %s", dummyPath, activeBuf.Filepath)
+	}
+
+	// 7. Execute "File.Save"
+	activeBuf.IsDirty = true
+	err = cmdManager.Execute("File.Save", nil)
+	if err != nil {
+		t.Fatalf("File.Save failed: %v", err)
+	}
+	if activeBuf.IsDirty {
+		t.Error("Expected buffer to be clean after File.Save")
+	}
+
+	// 8. Verify Command Mapping
 	if name, ok := commands.CommandIDToName[41001]; !ok || name != "File.New" {
 		t.Errorf("Expected mapping for 41001 to be File.New, got %s", name)
+	}
+}
+
+func TestUndoRedoIntegration(t *testing.T) {
+	eventBus := core.NewEventBus()
+	bufManager := core.NewBufferManager(eventBus)
+	appConfig := config.DefaultConfig()
+	layout := workspace.NewLayout()
+	cmdManager := commands.NewManager()
+	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
+
+	// Currently Undo/Redo are stubs, but we verify they can be executed
+	if err := cmdManager.Execute("Edit.Undo", nil); err != nil {
+		t.Errorf("Edit.Undo execution failed: %v", err)
+	}
+	if err := cmdManager.Execute("Edit.Redo", nil); err != nil {
+		t.Errorf("Edit.Redo execution failed: %v", err)
 	}
 }
