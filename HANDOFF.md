@@ -11,3 +11,10 @@ This file tracks the latest actions and status for the next AI agent or human de
 ## Recent Analysis & Decisions
 - The decision to use direct function dispatch instead of C++ virtual inheritance or OS messaging ensures absolute maximum performance for Scintilla rendering while maintaining perfect cross-platform compatibility.
 - With the backend (`go-port`), the CGO boundary (`core/GoBridge`), and the Text Rendering boundary (`core/NativeScintilla`) now established, Phase 4 UI implementation is purely a matter of sketching the visual widgets in Qt6.
+
+## Session Updates (Jules)
+- Mapped legacy Notepad++ command IDs to Go command strings in `go-port/pkg/commands/mapping.go`.
+- Implemented Vertical Tabs as the default layout with horizontal labels in `bobui`.
+- Integrated `bobui` widgets (MenuBar, Toolbar, ContextMenu) with the Go `CommandManager`.
+- Established a central `EventBus` for backend-to-UI state synchronization.
+- Created an integration testing suite in `go-port/pkg/integration` to verify end-to-end workflows.
