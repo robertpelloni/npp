@@ -26,13 +26,15 @@ type Buffer struct {
 }
 
 type BufferManager struct {
-	buffers map[BufferID]*Buffer
-	active  BufferID
+	buffers  map[BufferID]*Buffer
+	active   BufferID
+	eventBus *EventBus
 }
 
-func NewBufferManager() *BufferManager {
+func NewBufferManager(eb *EventBus) *BufferManager {
 	return &BufferManager{
-		buffers: make(map[BufferID]*Buffer),
+		buffers:  make(map[BufferID]*Buffer),
+		eventBus: eb,
 	}
 }
 
@@ -51,6 +53,11 @@ func (bm *BufferManager) OpenBuffer(filepath string, encoding string) *Buffer {
 
 	bm.buffers[id] = buf
 	bm.active = id
+
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferOpened", buf)
+	}
+
 	return buf
 }
 
@@ -64,5 +71,8 @@ func (bm *BufferManager) GetActiveBuffer() (*Buffer, error) {
 func (bm *BufferManager) MarkDirty(id BufferID) {
 	if buf, exists := bm.buffers[id]; exists {
 		buf.IsDirty = true
+		if bm.eventBus != nil {
+			bm.eventBus.Publish("BufferChanged", buf)
+		}
 	}
 }

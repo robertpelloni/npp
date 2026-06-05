@@ -30,7 +30,7 @@ type Layout struct {
 func NewLayout() *Layout {
 	return &Layout{
 		Placement:       PlacementVertical, // Fulfilling user requirement as default
-		VerticalWidthPx: 250,
+		VerticalWidthPx: 300,               // Increased default width for horizontal labels
 		Tabs:            make([]*Tab, 0),
 	}
 }

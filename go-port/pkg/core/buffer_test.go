@@ -3,7 +3,8 @@ package core
 import "testing"
 
 func TestBufferManager(t *testing.T) {
-	bm := NewBufferManager()
+	eb := NewEventBus()
+	bm := NewBufferManager(eb)
 
 	buf := bm.OpenBuffer("C:\\code\\main.go", "UTF-8")
 	if buf == nil {

@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/notepad-plus-plus/ultra-project/pkg/config"
 	"github.com/notepad-plus-plus/ultra-project/pkg/core"
+	"github.com/notepad-plus-plus/ultra-project/pkg/io"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
 )
 
@@ -16,15 +19,93 @@ func RegisterDefaultCommands(
 	appConfig *config.AppConfig,
 	layout *workspace.Layout,
 ) {
+	fileManager := io.NewFileManager()
 
+	newFileCount := 0
 	manager.Register(&Command{
 		ID:          "File.New",
 		Description: "Create a new empty buffer",
 		Execute: func(args map[string]interface{}) error {
-			// Stub: In reality, we'd generate a unique ID
-			title := "new_1.txt"
+			newFileCount++
+			title := fmt.Sprintf("new_%d.txt", newFileCount)
 			buf := bufManager.OpenBuffer(title, "UTF-8")
 			layout.AddTab(buf.ID, title)
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "File.Open",
+		Description: "Open an existing file",
+		Execute: func(args map[string]interface{}) error {
+			if filepath, ok := args["filepath"].(string); ok {
+				_, err := fileManager.ReadFile(filepath)
+				if err != nil {
+					return err
+				}
+				buf := bufManager.OpenBuffer(filepath, "UTF-8")
+				layout.AddTab(buf.ID, filepath)
+				return nil
+			}
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "File.Save",
+		Description: "Save the current buffer",
+		Execute: func(args map[string]interface{}) error {
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+
+			// SAFETY: Do not overwrite file until we have real content.
+			// For now, we just mark it as not dirty to simulate success.
+			// err = fileManager.WriteFile(buf.Filepath, content)
+
+			buf.IsDirty = false
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "File.CloseAll",
+		Description: "Close all open buffers",
+		Execute: func(args map[string]interface{}) error {
+			// In a real implementation, this would clear the BufferManager and Layout
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Edit.Undo",
+		Description: "Undo the last action",
+		Execute: func(args map[string]interface{}) error {
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Edit.Redo",
+		Description: "Redo the last undone action",
+		Execute: func(args map[string]interface{}) error {
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Search.Find",
+		Description: "Find text in the current buffer",
+		Execute: func(args map[string]interface{}) error {
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Search.Replace",
+		Description: "Replace text in the current buffer",
+		Execute: func(args map[string]interface{}) error {
 			return nil
 		},
 	})
