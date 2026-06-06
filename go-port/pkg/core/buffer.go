@@ -24,6 +24,9 @@ type Buffer struct {
 	Encoding     string // e.g., "UTF-8", "ANSI"
 	LanguageType string // Maps to L_USER, L_CPP, etc.
 	LastModified time.Time
+
+	undoStack [][]byte
+	redoStack [][]byte
 }
 
 type BufferManager struct {
@@ -71,11 +74,64 @@ func (bm *BufferManager) GetActiveBuffer() (*Buffer, error) {
 
 func (bm *BufferManager) MarkDirty(id BufferID) {
 	if buf, exists := bm.buffers[id]; exists {
+		// Save current state to undo stack before marking dirty if it's a new change
+		// In a real editor, this would be more granular (diffs)
+		buf.undoStack = append(buf.undoStack, append([]byte(nil), buf.Content...))
+		buf.redoStack = nil // Clear redo stack on new change
+
 		buf.IsDirty = true
 		if bm.eventBus != nil {
 			bm.eventBus.Publish("BufferChanged", buf)
 		}
 	}
+}
+
+func (bm *BufferManager) Undo(id BufferID) error {
+	buf, exists := bm.buffers[id]
+	if !exists {
+		return fmt.Errorf("buffer not found")
+	}
+
+	if len(buf.undoStack) == 0 {
+		return fmt.Errorf("nothing to undo")
+	}
+
+	// Move current to redo
+	buf.redoStack = append(buf.redoStack, append([]byte(nil), buf.Content...))
+
+	// Pop from undo
+	lastIdx := len(buf.undoStack) - 1
+	buf.Content = buf.undoStack[lastIdx]
+	buf.undoStack = buf.undoStack[:lastIdx]
+
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferChanged", buf)
+	}
+	return nil
+}
+
+func (bm *BufferManager) Redo(id BufferID) error {
+	buf, exists := bm.buffers[id]
+	if !exists {
+		return fmt.Errorf("buffer not found")
+	}
+
+	if len(buf.redoStack) == 0 {
+		return fmt.Errorf("nothing to redo")
+	}
+
+	// Move current to undo
+	buf.undoStack = append(buf.undoStack, append([]byte(nil), buf.Content...))
+
+	// Pop from redo
+	lastIdx := len(buf.redoStack) - 1
+	buf.Content = buf.redoStack[lastIdx]
+	buf.redoStack = buf.redoStack[:lastIdx]
+
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferChanged", buf)
+	}
+	return nil
 }
 
 func (bm *BufferManager) CloseBuffer(id BufferID) error {

@@ -84,7 +84,11 @@ func RegisterDefaultCommands(
 		ID:          "Edit.Undo",
 		Description: "Undo the last action",
 		Execute: func(args map[string]interface{}) error {
-			return nil
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+			return bufManager.Undo(buf.ID)
 		},
 	})
 
@@ -92,7 +96,11 @@ func RegisterDefaultCommands(
 		ID:          "Edit.Redo",
 		Description: "Redo the last undone action",
 		Execute: func(args map[string]interface{}) error {
-			return nil
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+			return bufManager.Redo(buf.ID)
 		},
 	})
 

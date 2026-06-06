@@ -107,12 +107,33 @@ func TestUndoRedoIntegration(t *testing.T) {
 	cmdManager := commands.NewManager()
 	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
 
-	// Currently Undo/Redo are stubs, but we verify they can be executed
+	// Create buffer
+	_ = cmdManager.Execute("File.New", nil)
+	activeBuf, _ := bufManager.GetActiveBuffer()
+	activeBuf.Content = []byte("v1")
+
+	// Trigger undo save
+	bufManager.MarkDirty(activeBuf.ID)
+	activeBuf.Content = []byte("v2")
+
+	if string(activeBuf.Content) != "v2" {
+		t.Errorf("Expected v2, got %s", activeBuf.Content)
+	}
+
+	// Undo
 	if err := cmdManager.Execute("Edit.Undo", nil); err != nil {
 		t.Errorf("Edit.Undo execution failed: %v", err)
 	}
+	if string(activeBuf.Content) != "v1" {
+		t.Errorf("Expected v1 after undo, got %s", activeBuf.Content)
+	}
+
+	// Redo
 	if err := cmdManager.Execute("Edit.Redo", nil); err != nil {
 		t.Errorf("Edit.Redo execution failed: %v", err)
+	}
+	if string(activeBuf.Content) != "v2" {
+		t.Errorf("Expected v2 after redo, got %s", activeBuf.Content)
 	}
 }
 
