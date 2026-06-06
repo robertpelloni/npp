@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/notepad-plus-plus/ultra-project/pkg/config"
 	"github.com/notepad-plus-plus/ultra-project/pkg/core"
