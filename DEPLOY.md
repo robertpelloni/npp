@@ -5,6 +5,11 @@
 2. **C++ Environment:** Install Visual Studio 2022 (or newer) with C++ Desktop Development workload.
 3. **Go Environment:** Install Go 1.26.1 or newer.
 4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed.
+5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference the `bobui` submodule. Ensure `bobui` is present in the parent directory.
+
+## Configuration & Versioning
+- **Version Tracking:** The global project version is managed in the `VERSION` file in the root directory. This version is referenced by the build scripts and the Go backend to ensure consistency.
+- **SQLite Database:** The Autosave feature requires a local SQLite database. By default, this is created in the user's application data directory. Ensure the process has write permissions.
 
 ## Build Process
 
