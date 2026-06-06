@@ -1,12 +1,14 @@
 package integration
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/notepad-plus-plus/ultra-project/pkg/commands"
 	"github.com/notepad-plus-plus/ultra-project/pkg/config"
 	"github.com/notepad-plus-plus/ultra-project/pkg/core"
+	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
 )
 
@@ -191,5 +193,42 @@ func TestUIToBackendEventFlow(t *testing.T) {
 
 	if activeBuf.IsDirty {
 		t.Error("Expected buffer to be clean after UI-triggered save")
+	}
+}
+
+func TestLSPIntegration(t *testing.T) {
+	ctx := context.Background()
+	eventBus := core.NewEventBus()
+	bufManager := core.NewBufferManager(eventBus)
+	appConfig := config.DefaultConfig()
+	layout := workspace.NewLayout()
+	cmdManager := commands.NewManager()
+	lspManager := lsp.NewManager(ctx)
+
+	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
+	lsp.RegisterLSPCommands(cmdManager, lspManager, bufManager)
+
+	// 1. Create a buffer
+	_ = cmdManager.Execute("File.New", nil)
+	activeBuf, _ := bufManager.GetActiveBuffer()
+	activeBuf.LanguageType = "mock_lang"
+
+	// 2. Start a mock LSP (using 'cat' as a dummy process)
+	err := cmdManager.Execute("LSP.Start", map[string]interface{}{
+		"language": "mock_lang",
+		"command":  "cat",
+	})
+	if err != nil {
+		t.Fatalf("LSP.Start failed: %v", err)
+	}
+	defer lspManager.ShutdownAll()
+
+	// 3. Request completion
+	err = cmdManager.Execute("LSP.Completion", map[string]interface{}{
+		"line":      10,
+		"character": 5,
+	})
+	if err != nil {
+		t.Errorf("LSP.Completion failed: %v", err)
 	}
 }

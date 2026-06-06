@@ -7,6 +7,7 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/commands"
 	"github.com/notepad-plus-plus/ultra-project/pkg/config"
 	"github.com/notepad-plus-plus/ultra-project/pkg/core"
+	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
 	"github.com/robertpelloni/bobui/pkg/ui"
 )
@@ -27,9 +28,13 @@ func main() {
 
 	_ = eventBus // will be passed to command manager
 
+	// Initialize LSP Manager
+	lspManager := lsp.NewManager(context.Background())
+
 	// Initialize Command Router
 	cmdManager := commands.NewManager()
 	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
+	lsp.RegisterLSPCommands(cmdManager, lspManager, bufManager)
 
 	log.Println("Core data models and command router initialized.")
 

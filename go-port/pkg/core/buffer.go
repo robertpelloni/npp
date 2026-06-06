@@ -124,6 +124,10 @@ func (bm *BufferManager) Undo(id BufferID) error {
 	return nil
 }
 
+func (bm *BufferManager) GetEventBus() *EventBus {
+	return bm.eventBus
+}
+
 func (bm *BufferManager) Redo(id BufferID) error {
 	bm.mu.Lock()
 	defer bm.mu.Unlock()

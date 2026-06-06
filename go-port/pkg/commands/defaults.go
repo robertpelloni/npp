@@ -21,13 +21,19 @@ func RegisterDefaultCommands(
 ) {
 	fileManager := io.NewFileManager()
 
-	newFileCount := 0
+	var newFileCount int32
+	var newFileMu sync.Mutex
+
 	manager.Register(&Command{
 		ID:          "File.New",
 		Description: "Create a new empty buffer",
 		Execute: func(args map[string]interface{}) error {
+			newFileMu.Lock()
 			newFileCount++
-			title := fmt.Sprintf("new_%d.txt", newFileCount)
+			count := newFileCount
+			newFileMu.Unlock()
+
+			title := fmt.Sprintf("new_%d.txt", count)
 			buf := bufManager.OpenBuffer(title, "UTF-8")
 			layout.AddTab(buf.ID, title)
 			return nil
@@ -126,6 +132,10 @@ func RegisterDefaultCommands(
 
 			results := searchService.FindAll(buf.Content, query)
 			fmt.Printf("Search found %d results for: %s\n", len(results), query)
+
+			if bufManager.GetEventBus() != nil {
+				bufManager.GetEventBus().Publish("Search.Results", results)
+			}
 			return nil
 		},
 	})
