@@ -39,11 +39,12 @@ func RegisterDefaultCommands(
 		Description: "Open an existing file",
 		Execute: func(args map[string]interface{}) error {
 			if filepath, ok := args["filepath"].(string); ok {
-				_, err := fileManager.ReadFile(filepath)
+				content, err := fileManager.ReadFile(filepath)
 				if err != nil {
 					return err
 				}
 				buf := bufManager.OpenBuffer(filepath, "UTF-8")
+				buf.Content = content
 				layout.AddTab(buf.ID, filepath)
 				return nil
 			}
@@ -60,9 +61,10 @@ func RegisterDefaultCommands(
 				return err
 			}
 
-			// SAFETY: Do not overwrite file until we have real content.
-			// For now, we just mark it as not dirty to simulate success.
-			// err = fileManager.WriteFile(buf.Filepath, content)
+			err = fileManager.WriteFile(buf.Filepath, buf.Content)
+			if err != nil {
+				return err
+			}
 
 			buf.IsDirty = false
 			return nil

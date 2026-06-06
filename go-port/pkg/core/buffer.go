@@ -18,6 +18,7 @@ type BufferID string
 type Buffer struct {
 	ID           BufferID
 	Filepath     string
+	Content      []byte
 	IsDirty      bool
 	IsReadOnly   bool
 	Encoding     string // e.g., "UTF-8", "ANSI"
@@ -75,4 +76,39 @@ func (bm *BufferManager) MarkDirty(id BufferID) {
 			bm.eventBus.Publish("BufferChanged", buf)
 		}
 	}
+}
+
+func (bm *BufferManager) CloseBuffer(id BufferID) error {
+	buf, exists := bm.buffers[id]
+	if !exists {
+		return fmt.Errorf("buffer not found")
+	}
+
+	delete(bm.buffers, id)
+
+	if bm.active == id {
+		bm.active = ""
+		// Pick another buffer to make active if available
+		for nextID := range bm.buffers {
+			bm.active = nextID
+			break
+		}
+	}
+
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferClosed", buf)
+	}
+
+	return nil
+}
+
+func (bm *BufferManager) SwitchToBuffer(id BufferID) error {
+	if _, exists := bm.buffers[id]; !exists {
+		return fmt.Errorf("buffer not found")
+	}
+	bm.active = id
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferActivated", id)
+	}
+	return nil
 }
