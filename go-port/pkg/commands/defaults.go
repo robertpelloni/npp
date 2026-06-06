@@ -96,10 +96,23 @@ func RegisterDefaultCommands(
 		},
 	})
 
+	searchService := core.NewSearchService()
 	manager.Register(&Command{
 		ID:          "Search.Find",
 		Description: "Find text in the current buffer",
 		Execute: func(args map[string]interface{}) error {
+			query, ok := args["query"].(string)
+			if !ok {
+				return fmt.Errorf("missing query parameter")
+			}
+
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+
+			results := searchService.FindAll(buf.Content, query)
+			fmt.Printf("Search found %d results for: %s\n", len(results), query)
 			return nil
 		},
 	})

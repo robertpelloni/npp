@@ -91,6 +91,12 @@ func TestEndToEndFileWorkflow(t *testing.T) {
 	if name, ok := commands.CommandIDToName[41001]; !ok || name != "File.New" {
 		t.Errorf("Expected mapping for 41001 to be File.New, got %s", name)
 	}
+
+	// 9. Execute "Search.Find" and verify integration
+	err = cmdManager.Execute("Search.Find", map[string]interface{}{"query": "test"})
+	if err != nil {
+		t.Fatalf("Search.Find failed: %v", err)
+	}
 }
 
 func TestUndoRedoIntegration(t *testing.T) {
@@ -107,5 +113,43 @@ func TestUndoRedoIntegration(t *testing.T) {
 	}
 	if err := cmdManager.Execute("Edit.Redo", nil); err != nil {
 		t.Errorf("Edit.Redo execution failed: %v", err)
+	}
+}
+
+func TestUIToBackendEventFlow(t *testing.T) {
+	eventBus := core.NewEventBus()
+	bufManager := core.NewBufferManager(eventBus)
+	appConfig := config.DefaultConfig()
+	layout := workspace.NewLayout()
+	cmdManager := commands.NewManager()
+	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
+
+	// Simulate UI tracking state change
+	bufferChanged := false
+	eventBus.Subscribe("BufferChanged", func(payload interface{}) {
+		bufferChanged = true
+	})
+
+	// 1. Create a new buffer
+	_ = cmdManager.Execute("File.New", nil)
+	activeBuf, _ := bufManager.GetActiveBuffer()
+
+	// 2. Simulate editing (Mocking UI activity)
+	activeBuf.Content = []byte("user typed this")
+	bufManager.MarkDirty(activeBuf.ID)
+
+	// 3. Verify backend published the change event
+	if !bufferChanged {
+		t.Error("Expected UI to receive BufferChanged event after MarkDirty")
+	}
+
+	// 4. Simulate UI triggering Save
+	err := cmdManager.Execute("File.Save", nil)
+	if err != nil {
+		t.Fatalf("File.Save failed: %v", err)
+	}
+
+	if activeBuf.IsDirty {
+		t.Error("Expected buffer to be clean after UI-triggered save")
 	}
 }
