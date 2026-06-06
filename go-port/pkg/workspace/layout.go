@@ -1,6 +1,10 @@
 package workspace
 
-import "github.com/notepad-plus-plus/ultra-project/pkg/core"
+import (
+	"sync"
+
+	"github.com/notepad-plus-plus/ultra-project/pkg/core"
+)
 
 // Deep comment: Workspace manages the UI layout state, specifically fulfilling the Vertical Tabs requirement.
 // Why: Legacy Notepad++ ties tabs tightly to the Win32 TabCtrl. By extracting this into a Go model,
@@ -22,6 +26,7 @@ type Tab struct {
 }
 
 type Layout struct {
+	mu              sync.RWMutex
 	Placement       TabPlacement
 	VerticalWidthPx int
 	Tabs            []*Tab
@@ -36,6 +41,9 @@ func NewLayout() *Layout {
 }
 
 func (l *Layout) AddTab(bufID core.BufferID, title string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	// Deactivate existing
 	for _, t := range l.Tabs {
 		t.IsActive = false
@@ -50,6 +58,9 @@ func (l *Layout) AddTab(bufID core.BufferID, title string) {
 }
 
 func (l *Layout) SetVerticalWidth(width int) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	if width > 50 && width < 1000 {
 		l.VerticalWidthPx = width
 	}
