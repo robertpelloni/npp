@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -30,6 +31,7 @@ type Buffer struct {
 }
 
 type BufferManager struct {
+	mu       sync.RWMutex
 	buffers  map[BufferID]*Buffer
 	active   BufferID
 	eventBus *EventBus
@@ -43,6 +45,8 @@ func NewBufferManager(eb *EventBus) *BufferManager {
 }
 
 func (bm *BufferManager) OpenBuffer(filepath string, encoding string) *Buffer {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
 	// In a real scenario, this would generate a UUID or hash
 	id := BufferID(filepath)
 
@@ -66,6 +70,9 @@ func (bm *BufferManager) OpenBuffer(filepath string, encoding string) *Buffer {
 }
 
 func (bm *BufferManager) GetActiveBuffer() (*Buffer, error) {
+	bm.mu.RLock()
+	defer bm.mu.RUnlock()
+
 	if buf, exists := bm.buffers[bm.active]; exists {
 		return buf, nil
 	}
@@ -73,6 +80,9 @@ func (bm *BufferManager) GetActiveBuffer() (*Buffer, error) {
 }
 
 func (bm *BufferManager) MarkDirty(id BufferID) {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
 	if buf, exists := bm.buffers[id]; exists {
 		// Save current state to undo stack before marking dirty if it's a new change
 		// In a real editor, this would be more granular (diffs)
@@ -87,6 +97,9 @@ func (bm *BufferManager) MarkDirty(id BufferID) {
 }
 
 func (bm *BufferManager) Undo(id BufferID) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
 	buf, exists := bm.buffers[id]
 	if !exists {
 		return fmt.Errorf("buffer not found")
@@ -111,6 +124,9 @@ func (bm *BufferManager) Undo(id BufferID) error {
 }
 
 func (bm *BufferManager) Redo(id BufferID) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
 	buf, exists := bm.buffers[id]
 	if !exists {
 		return fmt.Errorf("buffer not found")
@@ -135,6 +151,9 @@ func (bm *BufferManager) Redo(id BufferID) error {
 }
 
 func (bm *BufferManager) CloseBuffer(id BufferID) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
 	buf, exists := bm.buffers[id]
 	if !exists {
 		return fmt.Errorf("buffer not found")
@@ -159,6 +178,9 @@ func (bm *BufferManager) CloseBuffer(id BufferID) error {
 }
 
 func (bm *BufferManager) SwitchToBuffer(id BufferID) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
 	if _, exists := bm.buffers[id]; !exists {
 		return fmt.Errorf("buffer not found")
 	}
