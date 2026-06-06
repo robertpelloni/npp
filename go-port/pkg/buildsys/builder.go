@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"sync"
 )
 
 // Deep comment: The BuildSystem fulfills the Geany 1:1 parity requirement for native compilation.
@@ -43,7 +44,11 @@ func (bm *BuildManager) ExecuteBuild(ctx context.Context, command string, args [
 	}
 
 	// Stream output in goroutines so we don't block
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stdoutPipe)
 		for scanner.Scan() {
 			onOutput(scanner.Text())
@@ -51,14 +56,18 @@ func (bm *BuildManager) ExecuteBuild(ctx context.Context, command string, args [
 	}()
 
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stderrPipe)
 		for scanner.Scan() {
 			onOutput("ERROR: " + scanner.Text())
 		}
 	}()
 
-	// Wait blocks until the command completes and pipes are closed
-	if err := cmd.Wait(); err != nil {
+	// Wait blocks until the command completes. We also need to wait for scanners.
+	err = cmd.Wait()
+	wg.Wait()
+
+	if err != nil {
 		return fmt.Errorf("build command exited with error: %w", err)
 	}
 
