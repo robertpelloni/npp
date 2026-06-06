@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -174,6 +175,27 @@ func (bm *BufferManager) CloseBuffer(id BufferID) error {
 		bm.eventBus.Publish("BufferClosed", buf)
 	}
 
+	return nil
+}
+
+func (bm *BufferManager) ConvertLineEndings(id BufferID, eol string) error {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+
+	buf, exists := bm.buffers[id]
+	if !exists {
+		return fmt.Errorf("buffer not found")
+	}
+
+	// Simple conversion logic
+	content := string(buf.Content)
+	content = regexp.MustCompile(`\r\n|\r|\n`).ReplaceAllString(content, eol)
+	buf.Content = []byte(content)
+	buf.IsDirty = true
+
+	if bm.eventBus != nil {
+		bm.eventBus.Publish("BufferChanged", buf)
+	}
 	return nil
 }
 

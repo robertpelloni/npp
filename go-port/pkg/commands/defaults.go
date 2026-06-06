@@ -75,7 +75,12 @@ func RegisterDefaultCommands(
 		ID:          "File.CloseAll",
 		Description: "Close all open buffers",
 		Execute: func(args map[string]interface{}) error {
-			// In a real implementation, this would clear the BufferManager and Layout
+			buf, err := bufManager.GetActiveBuffer()
+			for err == nil {
+				_ = bufManager.CloseBuffer(buf.ID)
+				buf, err = bufManager.GetActiveBuffer()
+			}
+			layout.Tabs = nil
 			return nil
 		},
 	})
@@ -129,6 +134,19 @@ func RegisterDefaultCommands(
 		ID:          "Search.Replace",
 		Description: "Replace text in the current buffer",
 		Execute: func(args map[string]interface{}) error {
+			query, ok1 := args["query"].(string)
+			replacement, ok2 := args["replacement"].(string)
+			if !ok1 || !ok2 {
+				return fmt.Errorf("missing parameters")
+			}
+
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+
+			buf.Content = searchService.ReplaceAll(buf.Content, query, replacement)
+			bufManager.MarkDirty(buf.ID)
 			return nil
 		},
 	})
@@ -143,6 +161,51 @@ func RegisterDefaultCommands(
 			} else {
 				layout.Placement = workspace.PlacementTop
 			}
+			return nil
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Format.ToUnix",
+		Description: "Convert line endings to Unix (LF)",
+		Execute: func(args map[string]interface{}) error {
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+			return bufManager.ConvertLineEndings(buf.ID, "\n")
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Format.ToDOS",
+		Description: "Convert line endings to DOS (CRLF)",
+		Execute: func(args map[string]interface{}) error {
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+			return bufManager.ConvertLineEndings(buf.ID, "\r\n")
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Format.ToMac",
+		Description: "Convert line endings to Mac (CR)",
+		Execute: func(args map[string]interface{}) error {
+			buf, err := bufManager.GetActiveBuffer()
+			if err != nil {
+				return err
+			}
+			return bufManager.ConvertLineEndings(buf.ID, "\r")
+		},
+	})
+
+	manager.Register(&Command{
+		ID:          "Settings.Preferences",
+		Description: "Show preference dialog",
+		Execute: func(args map[string]interface{}) error {
+			// Handled by UI wiring to toggle SettingsPanel visibility
 			return nil
 		},
 	})

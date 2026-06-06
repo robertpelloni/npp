@@ -59,3 +59,17 @@ func (s *SearchService) FindAllRegex(content []byte, pattern string) ([]SearchRe
 
 	return results, nil
 }
+
+// ReplaceAll occurrences of a literal string with another string
+func (s *SearchService) ReplaceAll(content []byte, query, replacement string) []byte {
+	return bytes.ReplaceAll(content, []byte(query), []byte(replacement))
+}
+
+// ReplaceAllRegex replaces all regex matches with a replacement string
+func (s *SearchService) ReplaceAllRegex(content []byte, pattern, replacement string) ([]byte, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, err
+	}
+	return re.ReplaceAll(content, []byte(replacement)), nil
+}

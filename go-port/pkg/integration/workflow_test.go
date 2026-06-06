@@ -97,6 +97,25 @@ func TestEndToEndFileWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Search.Find failed: %v", err)
 	}
+
+	// 10. Execute "Search.Replace" and verify content update
+	activeBuf.Content = []byte("hello world")
+	err = cmdManager.Execute("Search.Replace", map[string]interface{}{"query": "world", "replacement": "golang"})
+	if err != nil {
+		t.Fatalf("Search.Replace failed: %v", err)
+	}
+	if string(activeBuf.Content) != "hello golang" {
+		t.Errorf("Expected hello golang, got %s", activeBuf.Content)
+	}
+
+	// 11. Execute "File.CloseAll"
+	err = cmdManager.Execute("File.CloseAll", nil)
+	if err != nil {
+		t.Fatalf("File.CloseAll failed: %v", err)
+	}
+	if len(layout.Tabs) != 0 {
+		t.Errorf("Expected 0 tabs after CloseAll, got %d", len(layout.Tabs))
+	}
 }
 
 func TestUndoRedoIntegration(t *testing.T) {
