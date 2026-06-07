@@ -3,7 +3,7 @@
 ## Environment Setup
 1. **Clone the repository:** Ensure all submodules are updated (`git submodule update --init --recursive`).
 2. **C++ Environment:** Install Visual Studio 2022 (or newer) with C++ Desktop Development workload.
-3. **Go Environment:** Install Go 1.26.1 or newer.
+3. **Go Environment:** Install Go 1.24 or newer.
 4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed.
 5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference the `bobui` submodule. Ensure `bobui` is present in the parent directory.
 

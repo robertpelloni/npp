@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.19] - 2025-05-14
 ### Added
 - Mapped legacy Notepad++ command IDs to Go command strings.
 - Implemented Vertical Tabs as the default layout with horizontal labels.
