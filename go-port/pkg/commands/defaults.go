@@ -156,8 +156,10 @@ func RegisterDefaultCommands(
 				return err
 			}
 
-			buf.Content = searchService.ReplaceAll(buf.Content, query, replacement)
+			// Capture undo state BEFORE modification
 			bufManager.MarkDirty(buf.ID)
+			buf.Content = searchService.ReplaceAll(buf.Content, query, replacement)
+
 			return nil
 		},
 	})
@@ -184,6 +186,7 @@ func RegisterDefaultCommands(
 			if err != nil {
 				return err
 			}
+			bufManager.MarkDirty(buf.ID)
 			return bufManager.ConvertLineEndings(buf.ID, "\n")
 		},
 	})
@@ -196,6 +199,7 @@ func RegisterDefaultCommands(
 			if err != nil {
 				return err
 			}
+			bufManager.MarkDirty(buf.ID)
 			return bufManager.ConvertLineEndings(buf.ID, "\r\n")
 		},
 	})
@@ -208,6 +212,7 @@ func RegisterDefaultCommands(
 			if err != nil {
 				return err
 			}
+			bufManager.MarkDirty(buf.ID)
 			return bufManager.ConvertLineEndings(buf.ID, "\r")
 		},
 	})
