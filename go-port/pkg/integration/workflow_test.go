@@ -1,8 +1,13 @@
 package integration
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/notepad-plus-plus/ultra-project/pkg/commands"
@@ -131,25 +136,26 @@ func TestUndoRedoIntegration(t *testing.T) {
 	// Create buffer
 	_ = cmdManager.Execute("File.New", nil)
 	activeBuf, _ := bufManager.GetActiveBuffer()
-	activeBuf.Content = []byte("v1")
 
-	// Trigger undo save
-	bufManager.MarkDirty(activeBuf.ID)
-	activeBuf.Content = []byte("v2")
+	// Use ApplyEdit for proper delta tracking (replaces old MarkDirty snapshot approach)
+	// First, set initial content via ApplyEdit
+	if err := bufManager.ApplyEdit(activeBuf.ID, 0, []byte{}, []byte("v2")); err != nil {
+		t.Fatalf("ApplyEdit failed: %v", err)
+	}
 
 	if string(activeBuf.Content) != "v2" {
 		t.Errorf("Expected v2, got %s", activeBuf.Content)
 	}
 
-	// Undo
+	// Undo should revert to empty
 	if err := cmdManager.Execute("Edit.Undo", nil); err != nil {
 		t.Errorf("Edit.Undo execution failed: %v", err)
 	}
-	if string(activeBuf.Content) != "v1" {
-		t.Errorf("Expected v1 after undo, got %s", activeBuf.Content)
+	if string(activeBuf.Content) != "" {
+		t.Errorf("Expected empty after undo, got %s", activeBuf.Content)
 	}
 
-	// Redo
+	// Redo should restore v2
 	if err := cmdManager.Execute("Edit.Redo", nil); err != nil {
 		t.Errorf("Edit.Redo execution failed: %v", err)
 	}
@@ -213,18 +219,80 @@ func TestLSPIntegration(t *testing.T) {
 	activeBuf, _ := bufManager.GetActiveBuffer()
 	activeBuf.LanguageType = "mock_lang"
 
-	// 2. Start a mock LSP (using 'cat' as a dummy process)
-	err := cmdManager.Execute("LSP.Start", map[string]interface{}{
-		"language": "mock_lang",
-		"command":  "cat",
-	})
-	if err != nil {
-		t.Fatalf("LSP.Start failed: %v", err)
+	// 2. Use a proper mock server via AddClient instead of 'cat'
+	// Create a mock client with goroutine-based server that returns actual completions
+	clientToServerReader, clientToServerWriter := io.Pipe()
+	serverToClientReader, serverToClientWriter := io.Pipe()
+
+	go func() {
+		br := bufio.NewReader(clientToServerReader)
+		for {
+			// Read Content-Length header
+			var contentLength int
+			for {
+				line, err := br.ReadString('\n')
+				if err != nil {
+					_ = serverToClientWriter.Close()
+					return
+				}
+				line = strings.TrimRight(line, "\r\n")
+				if line == "" {
+					break
+				}
+				if strings.HasPrefix(line, "Content-Length:") {
+					parts := strings.SplitN(line, ":", 2)
+					if len(parts) == 2 {
+						fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &contentLength)
+					}
+				}
+			}
+
+			body := make([]byte, contentLength)
+			if _, err := io.ReadFull(br, body); err != nil {
+				_ = serverToClientWriter.Close()
+				return
+			}
+
+			// Parse request ID
+			var req map[string]interface{}
+			json.Unmarshal(body, &req)
+			reqID := req["id"]
+
+			// Build completion response with proper types
+			items := []lsp.CompletionItem{
+				{Label: "fmt.Println", Kind: 2, Detail: "func(a ...any) (n int, err error)"},
+				{Label: "fmt.Sprintf", Kind: 2, Detail: "func(format string, a ...any) string"},
+			}
+			result := lsp.CompletionList{IsIncomplete: false, Items: items}
+			resultJSON, _ := json.Marshal(result)
+
+			// Use the proper Response struct so Result is json.RawMessage (not double-encoded)
+			resp := lsp.Response{
+				JSONRPC: "2.0",
+				ID:      reqID,
+				Result:  resultJSON,
+			}
+			respJSON, _ := json.Marshal(resp)
+
+			header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(respJSON))
+			serverToClientWriter.Write([]byte(header))
+			serverToClientWriter.Write(respJSON)
+
+			_ = serverToClientWriter.Close()
+			return
+		}
+	}()
+
+	mockClient := &lsp.Client{
+		Language: "mock_lang",
+		Command:  "mock",
 	}
-	defer lspManager.ShutdownAll()
+	mockClient.SetPipeIO(clientToServerWriter, bufio.NewReader(serverToClientReader))
+
+	lspManager.AddClient("mock_lang", mockClient)
 
 	// 3. Request completion
-	err = cmdManager.Execute("LSP.Completion", map[string]interface{}{
+	err := cmdManager.Execute("LSP.Completion", map[string]interface{}{
 		"line":      10,
 		"character": 5,
 	})

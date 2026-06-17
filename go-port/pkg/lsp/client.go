@@ -119,6 +119,12 @@ func (c *Client) ReadMessage() ([]byte, error) {
 	return body, nil
 }
 
+// SetPipeIO replaces the stdin/stdout pipes with custom ones (for testing).
+func (c *Client) SetPipeIO(writeCloser io.WriteCloser, reader *bufio.Reader) {
+	c.in = writeCloser
+	c.out = reader
+}
+
 // Stop sends a kill signal or cleanly shuts down the LSP server.
 func (c *Client) Stop() error {
 	if c.cancel != nil {
@@ -126,7 +132,15 @@ func (c *Client) Stop() error {
 	}
 	if c.cmd != nil && c.cmd.Process != nil {
 		log.Printf("[LSP] Stopping language server for %s", c.Language)
-		return c.cmd.Process.Kill()
+		if err := c.cmd.Process.Kill(); err != nil {
+			// On Windows, terminating a process that already exited can return "Access is denied".
+			// Silently ignore such errors to make Stop idempotent.
+			if strings.Contains(err.Error(), "Access is denied") || strings.Contains(err.Error(), "process already finished") {
+				return nil
+			}
+			return err
+		}
+		return nil
 	}
 	return nil
 }

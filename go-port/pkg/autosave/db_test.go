@@ -2,6 +2,7 @@ package autosave
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -14,6 +15,11 @@ func TestDBManager(t *testing.T) {
 
 	manager, err := NewDBManager(tempDir)
 	if err != nil {
+		// go-sqlite3 returns a stub error when CGO_ENABLED=0
+		// Skip the test gracefully instead of failing the suite
+		if strings.Contains(err.Error(), "CGO_ENABLED=0") {
+			t.Skipf("Skipping SQLite test: %v", err)
+		}
 		t.Fatalf("Failed to initialize SQLite manager: %v", err)
 	}
 	defer manager.Close()
