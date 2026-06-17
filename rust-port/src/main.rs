@@ -2,6 +2,7 @@ pub mod core;
 pub mod workspace;
 pub mod textfx;
 pub mod commands;
+pub mod markdown;
 pub mod config;
 pub mod io;
 pub mod autosave;
@@ -25,7 +26,7 @@ fn main() {
     // Initialize Core Systems
     let event_bus = EventBus::new();
     let buf_manager = Arc::new(BufferManager::new(Some(event_bus.clone())));
-    let app_config = Arc::new(AppConfig::default());
+    let app_config = Arc::new(parking_lot::Mutex::new(AppConfig::default()));
     let layout = Arc::new(Layout::new());
 
     // Initialize LSP Manager
