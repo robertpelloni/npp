@@ -17,3 +17,26 @@ impl FileManager {
         fs::write(filepath, content)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_fileio_read_write() {
+        let fm = FileManager::new();
+        let filepath = "test_io_file.txt";
+        let content = b"hello test file";
+
+        // Test Write
+        assert!(fm.write_file(filepath, content).is_ok());
+
+        // Test Read
+        let read_content = fm.read_file(filepath).unwrap();
+        assert_eq!(read_content, content);
+
+        // Cleanup
+        fs::remove_file(filepath).unwrap();
+    }
+}

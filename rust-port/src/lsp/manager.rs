@@ -1,10 +1,8 @@
 use crate::core::buffer::Buffer;
+use crate::lsp::client::Client;
 use parking_lot::RwLock;
 use std::collections::HashMap;
-
-pub struct Client {
-    // Stub
-}
+use serde_json::json;
 
 pub struct Manager {
     servers: RwLock<HashMap<String, Client>>,
@@ -17,25 +15,47 @@ impl Manager {
         }
     }
 
-    pub fn start_server(&self, language: &str, _command: &str) -> Result<(), String> {
+    pub fn start_server(&self, language: &str, command: &str) -> Result<(), String> {
         let mut servers = self.servers.write();
         if servers.contains_key(language) {
             return Ok(());
         }
-        servers.insert(language.to_string(), Client {});
+        let client = Client::new(language, command);
+        client.start()?;
+        servers.insert(language.to_string(), client);
         Ok(())
     }
 
-    pub fn request_completion(&self, buf: &Buffer, _line: usize, _character: usize) -> Result<Vec<String>, String> {
+    pub fn request_completion(&self, buf: &Buffer, line: usize, character: usize) -> Result<Vec<String>, String> {
         let servers = self.servers.read();
-        if !servers.contains_key(&buf.language_type) {
-            return Err(format!("no language server configured for {}", buf.language_type));
+        let client = servers.get(&buf.language_type).ok_or_else(|| format!("no language server configured for {}", buf.language_type))?;
+
+        let params = json!({
+            "textDocument": { "uri": format!("file://{}", buf.filepath) },
+            "position": { "line": line, "character": character }
+        });
+
+        let response = client.send_request("textDocument/completion", Some(params))?;
+
+        let mut completions = Vec::new();
+        if let Some(result) = response.result {
+            if let Some(items) = result.as_array() {
+                for item in items {
+                    if let Some(label) = item.get("label").and_then(|v| v.as_str()) {
+                        completions.push(label.to_string());
+                    }
+                }
+            }
         }
 
-        Ok(vec!["StubCompletion1".to_string(), "StubCompletion2".to_string()])
+        Ok(completions)
     }
 
     pub fn shutdown_all(&self) {
-        self.servers.write().clear();
+        let mut servers = self.servers.write();
+        for client in servers.values() {
+            client.stop();
+        }
+        servers.clear();
     }
 }
