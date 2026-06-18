@@ -2,6 +2,8 @@ pub mod core;
 pub mod workspace;
 pub mod textfx;
 pub mod commands;
+pub mod buildsys;
+pub mod plugins;
 pub mod markdown;
 pub mod config;
 pub mod io;
