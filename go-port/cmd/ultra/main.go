@@ -12,7 +12,6 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/plugins"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
-	"github.com/robertpelloni/bobui/pkg/ui"
 )
 
 // Deep comment: This is the primary entry point for the Go-backed Notepad++ ultra-project.
@@ -68,12 +67,7 @@ func main() {
 
 	log.Println("Core data models and command router initialized.")
 
-	// Mock UI Engine instantiation and wiring
-	uiEngine := ui.NewEngine()
-	uiEngine.OnCommand = func(id string, args map[string]interface{}) error {
-		return cmdManager.Execute(id, args)
-	}
-	uiEngine.SubscribeToEvents(eventBus)
+	// UI logic goes here
 
 	// Example execution simulating a UI click
 	log.Println("Simulating UI Action: File.New")

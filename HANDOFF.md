@@ -70,3 +70,10 @@ This file tracks the latest actions and status for the next AI agent or human de
 - **Vertical tab interactions in bobui:** context menu (Close, Close All, Pin) for vertical tab components
 - **Settings Panel in bobui:** Map all `AppConfig` fields to UI controls
 - **Theme Engine:** Finalize the "
+
+## Recent Session (Fix Test Failures)
+- Encountered a test failure when running `go test ./...` in the `go-port/` directory due to a missing dependency for `github.com/robertpelloni/bobui`.
+- The `bqt` UI submodule does not contain a `pkg/ui` package that was mocked in `go-port/cmd/ultra/main.go`.
+- Removed the broken mocked UI dependency from `main.go`.
+- Deferred the Settings Panel mapping in `TODO.md` as it depends on UI infrastructure not currently available in the tests.
+- All Go tests now pass.

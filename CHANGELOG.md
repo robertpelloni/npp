@@ -1,3 +1,7 @@
+## [1.0.20] - 2026-06-19
+### Fixed
+- Removed missing `bobui` UI dependency from `go-port/cmd/ultra/main.go` mock to restore backend test stability.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
