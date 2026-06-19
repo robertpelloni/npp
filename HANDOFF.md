@@ -77,3 +77,10 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Removed the broken mocked UI dependency from `main.go`.
 - Deferred the Settings Panel mapping in `TODO.md` as it depends on UI infrastructure not currently available in the tests.
 - All Go tests now pass.
+
+## Recent Session (Auth Middleware Integration)
+- Created the `go-port/pkg/auth` package for managing authentication tokens.
+- Implemented `TokenMiddleware` to ensure incoming commands carry valid tokens, rejecting unauthorized RPC/WebSocket calls.
+- Upgraded the `go-port/pkg/commands` Manager to support an execution chain pattern via `Manager.Use()`.
+- Added the `Auth.Login` command, which bypasses the middleware and checks credentials against the environment variables `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
+- All tests pass, and the application now enforces basic secure token session validation.

@@ -11,6 +11,7 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/core"
 	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/plugins"
+	"github.com/notepad-plus-plus/ultra-project/pkg/auth"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
 )
 
@@ -64,6 +65,14 @@ func main() {
 	cmdManager := commands.NewManager()
 	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
 	lsp.RegisterLSPCommands(cmdManager, lspManager, bufManager)
+
+	// Setup Authentication
+	cmdManager.Use(auth.TokenMiddleware)
+	cmdManager.Register(&commands.Command{
+		ID:          "Auth.Login",
+		Description: "Authenticate and retrieve a session token",
+		Execute:     auth.Authenticate,
+	})
 
 	log.Println("Core data models and command router initialized.")
 

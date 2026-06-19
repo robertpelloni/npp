@@ -21,14 +21,22 @@ type Command struct {
 }
 
 type Manager struct {
-	mu       sync.RWMutex
-	commands map[string]*Command
+	mu         sync.RWMutex
+	commands   map[string]*Command
+	middlewares []func(string, CommandFunc) CommandFunc
 }
 
 func NewManager() *Manager {
 	return &Manager{
 		commands: make(map[string]*Command),
 	}
+}
+
+
+func (m *Manager) Use(middleware func(string, CommandFunc) CommandFunc) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.middlewares = append(m.middlewares, middleware)
 }
 
 func (m *Manager) Register(cmd *Command) {
@@ -40,11 +48,18 @@ func (m *Manager) Register(cmd *Command) {
 func (m *Manager) Execute(id string, args map[string]interface{}) error {
 	m.mu.RLock()
 	cmd, exists := m.commands[id]
+	middlewares := m.middlewares
 	m.mu.RUnlock()
 
 	if !exists {
 		return fmt.Errorf("command not found: %s", id)
 	}
 
-	return cmd.Execute(args)
+	execFunc := cmd.Execute
+	// Apply middlewares in reverse order so the first one added is the outermost wrapper
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		execFunc = middlewares[i](id, execFunc)
+	}
+
+	return execFunc(args)
 }

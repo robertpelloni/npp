@@ -1,3 +1,8 @@
+## [1.0.21] - 2026-06-19
+### Added
+- Added `auth` package to handle user login and token generation using environment variables.
+- Updated `commands.Manager` to support middleware execution chains via `Manager.Use()`, and wired up `TokenMiddleware` in `main.go`.
+
 ## [1.0.20] - 2026-06-19
 ### Fixed
 - Removed missing `bobui` UI dependency from `go-port/cmd/ultra/main.go` mock to restore backend test stability.
