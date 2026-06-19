@@ -6,7 +6,7 @@
 	url = https://github.com/rainman74/NPPTextFX2.git
 [submodule "bgtk"]
 	path = bgtk
-	url = https://github.com/robertpelloni/bgtk
+	url = https://github.com/robertpelloni/bgtk.git
 [submodule "bcs"]
 	path = bcs
-	url = https://github.com/robertpelloni/bcs
+	url = https://github.com/robertpelloni/bcs.git
