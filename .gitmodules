@@ -1,12 +1,12 @@
-[submodule "bobui"]
-	path = bobui
-	url = https://github.com/robertpelloni/bobui.git
+[submodule "bqt"]
+	path = bqt
+	url = https://github.com/robertpelloni/bqt.git
 [submodule "textfx"]
 	path = textfx
 	url = https://github.com/rainman74/NPPTextFX2.git
-[submodule "bobgui"]
-	path = bobgui
-	url = https://github.com/robertpelloni/bobgui
-[submodule "btk"]
-	path = btk
-	url = https://github.com/robertpelloni/btk
+[submodule "bgtk"]
+	path = bgtk
+	url = https://github.com/robertpelloni/bgtk
+[submodule "bcs"]
+	path = bcs
+	url = https://github.com/robertpelloni/bcs
