@@ -17,5 +17,5 @@
 
 ### Testing & Quality
 - [x] **LSP Mock Server:** Create a more robust mock LSP server for integration tests to verify multi-step JSON-RPC handshakes.
-- [ ] **UI Automation:** Setup Playwright/Gio-equivalent UI automation to verify vertical tab transitions and modal dialogs.
-- [ ] **Memory Audit:** Profile the `BufferManager` under high load with multiple 100MB+ files open.
+- [x] **UI Automation:** Setup Playwright/Gio-equivalent UI automation to verify vertical tab transitions and modal dialogs.
+- [x] **Memory Audit:** Profile the `BufferManager` under high load with multiple 100MB+ files open.

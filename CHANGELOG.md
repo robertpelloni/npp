@@ -37,3 +37,8 @@ All notable changes to this project will be documented in this file.
 ## [1.0.22]
 ### Added
 - Implemented `go-port/pkg/theme` engine to support dynamic JSON configuration of the "Glass" theme style across all UI layers.
+
+## [1.0.23]
+### Added
+- Created `test_ui_automation.go` stub for Playwright/Gio UI testing.
+- Implemented `TestMemoryAudit` in `go-port/pkg/core/buffer_audit_test.go` to profile `BufferManager` under 100MB+ large-file memory stress.
