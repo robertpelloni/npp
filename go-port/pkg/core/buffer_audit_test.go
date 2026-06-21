@@ -15,19 +15,19 @@ func TestMemoryAudit(t *testing.T) {
 	eb := NewEventBus()
 	bm := NewBufferManager(eb)
 
-	// Create 100MB of dummy content
-	largeContent := bytes.Repeat([]byte("A"), 100*1024*1024)
-
 	var memStats runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&memStats)
 	startAlloc := memStats.Alloc
 
-	// Open 3 large buffers
+	// Open 3 large buffers and assign unique, isolated byte slices to each
+	// to properly test memory allocation without relying on single-pointer optimization.
 	for i := 0; i < 3; i++ {
 		id := BufferID("audit_file_" + string(rune(i)))
 		buf := bm.OpenBuffer(string(id), "UTF-8")
-		buf.Content = largeContent
+
+		// Create a distinct 100MB allocation for each buffer
+		buf.Content = bytes.Repeat([]byte("A"), 100*1024*1024)
 	}
 
 	runtime.ReadMemStats(&memStats)

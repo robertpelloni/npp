@@ -7,7 +7,7 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 - [ ] Investigate programmatic methods to set proportional fonts for prose and monospaced for code without breaking Scintilla's `stylers.xml` inheritance engine.
 
 ## Phase 2: "Never Lose a File" - Advanced Autosave & Versioning
-- [ ] Design a silent, background local Git or SQLite-based versioning system.
+- [x] Design a silent, background local Git or SQLite-based versioning system.
 - [ ] Hook into the Scintilla buffer modification events (`SCN_SAVEPOINTREACHED`, `SCN_MODIFIED`) to trigger silent snapshot saves.
 - [ ] Build a UI viewer (perhaps a dockable panel) to view the history timeline of the current buffer.
 

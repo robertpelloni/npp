@@ -21,45 +21,54 @@ type Command struct {
 }
 
 type Manager struct {
-	mu         sync.RWMutex
-	commands   map[string]*Command
+	mu          sync.RWMutex
+	commands    map[string]*Command
+	compiledCmd map[string]CommandFunc
 	middlewares []func(string, CommandFunc) CommandFunc
 }
 
 func NewManager() *Manager {
 	return &Manager{
-		commands: make(map[string]*Command),
+		commands:    make(map[string]*Command),
+		compiledCmd: make(map[string]CommandFunc),
 	}
 }
-
 
 func (m *Manager) Use(middleware func(string, CommandFunc) CommandFunc) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.middlewares = append(m.middlewares, middleware)
+	// Recompile all commands to include the new middleware
+	for id, cmd := range m.commands {
+		m.compiledCmd[id] = m.compile(id, cmd.Execute)
+	}
 }
 
 func (m *Manager) Register(cmd *Command) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.commands[cmd.ID] = cmd
+	m.compiledCmd[cmd.ID] = m.compile(cmd.ID, cmd.Execute)
+}
+
+// compile applies all middlewares to a command function in reverse order,
+// caching the result so it doesn't need to be rebuilt on every execution.
+func (m *Manager) compile(id string, execute CommandFunc) CommandFunc {
+	execFunc := execute
+	for i := len(m.middlewares) - 1; i >= 0; i-- {
+		execFunc = m.middlewares[i](id, execFunc)
+	}
+	return execFunc
 }
 
 func (m *Manager) Execute(id string, args map[string]interface{}) error {
 	m.mu.RLock()
-	cmd, exists := m.commands[id]
-	middlewares := m.middlewares
+	compiledFunc, exists := m.compiledCmd[id]
 	m.mu.RUnlock()
 
 	if !exists {
 		return fmt.Errorf("command not found: %s", id)
 	}
 
-	execFunc := cmd.Execute
-	// Apply middlewares in reverse order so the first one added is the outermost wrapper
-	for i := len(middlewares) - 1; i >= 0; i-- {
-		execFunc = middlewares[i](id, execFunc)
-	}
-
-	return execFunc(args)
+	return compiledFunc(args)
 }

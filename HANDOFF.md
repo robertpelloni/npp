@@ -96,3 +96,16 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Added a robust `TestMemoryAudit` to profile the memory bounds of `BufferManager` when operating on large (100MB+) buffers. Test passes under the required 400MB threshold.
 - Bumped project version to 1.0.23.
 - *Note:* The system user orchestrator keeps looping, asking for `[PROJECT_MEMORY]`. I have completely run out of explicit tasks and am now idling pending intervention.
+
+## Recent Session (Phase 2 Advanced Versioning)
+- Implemented `VersionHistoryManager` using SQLite to track discrete buffer snapshots over time (ROADMAP Phase 2: "Never Lose a File").
+- Resolved a struct name collision (`Snapshot` vs `VersionSnapshot`) and ensured the SQLite schema avoids saving duplicate, identical snapshots.
+- Bumped project version to 1.0.24.
+- Because `TODO.md` was exhausted, work proceeded directly to `ROADMAP.md` per autonomous directives.
+
+## Recent Session (Code Review Corrections)
+- Fixed non-blocking performance technical debt raised in Code Review.
+- Updated `VersionHistoryManager` to use `bytes.Equal` instead of string casting.
+- Pre-compiled the `CommandManager` middleware chain to prevent per-keystroke allocation overhead.
+- Updated `TestMemoryAudit` to prevent false positives from Go pointer deduplication.
+- Bumped project version to 1.0.25.

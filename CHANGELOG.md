@@ -42,3 +42,15 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Created `test_ui_automation.go` stub for Playwright/Gio UI testing.
 - Implemented `TestMemoryAudit` in `go-port/pkg/core/buffer_audit_test.go` to profile `BufferManager` under 100MB+ large-file memory stress.
+
+## [1.0.24]
+### Added
+- Implemented `VersionHistoryManager` in `pkg/autosave/versioning.go` to provide a silent, SQLite-backed file versioning system, fulfilling Phase 2 of the ROADMAP.
+- Skips saving identical snapshots to conserve storage.
+
+## [1.0.25]
+### Refactored
+- Addressed code review feedback to fix memory optimization violations.
+- Switched `string()` casts to `bytes.Equal()` in `pkg/autosave/versioning.go` to prevent heavy GC allocations when hashing 100MB+ files.
+- Refactored `pkg/commands/manager.go` to pre-compile the middleware execution chain during `.Register()`, rather than reallocating closures on every single `.Execute()`.
+- Enhanced `pkg/core/buffer_audit_test.go` to allocate distinct, isolated byte arrays per buffer, defeating compiler pointer optimizations to accurately measure `BufferManager` high-load memory pressure.
