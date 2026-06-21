@@ -33,3 +33,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Disabled the intrusive autocomplete popup in standard non-code text files (Normal Text).
+
+## [1.0.22]
+### Added
+- Implemented `go-port/pkg/theme` engine to support dynamic JSON configuration of the "Glass" theme style across all UI layers.
