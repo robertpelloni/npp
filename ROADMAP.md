@@ -18,6 +18,6 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 
 ## Phase 4: UI Modernization (The "Glass" Era)
 *Note: This is the most technically challenging phase due to Notepad++'s deep ties to pure Win32 API.*
-- [ ] Research UI frameworks compatible with the existing architecture (e.g., custom drawing over Win32, or a migration to Qt/wxWidgets - though a framework migration would be a near-total rewrite).
+- [x] Research UI frameworks compatible with the existing architecture (e.g., custom drawing over Win32, or a migration to Qt/wxWidgets - though a framework migration would be a near-total rewrite).
 - [ ] Implement a fully functional Vertical Tabs dockable pane, replicating all context menu actions of the standard horizontal tab bar.
 - [ ] Implement a theming engine capable of skinning standard Win32 controls, borders, and scrollbars to achieve the "glass" look.

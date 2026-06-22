@@ -140,3 +140,9 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Implemented `TerminalManager` (`go-port/pkg/terminal/manager.go`) to natively spawn and kill background shells (`bash` or `cmd.exe`) directly via the Go backend.
 - This creates the architecture necessary for the target UI modernization frontends to dock and display integrated terminal panes (like VSCode).
 - Bumped project version to 1.0.30.
+
+## Recent Session (Phase 4 UI Research)
+- Re-established control after a prompt loop sequence.
+- Began Phase 4 of `ROADMAP.md` (UI Modernization) by drafting `go-port/pkg/ui/framework_research.md`.
+- Audited Qt, GTK, Gio, and Win32 for the "Glass" theme. Verified that sticking to the `bqt` (Qt) submodule is the correct architectural decision due to Scintilla embedding constraints and `QSS` theming capabilities.
+- Bumped project version to 1.0.31.

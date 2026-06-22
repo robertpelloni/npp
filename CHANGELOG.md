@@ -78,3 +78,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Completed Phase 3 of ROADMAP by implementing `TerminalManager` in `pkg/terminal/manager.go`.
 - This handles cross-platform backend PTY instantiation (`cmd.exe`/`bash`), allowing dockable native UI panels to connect to local shell environments akin to Geany or VSCode.
+
+## [1.0.31]
+### Added
+- Completed Phase 4 UI Framework Research (`go-port/pkg/ui/framework_research.md`). Concluded that Qt (`bqt`) remains the most viable path forward for achieving the "Glass" theme and cross-platform native embedding of Scintilla, dismissing pure Go (Gio) due to extreme complexity in embedding the legacy C++ text component.
