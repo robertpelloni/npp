@@ -73,3 +73,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Resolved a critical memory mutation bug in `TrimTrailingWhitespace` by using `bytes.Clone()` before appending characters, preventing buffer corruption.
 - Registered all new `textfx` commands with the global `CommandManager` (`go-port/pkg/textfx/commands.go`) so they can be triggered from the Native UI (e.g., `TextFX.RemoveBlankLines`, `TextFX.ConvertCaseUpper`).
+
+## [1.0.30]
+### Added
+- Completed Phase 3 of ROADMAP by implementing `TerminalManager` in `pkg/terminal/manager.go`.
+- This handles cross-platform backend PTY instantiation (`cmd.exe`/`bash`), allowing dockable native UI panels to connect to local shell environments akin to Geany or VSCode.

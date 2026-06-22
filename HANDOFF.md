@@ -134,3 +134,9 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Added tests to verify execution integration without UI stubs (`TestTextFXCommands`).
 - All 15 Go packages pass testing perfectly.
 - Bumped project version to 1.0.29.
+
+## Recent Session (Terminal Manager Integration)
+- Successfully concluded Phase 3 of the `ROADMAP.md` (Core Feature Expansion).
+- Implemented `TerminalManager` (`go-port/pkg/terminal/manager.go`) to natively spawn and kill background shells (`bash` or `cmd.exe`) directly via the Go backend.
+- This creates the architecture necessary for the target UI modernization frontends to dock and display integrated terminal panes (like VSCode).
+- Bumped project version to 1.0.30.
