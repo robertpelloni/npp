@@ -13,6 +13,7 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/plugins"
 	"github.com/notepad-plus-plus/ultra-project/pkg/auth"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
+	"github.com/notepad-plus-plus/ultra-project/pkg/textfx"
 )
 
 // Deep comment: This is the primary entry point for the Go-backed Notepad++ ultra-project.
@@ -65,6 +66,7 @@ func main() {
 	cmdManager := commands.NewManager()
 	commands.RegisterDefaultCommands(cmdManager, bufManager, appConfig, layout)
 	lsp.RegisterLSPCommands(cmdManager, lspManager, bufManager)
+	textfx.RegisterTextFXCommands(cmdManager, bufManager)
 
 	// Setup Authentication
 	cmdManager.Use(auth.TokenMiddleware)

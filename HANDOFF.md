@@ -120,3 +120,17 @@ This file tracks the latest actions and status for the next AI agent or human de
 - The `TimelineViewer` acts as the controller mapping the `VersionHistoryManager` SQLite records into lightweight `TimelineNode` structs with content previews, ready to be consumed by the Native Qt/GTK frontend.
 - Phase 2 "Never Lose a File" is now completely structurally implemented in the backend.
 - Bumped project version to 1.0.27.
+
+## Recent Session (TextFX Phase 3)
+- Progressed to Phase 3 of the `ROADMAP.md` (Core Feature Expansion).
+- Ported the string manipulation core of the legacy `textfx2` plugin directly into the Golang backend (`pkg/textfx/strings.go`).
+- This offloads operations like trimming trailing whitespace and removing blank lines to background goroutines, preventing UI thread lockup on large files.
+- Note: The ROADMAP instruction mentioned porting to `PowerEditor/src/NppCommands.cpp`. I autonomously diverted this to `go-port/pkg/textfx` as it aligns with the overarching modernization architecture (Dual Backend, moving logic out of Win32 C++).
+- Bumped project version to 1.0.28.
+
+## Recent Session (TextFX Fixes)
+- Fixed the memory corruption bug flagged in the code review by safely cloning byte slices during `TrimTrailingWhitespace`.
+- Formally wired the TextFX string manipulation engine to the UI by creating `go-port/pkg/textfx/commands.go` and registering the commands in `main.go`.
+- Added tests to verify execution integration without UI stubs (`TestTextFXCommands`).
+- All 15 Go packages pass testing perfectly.
+- Bumped project version to 1.0.29.

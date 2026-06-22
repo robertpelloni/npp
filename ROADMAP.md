@@ -12,7 +12,7 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 - [x] Build a UI viewer (perhaps a dockable panel) to view the history timeline of the current buffer.
 
 ## Phase 3: Core Feature Expansion & Plugin Absorption
-- [ ] Audit the `textfx2` plugin. Port its string manipulation, encoding, and markup features directly into the core `PowerEditor/src/NppCommands.cpp`.
+- [x] Audit the `textfx2` plugin. Port its string manipulation, encoding, and markup features directly into the core `go-port/pkg/textfx`.
 - [ ] Audit Geany features missing from Notepad++ (e.g., integrated VTE/Terminal, advanced symbol tree).
 - [ ] Implement an integrated Terminal panel.
 

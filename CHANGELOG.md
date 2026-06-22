@@ -63,3 +63,13 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Completed Phase 2 of ROADMAP by implementing `TimelineViewer` in `pkg/autosave/ui_viewer.go`.
 - This provides the backend data source for visualizing the historical SQLite snapshots in a dockable Native UI panel.
+
+## [1.0.28]
+### Added
+- Implemented core string manipulation features from legacy `textfx2` plugin directly into `pkg/textfx` (ROADMAP Phase 3).
+- Added `RemoveBlankLines`, `TrimTrailingWhitespace`, and `ConvertCase` utilizing Go's highly optimized `bytes` package to prevent UI thread blocking on massive file operations.
+
+## [1.0.29]
+### Fixed
+- Resolved a critical memory mutation bug in `TrimTrailingWhitespace` by using `bytes.Clone()` before appending characters, preventing buffer corruption.
+- Registered all new `textfx` commands with the global `CommandManager` (`go-port/pkg/textfx/commands.go`) so they can be triggered from the Native UI (e.g., `TextFX.RemoveBlankLines`, `TextFX.ConvertCaseUpper`).
