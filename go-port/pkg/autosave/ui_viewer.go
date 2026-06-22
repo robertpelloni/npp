@@ -3,6 +3,7 @@ package autosave
 import (
 	"fmt"
 	"time"
+	"unicode/utf8"
 )
 
 // Deep comment: TimelineViewer satisfies Phase 2 of ROADMAP.md: "Build a UI viewer to view the history timeline"
@@ -36,14 +37,21 @@ func (tv *TimelineViewer) GetTimelineForFile(filepath string) ([]TimelineNode, e
 
 	var timeline []TimelineNode
 	for _, s := range snapshots {
-		// Create a short preview of the content (first 50 chars)
-		previewLen := len(s.Content)
+		// Create a short preview of the content (first 50 chars, respecting UTF-8 boundaries)
+		contentStr := string(s.Content)
+		previewLen := utf8.RuneCountInString(contentStr)
+
+		isTruncated := false
 		if previewLen > 50 {
 			previewLen = 50
+			isTruncated = true
 		}
 
-		previewStr := string(s.Content[:previewLen])
-		if len(s.Content) > 50 {
+		// Safely slice by runes, not raw bytes, to prevent mangled characters
+		runes := []rune(contentStr)
+		previewStr := string(runes[:previewLen])
+
+		if isTruncated {
 			previewStr += "..."
 		}
 

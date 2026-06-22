@@ -146,3 +146,13 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Began Phase 4 of `ROADMAP.md` (UI Modernization) by drafting `go-port/pkg/ui/framework_research.md`.
 - Audited Qt, GTK, Gio, and Win32 for the "Glass" theme. Verified that sticking to the `bqt` (Qt) submodule is the correct architectural decision due to Scintilla embedding constraints and `QSS` theming capabilities.
 - Bumped project version to 1.0.31.
+
+## Recent Session (Vertical Tabs Backend)
+- Continued Phase 4 (UI Modernization).
+- Implemented `VerticalTabsManager` in the Go backend. This provides the logical state tracking for the Qt/GTK vertical dockable pane, replicating classic horizontal tab behaviors like 'Pin', 'Close All', and 'Close Others'.
+- Bumped project version to 1.0.32.
+
+## Recent Session (Code Review Fixes for UI and Autosave)
+- Responded to code review by correcting the deletion logic in the `VerticalTabsManager` to preserve visual tab ordering.
+- Addressed potential UTF-8 truncation issues in the `TimelineViewer` preview generation by parsing characters as Go `rune`s instead of direct byte slicing.
+- Bumped project version to 1.0.33.

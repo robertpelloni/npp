@@ -82,3 +82,13 @@ All notable changes to this project will be documented in this file.
 ## [1.0.31]
 ### Added
 - Completed Phase 4 UI Framework Research (`go-port/pkg/ui/framework_research.md`). Concluded that Qt (`bqt`) remains the most viable path forward for achieving the "Glass" theme and cross-platform native embedding of Scintilla, dismissing pure Go (Gio) due to extreme complexity in embedding the legacy C++ text component.
+
+## [1.0.32]
+### Added
+- Completed another Phase 4 UI Modernization step by implementing `VerticalTabsManager` (`go-port/pkg/ui/vertical_tabs.go`).
+- Replicated standard horizontal tab bar context menu actions (Close, CloseAll, CloseOther, Pin) to power the target native dockable side-pane.
+
+## [1.0.33]
+### Fixed
+- Fixed a UX bug in `VerticalTabsManager` (`pkg/ui/vertical_tabs.go`) where closing a tab would ruin the visual order of the remaining tabs by performing a fast slice swap instead of an ordered splice.
+- Fixed a text mangling bug in `TimelineViewer` (`pkg/autosave/ui_viewer.go`) by parsing the history preview strings using safe UTF-8 rune slicing instead of raw byte slicing.
