@@ -9,7 +9,7 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 ## Phase 2: "Never Lose a File" - Advanced Autosave & Versioning
 - [x] Design a silent, background local Git or SQLite-based versioning system.
 - [x] Hook into the Scintilla buffer modification events (`SCN_SAVEPOINTREACHED`, `SCN_MODIFIED`) to trigger silent snapshot saves.
-- [ ] Build a UI viewer (perhaps a dockable panel) to view the history timeline of the current buffer.
+- [x] Build a UI viewer (perhaps a dockable panel) to view the history timeline of the current buffer.
 
 ## Phase 3: Core Feature Expansion & Plugin Absorption
 - [ ] Audit the `textfx2` plugin. Port its string manipulation, encoding, and markup features directly into the core `PowerEditor/src/NppCommands.cpp`.

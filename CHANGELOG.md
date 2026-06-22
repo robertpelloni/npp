@@ -58,3 +58,8 @@ All notable changes to this project will be documented in this file.
 ## [1.0.26]
 ### Added
 - Created `pkg/autosave/db_hook.go` to bridge `BufferChanged` and `BufferSaved` events (mapped from Scintilla `SCN_MODIFIED` and `SCN_SAVEPOINTREACHED`) directly into the `VersionHistoryManager`, providing fully automated background snapshotting.
+
+## [1.0.27]
+### Added
+- Completed Phase 2 of ROADMAP by implementing `TimelineViewer` in `pkg/autosave/ui_viewer.go`.
+- This provides the backend data source for visualizing the historical SQLite snapshots in a dockable Native UI panel.
