@@ -63,6 +63,7 @@ func (m *Manager) Kill(id string) error {
 
 	if cmd.Process != nil {
 		err := cmd.Process.Kill()
+		go cmd.Process.Wait()
 		if err != nil {
 			return fmt.Errorf("failed to kill process: %w", err)
 		}

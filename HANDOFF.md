@@ -156,3 +156,13 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Responded to code review by correcting the deletion logic in the `VerticalTabsManager` to preserve visual tab ordering.
 - Addressed potential UTF-8 truncation issues in the `TimelineViewer` preview generation by parsing characters as Go `rune`s instead of direct byte slicing.
 - Bumped project version to 1.0.33.
+
+## Recent Session (Documentation Cleanup)
+- Checked off the remaining completed item in `ROADMAP.md` Phase 4 (Theming engine), which was developed earlier but not marked as done.
+- Bumped project version to 1.0.34.
+
+## Recent Session (Code Review Adjustments)
+- Remediated the blocking regression in `main.go` where a legacy simulated command was causing a hard crash against the newly implemented Auth middleware.
+- Fixed two minor memory/process leaks in `VerticalTabsManager` and `TerminalManager`.
+- Removed compiled binaries from tracking.
+- Bumped project version to 1.0.35.

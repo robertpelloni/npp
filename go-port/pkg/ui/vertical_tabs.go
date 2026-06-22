@@ -99,7 +99,9 @@ func (vtm *VerticalTabsManager) removeTab(id string) {
 	for i, t := range vtm.tabs {
 		if t.ID == id {
 			// Fast slice deletion
-			vtm.tabs = append(vtm.tabs[:i], vtm.tabs[i+1:]...)
+			copy(vtm.tabs[i:], vtm.tabs[i+1:])
+			vtm.tabs[len(vtm.tabs)-1] = nil
+			vtm.tabs = vtm.tabs[:len(vtm.tabs)-1]
 
 			break
 		}

@@ -92,3 +92,13 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed a UX bug in `VerticalTabsManager` (`pkg/ui/vertical_tabs.go`) where closing a tab would ruin the visual order of the remaining tabs by performing a fast slice swap instead of an ordered splice.
 - Fixed a text mangling bug in `TimelineViewer` (`pkg/autosave/ui_viewer.go`) by parsing the history preview strings using safe UTF-8 rune slicing instead of raw byte slicing.
+
+## [1.0.34]
+### Fixed
+- Updated `ROADMAP.md` to properly track the completion of the Phase 4 Glass Theming engine, which was implemented previously but left unchecked in the roadmap manifest.
+
+## [1.0.35]
+### Fixed
+- Addressed code review feedback by removing a legacy simulated execution of `File.New` in `main.go` that was causing application crashes due to missing Authentication middleware tokens.
+- Fixed a minor memory leak in `VerticalTabsManager` by zeroing out the dangling pointer before slicing the backing array.
+- Prevented zombie processes in `TerminalManager.Kill` by running `cmd.Process.Wait()` in a background goroutine after dispatching the kill signal.
