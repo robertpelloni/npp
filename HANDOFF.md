@@ -109,3 +109,8 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Pre-compiled the `CommandManager` middleware chain to prevent per-keystroke allocation overhead.
 - Updated `TestMemoryAudit` to prevent false positives from Go pointer deduplication.
 - Bumped project version to 1.0.25.
+
+## Recent Session (Autosave Event Hooking)
+- Fulfilled the second requirement of ROADMAP Phase 2 by creating `pkg/autosave/db_hook.go`.
+- This file acts as an `EventListener` binding the `EventBus` to the `VersionHistoryManager`, ensuring that text edits seamlessly generate background SQLite snapshots without blocking the UI thread.
+- Bumped project version to 1.0.26.

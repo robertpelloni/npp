@@ -54,3 +54,7 @@ All notable changes to this project will be documented in this file.
 - Switched `string()` casts to `bytes.Equal()` in `pkg/autosave/versioning.go` to prevent heavy GC allocations when hashing 100MB+ files.
 - Refactored `pkg/commands/manager.go` to pre-compile the middleware execution chain during `.Register()`, rather than reallocating closures on every single `.Execute()`.
 - Enhanced `pkg/core/buffer_audit_test.go` to allocate distinct, isolated byte arrays per buffer, defeating compiler pointer optimizations to accurately measure `BufferManager` high-load memory pressure.
+
+## [1.0.26]
+### Added
+- Created `pkg/autosave/db_hook.go` to bridge `BufferChanged` and `BufferSaved` events (mapped from Scintilla `SCN_MODIFIED` and `SCN_SAVEPOINTREACHED`) directly into the `VersionHistoryManager`, providing fully automated background snapshotting.
