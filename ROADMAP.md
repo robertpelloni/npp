@@ -13,7 +13,7 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 
 ## Phase 3: Core Feature Expansion & Plugin Absorption
 - [x] Audit the `textfx2` plugin. Port its string manipulation, encoding, and markup features directly into the core `go-port/pkg/textfx`.
-- [ ] Audit Geany features missing from Notepad++ (e.g., integrated VTE/Terminal, advanced symbol tree).
+- [x] Audit Geany features missing from Notepad++ (e.g., integrated VTE/Terminal, advanced symbol tree).
 - [x] Implement an integrated Terminal panel.
 
 ## Phase 4: UI Modernization (The "Glass" Era)

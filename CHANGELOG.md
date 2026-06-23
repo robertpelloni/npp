@@ -107,3 +107,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Executed full repository sync and intelligent reverse-merge protocol, bringing `master` up to speed with all autonomous feature branch work (Authentication, Theming, Versioning, and UI Frameworks).
 - Explicitly purged tracking of extraneous compiled binaries and temporary test scripts that were erroneously added during autonomous feature branches.
+
+## [1.0.40]
+### Added
+- Completed Phase 3 of `ROADMAP.md` by implementing the final missing Geany parity feature: the `SymbolBrowser` in `pkg/lsp/geany_parity.go`.
+- Organizes raw LSP extracted symbols into hierarchical categories (Classes, Functions, Variables) for native dockable tree-view rendering.
