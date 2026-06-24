@@ -111,4 +111,11 @@ All notable changes to this project will be documented in this file.
 ## [1.0.40]
 ### Added
 - Completed Phase 3 of `ROADMAP.md` by implementing the final missing Geany parity feature: the `SymbolBrowser` in `pkg/lsp/geany_parity.go`.
+- Completed Phase 3 of `ROADMAP.md` by implementing the final missing Geany parity feature: the `SymbolBrowser` in `pkg/lsp/geany_parity.go`.
 - Organizes raw LSP extracted symbols into hierarchical categories (Classes, Functions, Variables) for native dockable tree-view rendering.
+
+## [1.0.41]
+### Fixed
+- Executed full repository sync per `EXECUTIVE PROTOCOL: REPOSITORY SYNCHRONIZATION & INTELLIGENT MERGE`.
+- Resolved merge conflicts resulting from merging the latest autonomous feature branch (`jules-13901361048815054885-69b0439c`) into `master`.
+- Ensured all checkboxes in `ROADMAP.md` correctly reflect their completed state after the fast-forward merge.
