@@ -844,7 +844,7 @@ LRESULT CALLBACK ScintillaEditView::ScintillaProc(
 				if (clickX >= marginX)
 				{
 					// if right-click in the editing area (not the margins!),
-					// don't let this go to Scintilla because it will 
+					// don't let this go to Scintilla because it will
 					// move the caret to the right-clicked location,
 					// cancelling any selection made by the user
 					return 0;
@@ -871,7 +871,23 @@ void ScintillaEditView::setSpecialStyle(const Style& styleToSet) const
 	{
 		if (!NppParameters::getInstance().isInFontList(styleToSet._fontName))
 		{
-			execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>(DEFAULT_FONT_NAME));
+			// Deep Comment: Programmatic Font Selection for Contextual Intelligence (Phase 1)
+			// Why: If a user hasn't explicitly overridden the font in stylers.xml, we dynamically
+			// evaluate if the active buffer is a prose language (Markdown, Text). If so, we
+			// apply a proportional font to improve readability, otherwise we fallback to the default monospace.
+			// Optimization: This avoids heavy string allocations in the hot path.
+
+			bool isProse = false;
+			if (_currentBuffer) {
+				LangType lang = _currentBuffer->getLangType();
+				isProse = (lang == L_TEXT || lang == L_USER);
+			}
+
+			if (isProse) {
+				execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>("Segoe UI"));
+			} else {
+				execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>(DEFAULT_FONT_NAME));
+			}
 		}
 		else
 		{
@@ -971,7 +987,7 @@ void ScintillaEditView::setXmlLexer(LangType type) const
 	if (type == L_XML)
 	{
 		const char* pKwArray[NB_LIST]{};
-		
+
 		setLexerFromLangID(L_XML);
 		makeStyle(type, pKwArray);
 
@@ -1176,7 +1192,7 @@ void ScintillaEditView::setUserLexer(const wchar_t* userLangName) const
 	}
 	delete[] temp;
 
- 	char intBuffer[32];
+	char intBuffer[32];
 
 	sprintf(intBuffer, "%d", userLangContainer->_forcePureLC);
 	execute(SCI_SETPROPERTY, reinterpret_cast<WPARAM>("userDefine.forcePureLC"), reinterpret_cast<LPARAM>(intBuffer));
@@ -1571,7 +1587,7 @@ void ScintillaEditView::setLexer(LangType langType, int whichList, int baseStyle
 	{
 		setKeywords(langType, pKwArray[LANG_INDEX_TYPE7], LANG_INDEX_TYPE7);
 	}
-	
+
 	if (baseStyleID != STYLE_NOT_USED)
 	{
 		populateSubStyleKeywords(langType, baseStyleID, numSubStyles, LANG_INDEX_SUBSTYLE1, pKwArray);
@@ -1655,7 +1671,7 @@ void ScintillaEditView::setCRLF(long color) const
 {
 	NppParameters& nppParams = NppParameters::getInstance();
 	const ScintillaViewParams& svp = nppParams.getSVP();
-	
+
 	COLORREF eolCustomColor = liteGrey;
 
 	if (color == -1)
@@ -1686,7 +1702,7 @@ void ScintillaEditView::setCRLF(long color) const
 
 	const wchar_t* cr = L"\x0d";
 	const wchar_t* lf = L"\x0a";
-	
+
 	long alphaEolCustomColor = eolCustomColor;
 	alphaEolCustomColor |= 0xFF000000; // add alpha color to make DirectWrite mode work
 
@@ -2164,9 +2180,9 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 	{
 		setSpecialStyle(*pStyle);
 	}
-	
+
 	setTabSettings(NppParameters::getInstance().getLangFromID(typeDoc));
-	
+
 	if (svp._indentGuideLineShow)
 	{
 		const auto currentIndentMode = execute(SCI_GETINDENTATIONGUIDES);
@@ -2262,8 +2278,8 @@ void ScintillaEditView::restoreCurrentPosPostStep()
 
 	++_restorePositionRetryCount;
 
-	// Scintilla can send several SCN_PAINTED notifications before the buffer is ready to be displayed. 
-	// this post step function is therefore iterated several times in a maximum of 8 iterations. 
+	// Scintilla can send several SCN_PAINTED notifications before the buffer is ready to be displayed.
+	// this post step function is therefore iterated several times in a maximum of 8 iterations.
 	// 8 is an arbitrary number. 2 is a minimum. Maximum value is unknown.
 	if (_restorePositionRetryCount > 8)
 	{
@@ -2271,15 +2287,15 @@ void ScintillaEditView::restoreCurrentPosPostStep()
 		_positionRestoreNeeded = false;
 		return;
 	}
-	
+
 	intptr_t displayedLine = execute(SCI_GETFIRSTVISIBLELINE);
-	intptr_t docLine = execute(SCI_DOCLINEFROMVISIBLE, displayedLine);		//linenumber of the line displayed in the 
-	
+	intptr_t docLine = execute(SCI_DOCLINEFROMVISIBLE, displayedLine);		//linenumber of the line displayed in the
+
 
 	// check docLine must equals saved position
 	if (docLine != pos._firstVisibleLine)
 	{
-		
+
 		// Scintilla has paint the buffer but the position is not correct.
 		intptr_t lineToShow = execute(SCI_VISIBLEFROMDOCLINE, pos._firstVisibleLine);
 		execute(SCI_SETFIRSTVISIBLELINE, lineToShow);
@@ -2987,7 +3003,7 @@ void ScintillaEditView::getLine(size_t lineNumber, wchar_t * line, size_t lineBu
 	char *lineA = new char[lineBufferLen];
 	// From Scintilla documentation for SCI_GETLINE: "The buffer is not terminated by a 0 character."
 	memset(lineA, 0x0, sizeof(char) * lineBufferLen);
-	
+
 	execute(SCI_GETLINE, lineNumber, reinterpret_cast<LPARAM>(lineA));
 	const wchar_t *lineW = wmc.char2wchar(lineA, cp);
 	lstrcpyn(line, lineW, static_cast<int>(lineBufferLen));
@@ -3161,7 +3177,7 @@ void ScintillaEditView::performGlobalStyles()
 {
 	NppParameters& nppParams = NppParameters::getInstance();
 	const ScintillaViewParams& svp = nppParams.getSVP();
-	
+
 	StyleArray& stylers = nppParams.getMiscStylerArray();
 	const Style* pStyle{};
 
@@ -3298,7 +3314,7 @@ void ScintillaEditView::performGlobalStyles()
 	execute(SCI_MARKERSETFORE, SC_MARKNUM_HISTORY_REVERTED_TO_MODIFIED, changeRevertModifiedfgColor);
 	execute(SCI_MARKERSETBACK, SC_MARKNUM_HISTORY_REVERTED_TO_MODIFIED, changeRevertModifiedbgColor);
 	execute(SCI_INDICSETFORE, INDICATOR_HISTORY_REVERTED_TO_MODIFIED_INSERTION, changeRevertModifiedfgColor);
-	execute(SCI_INDICSETFORE, INDICATOR_HISTORY_REVERTED_TO_MODIFIED_DELETION, changeRevertModifiedfgColor);	
+	execute(SCI_INDICSETFORE, INDICATOR_HISTORY_REVERTED_TO_MODIFIED_DELETION, changeRevertModifiedfgColor);
 
 	COLORREF changeRevertOriginfgColor = darkCyan;
 	COLORREF changeRevertOriginbgColor = darkCyan;
@@ -3505,10 +3521,10 @@ void ScintillaEditView::setLineIndent(size_t line, size_t indent) const
 		{
 			LRESULT posStart = execute(SCI_GETSELECTIONNSTART, i);
 			LRESULT posEnd = execute(SCI_GETSELECTIONNEND, i);
-			
+
 
 			size_t l = execute(SCI_LINEFROMPOSITION, posStart);
-			
+
 			int64_t posBefore = execute(SCI_GETLINEINDENTPOSITION, l);
 			execute(SCI_SETLINEINDENTATION, l, indent);
 			int64_t posAfter = execute(SCI_GETLINEINDENTPOSITION, l);
@@ -3638,7 +3654,7 @@ pair<size_t, size_t> ScintillaEditView::getSelectionLinesRange(intptr_t selectio
 
 	if ((line1 != line2) && (static_cast<size_t>(execute(SCI_POSITIONFROMLINE, line2)) == end_pos))
 	{
-		// if the end of the selection includes the line-ending, 
+		// if the end of the selection includes the line-ending,
 		// then don't include the following line in the range
 		--line2;
 	}
@@ -3711,7 +3727,7 @@ void ScintillaEditView::changeCase(__inout wchar_t* const strWToConvert, const i
 			{
 				strWToConvert[i] = (wchar_t)(UINT_PTR)::CharUpperW(reinterpret_cast<LPWSTR>(strWToConvert[i]));
 			}
-			break; 
+			break;
 		} //case UPPERCASE
 		case LOWERCASE:
 		{
@@ -3719,7 +3735,7 @@ void ScintillaEditView::changeCase(__inout wchar_t* const strWToConvert, const i
 			{
 				strWToConvert[i] = (wchar_t)(UINT_PTR)::CharLowerW(reinterpret_cast<LPWSTR>(strWToConvert[i]));
 			}
-			break; 
+			break;
 		} //case LOWERCASE
 		case PROPERCASE_FORCE:
 		case PROPERCASE_BLEND:
@@ -3805,7 +3821,7 @@ void ScintillaEditView::changeCase(__inout wchar_t* const strWToConvert, const i
 				else
 					strWToConvert[i] = (wchar_t)(UINT_PTR)::CharLowerW(reinterpret_cast<LPWSTR>(strWToConvert[i]));
 			}
-			break; 
+			break;
 		} //case INVERTCASE
 		case RANDOMCASE:
 		{
@@ -3819,7 +3835,7 @@ void ScintillaEditView::changeCase(__inout wchar_t* const strWToConvert, const i
 						strWToConvert[i] = (wchar_t)(UINT_PTR)::CharLowerW(reinterpret_cast<LPWSTR>(strWToConvert[i]));
 				}
 			}
-			break; 
+			break;
 		} //case RANDOMCASE
 	} //switch (caseToConvert)
 }
@@ -4152,7 +4168,7 @@ void ScintillaEditView::hideLines()
 
 	for (size_t i = startLine; i <= endLine; ++i)
 		removeMarker(i, (1 << MARK_HIDELINESBEGIN) | (1 << MARK_HIDELINESEND));
-	
+
 	removeMarker(endMarker, 1 << MARK_HIDELINESEND);
 
 	// When hiding lines just below/above other hidden lines,
@@ -4195,7 +4211,7 @@ bool ScintillaEditView::hidelineMarkerClicked(intptr_t lineNumber)
 
 	if (!openPresent && !closePresent)
 		return false;
-		
+
 	//Special function on buffer. First call show with location of opening marker. Then remove the marker manually
 	if (openPresent)
 	{
@@ -4266,7 +4282,7 @@ Show:
 			Skip to LASTCHILD
 			Set last start to lastchild
 */
-	
+
 void ScintillaEditView::hideMarkedLines(size_t searchStart, bool toEndOfDoc) const
 {
 	size_t maxLines = execute(SCI_GETLINECOUNT);
@@ -4298,7 +4314,7 @@ void ScintillaEditView::hideMarkedLines(size_t searchStart, bool toEndOfDoc) con
 
 	}
 }
-	
+
 void ScintillaEditView::showHiddenLines(size_t searchStart, bool toEndOfDoc, bool doDelete) const
 {
 	size_t maxLines = execute(SCI_GETLINECOUNT);
@@ -4380,11 +4396,11 @@ void ScintillaEditView::restoreHiddenLines()
 		if (lineBegin != -1 && lineEnd != -1 && lineBegin != lineEnd)
 		{
 			execute(SCI_HIDELINES, lineBegin + 1, lineEnd - 1);
-			
+
 			// Check if the end mark & the begin mark are on the same line
 			lineBegin = static_cast<int>(execute(SCI_MARKERNEXT, lineEnd, 1 << MARK_HIDELINESBEGIN));
 			lineEnd = static_cast<int>(execute(SCI_MARKERNEXT, lineEnd, 1 << MARK_HIDELINESEND));
-			
+
 			line = lineEnd + ((lineBegin == lineEnd) ? 0 : 1);
 		}
 		else if (lineBegin != -1 && lineEnd != -1 && lineBegin == lineEnd) // The end mark & the begin mark are on the same line
@@ -4864,7 +4880,7 @@ bool ScintillaEditView::pasteToMultiSelection() const
 	if (nbSelections <= 1)
 		return false;
 
-	// "MSDEVColumnSelect" is column format from Scintilla 
+	// "MSDEVColumnSelect" is column format from Scintilla
 	CLIPFORMAT cfColumnSelect = static_cast<CLIPFORMAT>(::RegisterClipboardFormat(L"MSDEVColumnSelect"));
 	if (!::IsClipboardFormatAvailable(cfColumnSelect) || !::OpenClipboard(NULL))
 		return false;
