@@ -45,3 +45,14 @@ The Go backend methodically replaces deeply coupled Win32 C++ legacy systems wit
   * `CHANGELOG.md` / `VERSION`: Strict adherence to semantic version bumps across the project; commits must explicitly document the version bump.
   * `HANDOFF.md`: Critical context summaries prepared at the end of every active session to allow successor models to seamlessly resume context.
 * **Pre-commit Rigor:** Always complete pre-commit instructions, run `go test ./...`, and properly merge upstream changes/submodules before declaring task completion.
+
+## 7. Known Quirks & Actionable Resolutions
+* **Missing Testing Frameworks (`make test` limitation):**
+  * *Quirk:* The standard `make test` target is not natively configured in the repository for C++ components, forcing developers to rely exclusively on `go test ./...` in the `go-port/` directory.
+  * *Resolution:* Introduce Google Test or Catch2 into the `CMakeLists.txt` and define a custom `test` target for the legacy C++ core, bridging the parity between Go and C++ unit tests.
+* **Markdown Language Handling:**
+  * *Quirk:* Markdown does not exist as a core Scintilla Lexer in the legacy system; it relies heavily on fragile User-Defined Language (UDL) logic (`L_USER`).
+  * *Resolution:* Enhance `langs.model.xml` and the `NativeScintilla` implementation to formally recognize Markdown via the Scintilla Lexer framework (e.g., integrating the actual `lexilla` markdown plugin), bypassing UDL limitations entirely.
+* **Keystroke Performance in TextFX/UI:**
+  * *Quirk:* Intensive string manipulations (like case switching or regex replacements) during hot loops (like keystroke handlers) can cause micro-stutters if they rely on string allocations rather than byte slice manipulation.
+  * *Resolution:* Ensure all incoming buffer modifications intercepted by `core/GoBridge` use pre-allocated buffers and zero-copy `bytes` conversions in Go, avoiding temporary `std::string` allocations in C++.

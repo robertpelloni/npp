@@ -191,3 +191,12 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Updated `ROADMAP.md` checkboxes to reflect that all Phases (1 through 4) are now complete.
 - **Supervisor Note:** A prompt requested to begin work on Phase 2 ("Never Lose a File" / SQLite Versioning & Scintilla hooks). This work was already completed in prior sessions and is now permanently merged into the `master` branch (see `go-port/pkg/autosave/versioning.go` and `db_hook.go`).
 - Version is now 1.0.41.
+
+## Recent Session (Documentation & Quirks Resolution)
+- Addressed a specific user prompt to resolve known issues and update documentation.
+- Appended concrete actionable resolutions to `MEMORY.md` covering C++ testing frameworks, Markdown UDL fragility, and text allocation performance bottlenecks.
+- Updated `DEPLOY.md` with concrete Qt6 and Wayland dependency instructions.
+- Synced `VISION.md` to reflect the decision to use the `bqt` submodule for the Glass UI.
+- Added a `Makefile` stub to support the `make test` expectation.
+- Bumped version to 1.0.42.
+- Ignored redundant Supervisor nudges for Phase 1 and Phase 2 roadmap items, as those are already fully implemented.

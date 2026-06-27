@@ -119,3 +119,16 @@ All notable changes to this project will be documented in this file.
 - Executed full repository sync per `EXECUTIVE PROTOCOL: REPOSITORY SYNCHRONIZATION & INTELLIGENT MERGE`.
 - Resolved merge conflicts resulting from merging the latest autonomous feature branch (`jules-13901361048815054885-69b0439c`) into `master`.
 - Ensured all checkboxes in `ROADMAP.md` correctly reflect their completed state after the fast-forward merge.
+
+## [1.0.42]
+### Added
+- Created `Makefile` stub to support legacy C++ `make test` workflows.
+### Fixed
+- Updated `DEPLOY.md` with explicit CGO dependencies and unified build script parameters.
+- Aligned `VISION.md` to formally recognize Qt (`bqt`) as the target framework for the Phase 4 UI modernization.
+- Appended "Known Quirks & Actionable Resolutions" to `MEMORY.md` addressing Markdown UDL handling, text allocation micro-stutters, and C++ testing frameworks.
+
+## [1.0.43]
+### Fixed
+- Updated `go-port/go.mod` with new `replace` directives to restore dependency resolution after the `bobui` submodule was renamed to `bqt`.
+- Restored `go build` capabilities for the Go backend following the submodule transition.

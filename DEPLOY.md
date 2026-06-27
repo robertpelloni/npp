@@ -2,10 +2,10 @@
 
 ## Environment Setup
 1. **Clone the repository:** Ensure all submodules are updated (`git submodule update --init --recursive`).
-2. **C++ Environment:** Install Visual Studio 2022 (or newer) with C++ Desktop Development workload.
-3. **Go Environment:** Install Go 1.25 or newer.
-4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed.
-5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference the `bobui` submodule. Ensure `bobui` is present in the parent directory.
+2. **C++ Environment:** Install Visual Studio 2022 (or newer) with C++ Desktop Development workload. A CMake integration is strongly recommended for standardizing tests (e.g., Google Test).
+3. **Go Environment:** Install Go 1.25 or newer with `CGO_ENABLED=1`.
+4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed, along with Qt6 development packages (`qt6-base-dev`) for the `bqt` UI.
+5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference local submodules.
 
 ## Configuration & Versioning
 - **Version Tracking:** The global project version is managed in the `VERSION` file in the root directory. This version is referenced by the build scripts and the Go backend to ensure consistency.
@@ -13,22 +13,25 @@
 
 ## Build Process
 
-### Go Backend & Gio UI
-1. Navigate to the `go-port` directory.
-2. Run `go mod tidy` to ensure dependencies are resolved.
-3. Build the application: `go build -o notepad-ultra ./cmd/ultra`.
+### Go Backend & Native UI (Qt/GTK)
+1. Navigate to the root directory.
+2. The project uses a unified build orchestration script (`build.sh`) that accepts flags for target frontends (e.g., `--qt6`, `--qt4`, `--gtk`) and relies on `CMakeLists.txt.ultra`.
+3. Run: `./build.sh --qt6` (This will compile the Go shared library and link it to the selected frontend).
 
 ### Legacy C++ Build
 1. Open `PowerEditor\visual.net\notepadPlus.vcxproj` in Visual Studio.
 2. Select your desired configuration (e.g., `Release` or `Debug`) and architecture (`x64` or `Win32`).
 3. Build the solution (Ctrl+Shift+B).
 
+## Testing
+- **Go Backend:** Navigate to `go-port/` and run `go test ./...`
+- **C++ Core:** Configure the CMake test target and run `make test` (or use the Visual Studio Test Explorer).
+
 ## Deployment
 
-### Modern (Go/Gio) Deployment
-1. The compiled binary `notepad-ultra` (or `notepad-ultra.exe` on Windows) is a standalone executable.
-2. Ensure it remains in the project root or carries its configuration files if moved.
+### Modern Deployment
+1. The compiled binary (e.g., `npp_bobui.exe` or `notepad-ultra`) is statically linked where possible, but depends on `libultra.so` or `libultra.dll`. Ensure the dynamic library is distributed alongside the executable.
 
 ### Legacy C++ Deployment
 1. The compiled executable `notepad++.exe` will be located in the `PowerEditor\bin\` directory (or `PowerEditor\bin64\` for x64 builds).
-2. For a portable deployment, simply copy the `bin` directory contents to your target machine. Ensure `langs.model.xml` and `stylers.model.xml` remain in the same directory as the executable.
+2. For a portable deployment, copy the `bin` directory contents. Ensure `langs.model.xml` and `stylers.model.xml` remain alongside the executable.
