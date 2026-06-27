@@ -30,7 +30,7 @@
 ## Deployment
 
 ### Modern Deployment
-1. The compiled binary (e.g., `npp_bobui.exe` or `notepad-ultra`) is statically linked where possible, but depends on `libultra.so` or `libultra.dll`. Ensure the dynamic library is distributed alongside the executable.
+1. The compiled binary (e.g., `npp_bqt.exe` or `notepad-ultra`) is statically linked where possible, but depends on `libultra.so` or `libultra.dll`. Ensure the dynamic library is distributed alongside the executable.
 
 ### Legacy C++ Deployment
 1. The compiled executable `notepad++.exe` will be located in the `PowerEditor\bin\` directory (or `PowerEditor\bin64\` for x64 builds).
