@@ -24,7 +24,8 @@ func TestEngine_LoadTheme(t *testing.T) {
 		"background_color": "#000000",
 		"foreground_color": "#FFFFFF",
 		"accent_color": "#FF0000",
-		"font_family": "Arial",
+		"proportional_font": "Arial",
+		"monospace_font": "Courier New",
 		"font_size": 14
 	}`
 	err := os.WriteFile(tmpFile, []byte(themeData), 0644)
@@ -46,6 +47,12 @@ func TestEngine_LoadTheme(t *testing.T) {
 	}
 	if config.BackgroundColor != "#000000" {
 		t.Errorf("Expected background color '#000000', got '%s'", config.BackgroundColor)
+	}
+	if config.ProportionalFont != "Arial" {
+		t.Errorf("Expected proportional font 'Arial', got '%s'", config.ProportionalFont)
+	}
+	if config.MonospaceFont != "Courier New" {
+		t.Errorf("Expected monospace font 'Courier New', got '%s'", config.MonospaceFont)
 	}
 }
 

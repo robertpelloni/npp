@@ -19,8 +19,9 @@ type Config struct {
 	BackgroundColor string `json:"background_color"`
 	ForegroundColor string `json:"foreground_color"`
 	AccentColor     string `json:"accent_color"`
-	FontFamily      string `json:"font_family"`
-	FontSize        int    `json:"font_size"`
+	ProportionalFont string `json:"proportional_font"`
+	MonospaceFont    string `json:"monospace_font"`
+	FontSize         int    `json:"font_size"`
 }
 
 // Engine manages the active theme state
@@ -37,8 +38,9 @@ func NewEngine() *Engine {
 			BackgroundColor: "#1E1E1E",
 			ForegroundColor: "#D4D4D4",
 			AccentColor:     "#007ACC",
-			FontFamily:      "Consolas",
-			FontSize:        12,
+			ProportionalFont: "Segoe UI",
+			MonospaceFont:    "Consolas",
+			FontSize:         12,
 		},
 	}
 }
@@ -68,6 +70,17 @@ func (e *Engine) GetCurrentConfig() Config {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.activeConfig
+}
+
+// GetContextualFontFamily returns the correct font family (Proportional or Monospace) based on the language type.
+func (e *Engine) GetContextualFontFamily(langType int) string {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	if DetermineFontCategory(langType) == FontCategoryProportional {
+		return e.activeConfig.ProportionalFont
+	}
+	return e.activeConfig.MonospaceFont
 }
 
 // ApplyTheme applies the active theme directly (stub for Native UIs)
