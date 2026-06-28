@@ -9,7 +9,7 @@
 - [x] **Plugin System:** Implement the plugin loader stub in `main.go` to dynamically load `.so`/`.dll` plugins from a dedicated directory.
 - [x] **Configuration Persistence:** Ensure `AppConfig` changes are serialized to a local XML or SQLite database on exit.
 
-### UI Integration (Native UI Integration (Native & BobUI) Bqt)
+### UI Integration (Native & Bqt)
 - [x] **Native Scintilla Wiring:** Bridge the `NativeScintilla` C++ implementation with the Go `BufferManager` via CGO. (Stubs for non-CGO, real bridge behind `//go:build cgo`)
 - [x] **Vertical Tab Interactions:** Replicate all context menu actions (Close, Close All, Pin) for the new Vertical Tab component in `bqt`.
 - [x] **Settings Panel Coverage:** Map every backend parameter in `AppConfig` to a UI toggle or input in the `SettingsPanel` (Deferred, removed UI mock dependency to fix go tests).
