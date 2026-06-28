@@ -2,9 +2,9 @@
 
 This roadmap outlines the long-term structural plans to achieve the goals defined in `VISION.md`. Because Notepad++ is a mature C++ Win32 application utilizing the Scintilla editing component, these changes require significant architectural updates.
 
-## Phase 1: Contextual Intelligence (In Progress)
+## Phase 1: Contextual Intelligence (Completed)
 - [x] Disable autocomplete popup in standard non-code text files (L_TEXT, L_USER/Markdown).
-- [x] Investigate programmatic methods to set proportional fonts for prose and monospaced for code without breaking Scintilla's `stylers.xml` inheritance engine.
+- [x] Implement programmatic methods to set proportional fonts for prose and monospaced for code without breaking Scintilla's `stylers.xml` inheritance engine.
 
 ## Phase 2: "Never Lose a File" - Advanced Autosave & Versioning
 - [x] Design a silent, background local Git or SQLite-based versioning system.
