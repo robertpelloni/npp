@@ -70,9 +70,9 @@ func main() {
 
 	// Mock UI Engine instantiation and wiring
 	uiEngine := ui.NewEngine()
-	uiEngine.OnCommand = func(id string, args map[string]interface{}) error {
+	uiEngine.SetOnCommand( func(id string, args map[string]interface{}) error {
 		return cmdManager.Execute(id, args)
-	}
+	})
 	uiEngine.SubscribeToEvents(eventBus)
 
 	// Example execution simulating a UI click
