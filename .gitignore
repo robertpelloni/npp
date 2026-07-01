@@ -4,3 +4,4 @@ go-port/libultra.h
 
 # Jules AI session logs (auto-generated, not needed in repo)
 .jules/sessions/
+go-port/notepad-ultra
