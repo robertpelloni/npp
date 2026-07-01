@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/mattn/go-sqlite3 v1.14.42
-	github.com/robertpelloni/bobui v0.0.0-00010101000000-000000000000
+	github.com/robertpelloni/bqt v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -27,4 +27,4 @@ require (
 	modernc.org/sqlite v1.48.1 // indirect
 )
 
-replace github.com/robertpelloni/bobui => ../bqt
+replace github.com/robertpelloni/bqt => ../bqt

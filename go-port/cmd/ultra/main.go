@@ -12,7 +12,7 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/plugins"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
-	"github.com/robertpelloni/bobui/pkg/ui"
+	"github.com/robertpelloni/bqt/pkg/ui"
 )
 
 // Deep comment: This is the primary entry point for the Go-backed Notepad++ ultra-project.
