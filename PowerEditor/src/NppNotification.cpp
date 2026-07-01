@@ -27,6 +27,7 @@
 #include "shortcut.h"
 
 using namespace std;
+#include "NppAutoVersioner.h"
 
 // Only for 2 main Scintilla editors
 BOOL Notepad_plus::notify(SCNotification *notification)
@@ -34,7 +35,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 	//Important, keep track of which element generated the message
 	bool isFromPrimary = (_mainEditView.getHSelf() == notification->nmhdr.hwndFrom || _mainDocTab.getHSelf() == notification->nmhdr.hwndFrom);
 	bool isFromSecondary = !isFromPrimary && (_subEditView.getHSelf() == notification->nmhdr.hwndFrom || _subDocTab.getHSelf() == notification->nmhdr.hwndFrom);
-	
+
 	ScintillaEditView * notifyView = nullptr;
 	if (isFromPrimary)
 		notifyView = &_mainEditView;
@@ -47,6 +48,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 	{
 		case SCN_MODIFIED:
 		{
+			// NppAutoVersioner Hook
+			NppAutoVersioner::getInstance().handleModification(notification);
 			if (!notifyView) return FALSE;
 
 			if (notification->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
@@ -83,7 +86,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 		case SCN_SAVEPOINTREACHED:
 		case SCN_SAVEPOINTLEFT:
-		{
 			//if (!notifyView) return FALSE; // Could be _invisibleEditView or _fileEditView (see the following code)
 
 			Buffer * buf = 0;
@@ -127,7 +129,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					isDirty = true;
 			}
 
-			if (buf->isUnsync()) // buffer in Notepad++ is not synchronized with the file on disk - in this case the buffer is always dirty 
+			if (buf->isUnsync()) // buffer in Notepad++ is not synchronized with the file on disk - in this case the buffer is always dirty
 				isDirty = true;
 
 			if (buf->isSavePointDirty())
@@ -138,7 +140,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_MARGINCLICK:
-		{
 			if (!notifyView) return FALSE;
 
 			if (notification->nmhdr.hwndFrom == _mainEditView.getHSelf())
@@ -167,7 +168,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_MARGINRIGHTCLICK:
-		{
 			if (!notifyView) return FALSE;
 
 			if (notification->nmhdr.hwndFrom == _mainEditView.getHSelf())
@@ -194,7 +194,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_CHARADDED:
-		{
 			if (!notifyView) return FALSE;
 
 			if (!_recordingMacro && !_playingBackMacro) // No macro recording or playing back
@@ -217,7 +216,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_DOUBLECLICK:
-		{
 			if (!notifyView) return FALSE;
 
 			if (notification->modifiers == SCMOD_CTRL)
@@ -395,14 +393,13 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_UPDATEUI:
-		{
 			if (!notifyView) return FALSE;
 
 			NppParameters& nppParam = NppParameters::getInstance();
 			NppGUI& nppGui = nppParam.getNppGUI();
 
 			Buffer* currentBuf = notifyView->getCurrentBuffer();
-			
+
 			// replacement for obsolete custom SCN_SCROLLED
 			if (notification->updated & SC_UPDATE_V_SCROLL)
 			{
@@ -464,7 +461,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_ZOOM:
-		{
 			if (!notifyView) return FALSE;
 
 			ScintillaEditView* unfocusView = isFromPrimary ? &_subEditView : &_mainEditView;
@@ -473,7 +469,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_MACRORECORD:
-		{
 			// Normalize EOL by replacing macro step using SCI_REPLACESEL
 			// with lParam representing string of one char with '\n' or '\r'
 			// with step using SCI_NEWLINE which is document context aware and will insert correct EOL.
@@ -512,10 +507,9 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_PAINTED:
-		{
 			if (!notifyView) return FALSE;
 
-			// Check if a restore position is needed. 
+			// Check if a restore position is needed.
 			// Restoring a position must done after SCN_PAINTED notification so that it works in every circumstances (including wrapped large file)
 			_mainEditView.restoreCurrentPosPostStep();
 			_subEditView.restoreCurrentPosPostStep();
@@ -562,7 +556,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_CALLTIPCLICK:
-		{
 			if (!notifyView) return FALSE;
 
 			AutoCompletion* autoC = isFromPrimary ? &_autoCompleteMain : &_autoCompleteSub;
@@ -571,12 +564,11 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_AUTOCSELECTION:
-		{
 			if (!notifyView) return FALSE;
 
 			const NppGUI& nppGui = NppParameters::getInstance().getNppGUI();
 
-			// if autocompletion is disabled and it is triggered manually, then both ENTER & TAB will insert the selection 
+			// if autocompletion is disabled and it is triggered manually, then both ENTER & TAB will insert the selection
 			if (nppGui._autocStatus == NppGUI::AutocStatus::autoc_none)
 			{
 				break;
@@ -601,7 +593,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		//
 
 		case SCN_FOLDINGSTATECHANGED: // Notification not part of Scintilla, but Notepad++ added
-		{
 			if ((notification->nmhdr.hwndFrom == _mainEditView.getHSelf()) || (notification->nmhdr.hwndFrom == _subEditView.getHSelf()))
 			{
 				size_t lineClicked = notification->line;
@@ -627,7 +618,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 		case TCN_MOUSEHOVERING:
 		case TCN_MOUSEHOVERSWITCHING:
-		{
 			NppParameters& nppParam = NppParameters::getInstance();
 			bool doPeekOnTab = nppParam.getNppGUI()._isDocPeekOnTab;
 			bool doPeekOnMap = nppParam.getNppGUI()._isDocPeekOnMap;
@@ -693,7 +683,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case TCN_MOUSELEAVING:
-		{
 			NppParameters& nppParam = NppParameters::getInstance();
 			bool doPeekOnTab = nppParam.getNppGUI()._isDocPeekOnTab;
 			bool doPeekOnMap = nppParam.getNppGUI()._isDocPeekOnMap;
@@ -715,7 +704,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 		case TCN_TABDROPPEDOUTSIDE:
 		case TCN_TABDROPPED:
-		{
 			TabBarPlus *sender = reinterpret_cast<TabBarPlus *>(notification->nmhdr.idFrom);
 			bool isInCtrlStat = (::GetKeyState(VK_LCONTROL) & 0x80000000) != 0;
 			if (notification->nmhdr.code == TCN_TABDROPPEDOUTSIDE)
@@ -804,7 +792,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case TCN_TABDELETE:
-		{
 			int index = tabNotification->_tabOrigin;
 			BufferID bufferToClose = notifyDocTab->getBufferByIndex(index);
 			Buffer * buf = MainFileManager.getBufferByID(bufferToClose);
@@ -825,7 +812,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case TCN_TABPINNED:
-		{
 			int index = tabNotification->_tabOrigin;
 			BufferID bufferToBePinned = notifyDocTab->getBufferByIndex(index);
 			Buffer * buf = MainFileManager.getBufferByID(bufferToBePinned);
@@ -855,7 +841,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case TCN_SELCHANGE:
-		{
 			int iView = -1;
 			if (notification->nmhdr.hwndFrom == _mainDocTab.getHSelf())
 			{
@@ -884,7 +869,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case NM_CLICK :
-		{
 			if (notification->nmhdr.hwndFrom == _statusBar.getHSelf())
 			{
 				LPNMMOUSE lpnm = (LPNMMOUSE)notification;
@@ -928,7 +912,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case NM_DBLCLK :
-		{
 			if (notification->nmhdr.hwndFrom == _statusBar.getHSelf())
 			{
 				LPNMMOUSE lpnm = (LPNMMOUSE)notification;
@@ -972,7 +955,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case NM_RCLICK :
-		{
 			POINT p;
 			::GetCursorPos(&p);
 
@@ -1056,7 +1038,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				else // default tab context menu
 				{
 					// IMPORTANT: If any submenu entry is added/moved/removed, you have to change the value of tabCmSubMenuEntryPos[] in localization.cpp file
-					
+
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSE, L"Close"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSEALL_BUT_CURRENT, L"Close All BUT This", L"Close Multiple Tabs"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSEALL_BUT_PINNED, L"Close All BUT Pinned", L"Close Multiple Tabs"));
@@ -1150,7 +1132,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			_tabPopupMenu.enableItem(IDM_FILE_SAVEAS, !isInaccessible);
 			_tabPopupMenu.enableItem(IDM_FILE_RENAME, !isInaccessible);
-			
+
 			NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
 			bool isTabPinEnabled = nppGUI._tabStatus & TAB_PINBUTTON;
 			wstring newName;
@@ -1184,7 +1166,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case TTN_GETDISPINFO:
-		{
 			try
 			{
 				LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)notification;
@@ -1258,13 +1239,11 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case RBN_HEIGHTCHANGE:
-		{
 			SendMessage(_pPublicInterface->getHSelf(), WM_SIZE, 0, 0);
 			break;
 		}
 
 		case RBN_CHEVRONPUSHED:
-		{
 			NMREBARCHEVRON * lpnm = reinterpret_cast<NMREBARCHEVRON *>(notification);
 			ReBar * notifRebar = &_rebarTop;
 			if (_rebarBottom.getHSelf() == lpnm->hdr.hwndFrom)
