@@ -4,11 +4,11 @@ This roadmap outlines the long-term structural plans to achieve the goals define
 
 ## Phase 1: Contextual Intelligence (In Progress)
 - [x] Disable autocomplete popup in standard non-code text files (L_TEXT, L_USER/Markdown).
-- [ ] Investigate programmatic methods to set proportional fonts for prose and monospaced for code without breaking Scintilla's `stylers.xml` inheritance engine.
+- [x] Investigate programmatic methods to set proportional fonts for prose and monospaced for code without breaking Scintilla's `stylers.xml` inheritance engine.
 
 ## Phase 2: "Never Lose a File" - Advanced Autosave & Versioning
-- [ ] Design a silent, background local Git or SQLite-based versioning system.
-- [ ] Hook into the Scintilla buffer modification events (`SCN_SAVEPOINTREACHED`, `SCN_MODIFIED`) to trigger silent snapshot saves.
+- [x] Design a silent, background local Git or SQLite-based versioning system.
+- [x] Hook into the Scintilla buffer modification events (`SCN_SAVEPOINTREACHED`, `SCN_MODIFIED`) to trigger silent snapshot saves.
 - [ ] Build a UI viewer (perhaps a dockable panel) to view the history timeline of the current buffer.
 
 ## Phase 3: Core Feature Expansion & Plugin Absorption
