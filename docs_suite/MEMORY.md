@@ -16,3 +16,6 @@ This document tracks ongoing observations about the codebase, design preferences
 ## User Preferences
 *   The UI must be fully skinnable, targeting a "super modern glass" aesthetic.
 *   ClearType should be enforced.
+
+## Build & Environment Validations
+*   **Submodule Alignment:** After replacing the `bobui` dependency with the new `bqt`, `bgtk`, and `bcs` submodules, the Go build pipeline has been successfully validated. Running `go build -o notepad-ultra ./cmd/ultra` inside the `go-port/` directory completes successfully with no resolution errors, confirming that the new replacement directives in `go-port/go.mod` properly locate the `bqt` UI engine.

@@ -12,6 +12,10 @@ void NppAutoVersioner::handleModification(SCNotification* notification) {
         return;
     }
 
+    if (notification->nmhdr.code == SCN_MODIFIED && !(notification->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))) {
+        return;
+    }
+
     // In a future implementation, this is where we'd dispatch an asynchronous
     // event via EventBus to the Go backend `VersionHistoryManager`.
     // We avoid string copies and deep comparisons here.

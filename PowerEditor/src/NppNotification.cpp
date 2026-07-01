@@ -85,6 +85,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_SAVEPOINTREACHED:
+			NppAutoVersioner::getInstance().handleModification(notification);
+			[[fallthrough]];
 		case SCN_SAVEPOINTLEFT:
 			//if (!notifyView) return FALSE; // Could be _invisibleEditView or _fileEditView (see the following code)
 
