@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/notepad-plus-plus/ultra-project/pkg/autosave"
 	"github.com/notepad-plus-plus/ultra-project/pkg/bindings"
 	"github.com/notepad-plus-plus/ultra-project/pkg/commands"
 	"github.com/notepad-plus-plus/ultra-project/pkg/config"
@@ -74,6 +75,16 @@ func main() {
 		return cmdManager.Execute(id, args)
 	})
 	uiEngine.SubscribeToEvents(eventBus)
+
+	// Phase 2: Autosave SQLite Ledger
+	dbPath := "."
+	dbManager, err := autosave.NewDBManager(dbPath)
+	if err != nil {
+		log.Printf("Failed to initialize SQLite Versioning Ledger: %v", err)
+	} else {
+		log.Println("SQLite Versioning Ledger Initialized.")
+		_ = autosave.NewTimelineViewer(dbManager)
+	}
 
 	// Example execution simulating a UI click
 	log.Println("Simulating UI Action: File.New")
