@@ -83,6 +83,7 @@ func main() {
 		log.Printf("Failed to initialize SQLite Versioning Ledger: %v", err)
 	} else {
 		log.Println("SQLite Versioning Ledger Initialized.")
+		autosave.HookDBManager(dbManager, *eventBus)
 		_ = autosave.NewTimelineViewer(dbManager)
 	}
 

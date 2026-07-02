@@ -70,8 +70,3 @@ This file tracks the latest actions and status for the next AI agent or human de
 - **Vertical tab interactions in bobui:** context menu (Close, Close All, Pin) for vertical tab components
 - **Settings Panel in bobui:** Map all `AppConfig` fields to UI controls
 - **Theme Engine:** Finalize the "
-
-## Last Tasks Performed:
-- Updated the UI subsystem in `bqt` module to move away from tabbed views to a single unified dashboard page to align with recent architectural decisions.
-- Wired in the SQLite database versioning hooks into the Notepad++ ultra runtime (`cmd/ultra/main.go`).
-- Increment the global version tracker file.
