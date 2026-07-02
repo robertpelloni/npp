@@ -70,3 +70,10 @@ This file tracks the latest actions and status for the next AI agent or human de
 - **Vertical tab interactions in bobui:** context menu (Close, Close All, Pin) for vertical tab components
 - **Settings Panel in bobui:** Map all `AppConfig` fields to UI controls
 - **Theme Engine:** Finalize the "
+Glass" theme for the Qt port (bqt) and tie it directly into the newly implemented `getFontForLang` font system.
+- **SQLite Versioning Phase 2:** A C++ hook is successfully filtering Scintilla events, and a Go DBManager is scaffolded, but the true native asynchronous CGO call between the C++ hook and the Go ledger needs to be wired and verified.
+
+## Supervisor Nudge Completions
+- Evaluated `go-port` dependencies after `bqt` UI submodule renames. Restored build success by updating `main.go`.
+- Unified the `bqt` GUI layout. Removed static tab components and rolled out a single Dashboard UI widget.
+- Completed the Scintilla Dual-Font PoC (Phase 1) within `setSpecialStyle`.
