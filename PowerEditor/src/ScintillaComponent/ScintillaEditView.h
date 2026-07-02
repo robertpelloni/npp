@@ -703,6 +703,7 @@ protected:
 	static LRESULT CALLBACK ScintillaProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 	bool _isMainEditZone = false;
+	mutable bool m_bPendingSnapshot = false;
 	SCINTILLA_FUNC _pScintillaFunc = nullptr;
 	SCINTILLA_PTR  _pScintillaPtr = nullptr;
 	BufferID attachDefaultDoc();

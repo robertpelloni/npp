@@ -49,6 +49,9 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		case SCN_MODIFIED:
 		{
 			// NppAutoVersioner Hook
+			if (notifyView) {
+				notifyView->m_bPendingSnapshot = true;
+			}
 			NppAutoVersioner::getInstance().handleModification(notification);
 			if (!notifyView) return FALSE;
 
@@ -85,6 +88,9 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_SAVEPOINTREACHED:
+			if (notifyView) {
+				notifyView->m_bPendingSnapshot = true;
+			}
 			NppAutoVersioner::getInstance().handleModification(notification);
 			[[fallthrough]];
 		case SCN_SAVEPOINTLEFT:
