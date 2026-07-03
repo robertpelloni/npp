@@ -536,16 +536,6 @@ LRESULT CALLBACK ScintillaEditView::ScintillaProc(
 
 	switch (uMsg)
 	{
-		case WM_USER + 0x1000:
-		{
-			if (pScint->m_bPendingSnapshot) {
-				pScint->m_bPendingSnapshot = false;
-				// Serialize the buffer contents into a timestamped snapshot file
-				// under %APPDATA%\Notepad++\autoversion\ (simulated as requested).
-			}
-			return 1;
-		}
-
 		case WM_NCDESTROY:
 		{
 			::RemoveWindowSubclass(hWnd, ScintillaEditView::ScintillaProc, uIdSubclass);
