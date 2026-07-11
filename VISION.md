@@ -6,7 +6,7 @@ The ultimate goal of this project is to transform Notepad++ from a classic, high
 ## Key Pillars of the Vision
 
 1. **Ultra-Modern User Interface**
-   - Transition from the classic Win32 look to a "super modern glass" UI.
+   - Transition from the classic Win32 look to a "super modern glass" UI. Phase 4 of the roadmap officially targets Qt (`bqt`) as the primary cross-platform vehicle to achieve this embedding.
    - Implement comprehensive skinning capabilities allowing users to customize every visual aspect of the application.
    - Introduce fully functional vertical tabs to handle massive numbers of open documents efficiently.
    - Enable ClearType and advanced font rendering techniques globally.
