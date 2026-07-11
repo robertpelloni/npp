@@ -27,6 +27,7 @@
 #include "shortcut.h"
 
 using namespace std;
+#include "NppAutoVersioner.h"
 
 // Only for 2 main Scintilla editors
 BOOL Notepad_plus::notify(SCNotification *notification)
@@ -34,7 +35,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 	//Important, keep track of which element generated the message
 	bool isFromPrimary = (_mainEditView.getHSelf() == notification->nmhdr.hwndFrom || _mainDocTab.getHSelf() == notification->nmhdr.hwndFrom);
 	bool isFromSecondary = !isFromPrimary && (_subEditView.getHSelf() == notification->nmhdr.hwndFrom || _subDocTab.getHSelf() == notification->nmhdr.hwndFrom);
-	
+
 	ScintillaEditView * notifyView = nullptr;
 	if (isFromPrimary)
 		notifyView = &_mainEditView;
@@ -47,6 +48,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 	{
 		case SCN_MODIFIED:
 		{
+			// NppAutoVersioner Hook
+			NppAutoVersioner::getInstance().handleModification(notification);
 			if (!notifyView) return FALSE;
 
 			if (notification->modificationType & (SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT))
@@ -82,6 +85,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		}
 
 		case SCN_SAVEPOINTREACHED:
+			NppAutoVersioner::getInstance().handleModification(notification);
+			[[fallthrough]];
 		case SCN_SAVEPOINTLEFT:
 		{
 			//if (!notifyView) return FALSE; // Could be _invisibleEditView or _fileEditView (see the following code)
@@ -127,7 +132,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					isDirty = true;
 			}
 
-			if (buf->isUnsync()) // buffer in Notepad++ is not synchronized with the file on disk - in this case the buffer is always dirty 
+			if (buf->isUnsync()) // buffer in Notepad++ is not synchronized with the file on disk - in this case the buffer is always dirty
 				isDirty = true;
 
 			if (buf->isSavePointDirty())
@@ -402,7 +407,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			NppGUI& nppGui = nppParam.getNppGUI();
 
 			Buffer* currentBuf = notifyView->getCurrentBuffer();
-			
+
 			// replacement for obsolete custom SCN_SCROLLED
 			if (notification->updated & SC_UPDATE_V_SCROLL)
 			{
@@ -515,7 +520,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		{
 			if (!notifyView) return FALSE;
 
-			// Check if a restore position is needed. 
+			// Check if a restore position is needed.
 			// Restoring a position must done after SCN_PAINTED notification so that it works in every circumstances (including wrapped large file)
 			_mainEditView.restoreCurrentPosPostStep();
 			_subEditView.restoreCurrentPosPostStep();
@@ -576,7 +581,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			const NppGUI& nppGui = NppParameters::getInstance().getNppGUI();
 
-			// if autocompletion is disabled and it is triggered manually, then both ENTER & TAB will insert the selection 
+			// if autocompletion is disabled and it is triggered manually, then both ENTER & TAB will insert the selection
 			if (nppGui._autocStatus == NppGUI::AutocStatus::autoc_none)
 			{
 				break;
@@ -1056,7 +1061,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				else // default tab context menu
 				{
 					// IMPORTANT: If any submenu entry is added/moved/removed, you have to change the value of tabCmSubMenuEntryPos[] in localization.cpp file
-					
+
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSE, L"Close"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSEALL_BUT_CURRENT, L"Close All BUT This", L"Close Multiple Tabs"));
 					itemUnitArray.push_back(MenuItemUnit(IDM_FILE_CLOSEALL_BUT_PINNED, L"Close All BUT Pinned", L"Close Multiple Tabs"));
@@ -1150,7 +1155,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			_tabPopupMenu.enableItem(IDM_FILE_SAVEAS, !isInaccessible);
 			_tabPopupMenu.enableItem(IDM_FILE_RENAME, !isInaccessible);
-			
+
 			NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
 			bool isTabPinEnabled = nppGUI._tabStatus & TAB_PINBUTTON;
 			wstring newName;

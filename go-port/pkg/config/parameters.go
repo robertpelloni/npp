@@ -24,6 +24,8 @@ type AppConfig struct {
 
 	// Typography
 	MixFonts bool `xml:"MixFonts"` // Regular for standard text, monospace for code
+	ProportionalFont string `xml:"ProportionalFont"`
+	MonospaceFont    string `xml:"MonospaceFont"`
 
 	// Editor Behavior
 	DisableAutocompleteInText bool `xml:"DisableAutocompleteInText"`
@@ -37,6 +39,8 @@ func DefaultConfig() *AppConfig {
 		VerticalTabsEnabled:       true,
 		VerticalTabWidth:          200,
 		MixFonts:                  true,
+		ProportionalFont:          "Segoe UI",
+		MonospaceFont:             "Consolas",
 		DisableAutocompleteInText: true,
 		AutosaveEnabled:           true,
 	}

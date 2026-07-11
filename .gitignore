@@ -5,3 +5,4 @@ go-port/libultra.h
 # Jules AI session logs (auto-generated, not needed in repo)
 .jules/sessions/
 rust-port/target
+go-port/notepad-ultra

@@ -888,10 +888,24 @@ void ScintillaEditView::setSpecialStyle(const Style& styleToSet) const
 			} else {
 				execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>(DEFAULT_FONT_NAME));
 			}
+			execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>(DEFAULT_FONT_NAME));
 		}
 		else
 		{
 			std::string fontNameA = wstring2string(styleToSet._fontName, CP_UTF8);
+			// DUAL FONT OVERRIDE POC: If the current buffer is a text/prose buffer,
+			// override the styler font with our user-defined ProportionalFont.
+			// If it is code, override with MonospaceFont.
+			// In the final version, this will be retrieved from the go-port backend.
+			auto langType = getCurrentBuffer() ? getCurrentBuffer()->getLangType() : L_TEXT;
+			bool mixFonts = true; // To be pulled from backend Config
+			if (mixFonts) {
+				if (langType == L_TEXT || langType == L_USER) {
+					fontNameA = "Segoe UI";
+				} else {
+					fontNameA = "Consolas";
+				}
+			}
 			execute(SCI_STYLESETFONT, styleID, reinterpret_cast<LPARAM>(fontNameA.c_str()));
 		}
 	}

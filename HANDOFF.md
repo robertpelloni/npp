@@ -211,3 +211,10 @@ This file tracks the latest actions and status for the next AI agent or human de
 - Handled the aftermath of the submodule rename (`bobui` to `bqt`) by cleaning up `go.mod`, `DEPLOY.md`, and `TODO.md`.
 - Stored learnings about `.gitignore` behavior and C++ hook string literal encodings into MEMORY.md.
 - Note to subsequent orchestrator: the internal supervisor appears to be stuck in a prompt loop, continually requesting execution of Phase 1 and Phase 2 items which have already been built, tested, and fully merged. The system is structurally sound but awaits novel feature requests or directives to move into Phase 5.
+Glass" theme for the Qt port (bqt) and tie it directly into the newly implemented `getFontForLang` font system.
+- **SQLite Versioning Phase 2:** A C++ hook is successfully filtering Scintilla events, and a Go DBManager is scaffolded, but the true native asynchronous CGO call between the C++ hook and the Go ledger needs to be wired and verified.
+
+## Supervisor Nudge Completions
+- Evaluated `go-port` dependencies after `bqt` UI submodule renames. Restored build success by updating `main.go`.
+- Unified the `bqt` GUI layout. Removed static tab components and rolled out a single Dashboard UI widget.
+- Completed the Scintilla Dual-Font PoC (Phase 1) within `setSpecialStyle`.

@@ -6,6 +6,10 @@
 3. **Go Environment:** Install Go 1.25 or newer with `CGO_ENABLED=1`.
 4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed, along with Qt6 development packages (`qt6-base-dev`) for the `bqt` UI.
 5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference local submodules.
+2. **C++ Environment:** Install Visual Studio 2022 (or newer) with C++ Desktop Development workload.
+3. **Go Environment:** Install Go 1.25 or newer.
+4. **UI Dependencies (Linux/Wayland):** If building on Linux, ensure `xkbcommon` and `wayland-client` libraries are installed.
+5. **Local Module Resolution:** The Go project uses a local `replace` directive in `go-port/go.mod` to reference the `bqt` submodule. Ensure `bqt` is present in the parent directory.
 
 ## Configuration & Versioning
 - **Version Tracking:** The global project version is managed in the `VERSION` file in the root directory. This version is referenced by the build scripts and the Go backend to ensure consistency.
