@@ -1,5 +1,10 @@
 package theme
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // Deep Comment: Scintilla Font Routing
 // Why: Legacy Notepad++ sets a single global monospace font for all documents via 'stylers.model.xml'.
 // This creates poor UX when writing prose (e.g., Markdown, TXT), where a proportional font (like Segoe UI or Arial) is standard.
@@ -47,10 +52,6 @@ func DetermineFontCategory(langType int) FontCategory {
 		return FontCategoryMonospace
 	}
 }
-import (
-	"encoding/json"
-	"fmt"
-)
 
 // FontConfig represents the user's font configuration
 type FontConfig struct {

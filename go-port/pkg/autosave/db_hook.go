@@ -55,6 +55,8 @@ func (el *EventListener) handleBufferSaved(data interface{}) {
 	if err != nil {
 		log.Printf("[Autosave Hook] Failed to snapshot buffer %s on save: %v", buf.ID, err)
 	}
+}
+
 // HookDBManager binds the EventBus to the DBManager.
 // Why: Bridges Scintilla's SCN_MODIFIED and SCN_SAVEPOINTREACHED events to trigger background
 //      SQLite snapshots without blocking the UI thread.

@@ -58,8 +58,8 @@ func TestTimelineViewer(t *testing.T) {
 
 	if timeline[1].Preview != "Short version" {
 		t.Errorf("Expected exact preview for short text, got '%s'", timeline[1].Preview)
-	"testing"
-)
+	}
+}
 
 func TestSafePreview(t *testing.T) {
 	tests := []struct {

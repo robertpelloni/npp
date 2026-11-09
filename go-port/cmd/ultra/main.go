@@ -14,8 +14,8 @@ import (
 	"github.com/notepad-plus-plus/ultra-project/pkg/lsp"
 	"github.com/notepad-plus-plus/ultra-project/pkg/plugins"
 	"github.com/notepad-plus-plus/ultra-project/pkg/textfx"
+	"github.com/notepad-plus-plus/ultra-project/pkg/ui"
 	"github.com/notepad-plus-plus/ultra-project/pkg/workspace"
-	"github.com/robertpelloni/bqt/pkg/ui"
 )
 
 type bridgeAdapter struct {
@@ -67,16 +67,13 @@ func main() {
 
 	log.Println("Core data models and command router initialized.")
 
-	// UI logic goes here
-	// Removing the mock "File.New" execution that was causing a log.Fatalf
-	// due to the newly added Auth middleware requiring a token.
-
-	// Mock UI Engine instantiation and wiring
-	uiEngine := ui.NewEngine()
-	uiEngine.SetOnCommand( func(id string, args map[string]interface{}) error {
-		return cmdManager.Execute(id, args)
+	// Vertical tabs UI manager initialization
+	tabsManager := ui.NewVerticalTabsManager()
+	eventBus.Subscribe("BufferCreated", func(payload interface{}) {
+		if buf, ok := payload.(*core.Buffer); ok {
+			tabsManager.AddTab(string(buf.ID), buf.Filepath)
+		}
 	})
-	uiEngine.SubscribeToEvents(eventBus)
 
 	// Phase 2: Autosave SQLite Ledger
 	dbPath := "."
@@ -86,17 +83,8 @@ func main() {
 	} else {
 		log.Println("SQLite Versioning Ledger Initialized.")
 		autosave.HookDBManager(dbManager, *eventBus)
-		_ = autosave.NewTimelineViewer(dbManager)
+		_ = autosave.NewTimelineViewerFromDB(dbManager)
 	}
-
-	// Example execution simulating a UI click
-	log.Println("Simulating UI Action: File.New")
-	if err := cmdManager.Execute("File.New", nil); err != nil {
-		log.Fatalf("Command failed: %v", err)
-	}
-
-	activeBuf, _ := bufManager.GetActiveBuffer()
-	log.Printf("Active buffer is now: %s", activeBuf.Filepath)
 
 	// Load plugins from the "plugins" directory (if it exists)
 	pluginMgr := plugins.NewManager()

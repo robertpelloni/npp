@@ -50,7 +50,8 @@ func TestEngine_GetContextualFontFamily(t *testing.T) {
 				t.Errorf("GetContextualFontFamily(%d) = %v, want %v", tt.langType, got, tt.expected)
 			}
 		})
-import "testing"
+	}
+}
 
 func TestGetFontForLang(t *testing.T) {
 	configJSON := `{"proportionalFont": "Segoe UI", "monospaceFont": "Consolas", "mixFonts": true}`

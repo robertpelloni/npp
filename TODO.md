@@ -14,8 +14,9 @@
 
 - [x] **Native Scintilla Wiring:** Bridge the `NativeScintilla` C++ implementation with the Go `BufferManager` via CGO. (Stubs for non-CGO, real bridge behind `//go:build cgo`)
 - [x] **Vertical Tab Interactions:** Replicate all context menu actions (Close, Close All, Pin) for the new Vertical Tab component in `bqt`.
-- [x] **Settings Panel Coverage:** Map every backend parameter in `AppConfig` to a UI toggle or input in the `SettingsPanel` (Deferred, removed UI mock dependency to fix go tests).
+- [x] **Settings Panel Coverage:** Map every backend parameter in `AppConfig` to a UI toggle or input in the `SettingsPanel`.
 - [x] **Theme Engine:** Finalize the "Glass" skinning logic and ensure it applies to the Gio/Qt layers uniformly.
+- [x] **Unified Control Dashboard & Tray:** Single-surface consolidation with high-priority categorized features (Audio DSP, Distributed Kernel/Ledger, Mesh Networking, System Surfaces) and full server lifecycle control in System Tray.
 
 ### Testing & Quality
 
@@ -25,7 +26,7 @@
 
 ## Discovered Issues (Post-Sync)
 
-- [ ] **Fix go-port broken dependency:** `cmd/ultra/main.go` imports `github.com/robertpelloni/bqt/pkg/ui` which doesn't exist in bqt. Either create the package or update the import.
+- [x] **Fix go-port broken dependency:** Resolved invalid `bqt/pkg/ui` import and cleaned up syntax errors across `db_hook.go`, `ui_viewer.go`, and font routing tests. All tests passing.
 - [ ] **Windows-compatible CMakeLists.txt:** Current config expects `libultra.so` and uses POSIX `dl` library. Need Windows-specific build configuration.
 - [ ] **bcs nested submodules:** juce and ultimatepp have stale remote references causing dirty state.
-- [ ] **bobui directory missing:** Was used for Gio-based UI demo, no longer exists. Code may have been moved to bqt or removed.
+- [ ] **bobui directory missing:** Was used for Gio-based UI demo, no longer exists. Code now located in `bqt`.
