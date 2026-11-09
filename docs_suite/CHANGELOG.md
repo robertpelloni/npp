@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. The versioning strictly follows Semantic Versioning.
 
+## [1.0.45] - 2026-11-09
+### Fixed
+- Fixed syntax errors and duplicate merge artifacts across `go-port/pkg/autosave/db_hook.go`, `go-port/pkg/autosave/ui_viewer.go`, `go-port/pkg/autosave/ui_viewer_test.go`, and `go-port/pkg/theme/scintilla_fonts.go`.
+- Resolved broken `bqt/pkg/ui` import in `go-port/cmd/ultra/main.go` and executed `go mod tidy` so all 14 Go packages build and pass test suites cleanly.
+- Consolidated and verified the unified single-page dashboard (`DemoSurface`) in `bqt` with high-value prioritized panels (Audio DSP, Distributed Kernel/Ledger, Mesh Networking, System Interop) and live interactive controls.
+- Verified interactive system tray icon with full server lifecycle controls (Quit BQt Servers, Restart EventLoop, Mute DSP, Disconnect Mesh) in headless Gio execution.
+
 ## [1.0.18] - 2026-04-13
 ### Added
 - Completed `NativeScintilla.h/.cpp` providing the final abstraction layer over the legacy Win32 `ScintillaEditView`. The native Qt/GTK wrappers can now pass a direct function pointer (`DirectFn`) to interact with the raw Scintilla engine without OS message passing.
