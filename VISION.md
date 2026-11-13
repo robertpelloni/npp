@@ -11,10 +11,11 @@ The ultimate goal of this project is to transform Notepad++ from a classic, high
    - Introduce fully functional vertical tabs to handle massive numbers of open documents efficiently.
    - Enable ClearType and advanced font rendering techniques globally.
 
-2. **Absolute Data Security (Never Lose a File)**
-   - Implement an "automatic versioning autosave" system.
-   - The editor should silently keep all historical versions of all files edited.
-   - Provide a seamless UI to scrub through a file's history and restore previous states.
+2. **Absolute Data Security (Never Lose a File - Phase 2)**
+   - Implement an "automatic versioning autosave" system backed by SQLite in the Go backend.
+   - Silently snapshot every modified buffer state on Scintilla events (`SCN_MODIFIED`, `SCN_SAVEPOINTREACHED`).
+   - Eliminate storage overhead via SHA-256 deduplication and in-memory byte slice comparisons (`bytes.Equal`).
+   - Provide a seamless Timeline Viewer UI panel allowing developers to scrub through historical snapshots with UTF-8 safe previews and restore prior states with zero latency.
 
 3. **Core Feature Expansion (Geany Parity & Plugins)**
    - Achieve 1:1 feature parity with Geany (a lightweight IDE). This implies adding features like robust project management, built-in terminal emulators, advanced build system integration, and symbol navigation out-of-the-box.
@@ -22,5 +23,5 @@ The ultimate goal of this project is to transform Notepad++ from a classic, high
 
 4. **Intelligent Context Awareness**
    - The editor must be smart enough to distinguish between code and prose seamlessly.
-   - (Implemented) Intelligently disable code-centric features like aggressive autocomplete popups in standard non-code text files (Normal Text, Markdown, etc.).
-   - Default styling should intuitively use proportional fonts for prose and monospaced fonts for code out-of-the-box (to be configured via the Style Configurator).
+   - Intelligently disable code-centric features like aggressive autocomplete popups in standard non-code text files (Normal Text, Markdown, etc.).
+   - Default styling should intuitively use proportional fonts for prose and monospaced fonts for code out-of-the-box via dynamic theme routing.
